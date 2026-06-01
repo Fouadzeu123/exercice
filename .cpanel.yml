@@ -1,0 +1,15 @@
+---
+deployment:
+  targets:
+    production:
+      domain: armicm.com
+      root: /
+      publish_dir: public
+      commands:
+        pre_build:
+          - npm install
+        build:
+          - npm run build
+        post_build:
+          - echo "Deployment completed successfully"
+
