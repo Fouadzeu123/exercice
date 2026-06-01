@@ -38,5 +38,7 @@ export default defineConfig({
         alias: {
             '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
         },
+        extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue', '.mts', '.cts'],
+        mainFields: ['browser', 'module', 'jsnext:main', 'jsnext', 'main'],
     },
 });
