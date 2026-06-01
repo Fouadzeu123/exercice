@@ -1,0 +1,697 @@
+Create a complete futuristic fintech web application called “ARM HOLDING” using:
+
+* Laravel 12
+* Vue 3
+* Inertia.js
+* Tailwind CSS
+* Pinia
+* Axios
+* Laravel Sanctum
+* PostgreSQL or MySQL
+
+The application must be mobile-first and designed as a futuristic semiconductor AI investment platform.
+
+IMPORTANT:
+
+* Use Laravel + Vue + Inertia architecture
+* Use a premium futuristic UI
+* Use dark cyberpunk fintech aesthetics
+* Use glassmorphism and holographic effects
+* Use highly attractive modern animations
+* Use reusable components
+* Use responsive mobile-first layouts
+* The platform must feel like a billion-dollar AI semiconductor company
+* The admin must have TOTAL CONTROL over the application
+
+====================================================
+GENERAL DESIGN ATMOSPHERE
+=========================
+
+The visual style must be inspired by:
+
+* NVIDIA
+* ARM processors
+* AI infrastructures
+* futuristic fintech systems
+* cybersecurity interfaces
+* GPU server systems
+* quantum computing
+* premium SaaS dashboards
+
+The application must look:
+
+* more beautiful
+* more immersive
+* more premium
+* more futuristic
+  than the provided reference images.
+
+====================================================
+MAIN COLORS
+===========
+
+* Deep black (#050816)
+* Neon cyan
+* Electric blue
+* Violet neon
+* Metallic silver
+* Soft glowing gradients
+
+====================================================
+VISUAL EFFECTS
+==============
+
+Add:
+
+* floating particles
+* holographic effects
+* animated circuits
+* glowing borders
+* smooth transitions
+* futuristic shadows
+* neon hover effects
+* animated counters
+* glass cards
+* GPU-like lighting effects
+* AI processing animations
+
+====================================================
+AUTHENTICATION FLOW
+===================
+
+IMPORTANT:
+There is NO public home page.
+
+The FIRST page of the application is the registration page.
+
+Routes:
+
+* Register
+* Login
+* Forgot password
+* OTP verification
+
+====================================================
+REGISTER PAGE
+=============
+
+The registration page must be ultra futuristic.
+
+IMPORTANT:
+Leave a large premium area at the top-center for a future 3D ARM logo image that will be inserted later manually.
+
+The register page must contain:
+
+* futuristic background
+* animated particles
+* holographic glow
+* AI atmosphere
+* neon form inputs
+* smooth animated buttons
+* mobile-first layout
+
+Registration fields:
+
+* Full name
+* Phone number
+* Email
+* Password
+* Confirm password
+* Referral code (optional)
+
+Add:
+
+* smooth focus animations
+* glowing borders
+* cyberpunk UI effects
+* futuristic typography
+
+====================================================
+LOGIN PAGE
+==========
+
+The login page must use:
+
+* glassmorphism
+* animated neon borders
+* futuristic cyberpunk background
+* AI effects
+* smooth transitions
+
+====================================================
+APPLICATION CONCEPT
+===================
+
+ARM HOLDING is a futuristic semiconductor investment ecosystem.
+
+Users invest in:
+
+* AI processing nodes
+* semiconductor infrastructures
+* GPU clusters
+* quantum systems
+* neural processing systems
+
+The entire application must feel like:
+
+* AI operating system
+* semiconductor infrastructure company
+* futuristic fintech command center
+
+====================================================
+CURRENCY
+========
+
+Use XAF everywhere.
+
+====================================================
+MAIN SYSTEMS
+============
+
+The platform contains:
+
+1. Infrastructure Nodes
+2. ARM Vault Locked Investments
+3. VIP/AVIP System
+4. Team Development System
+5. Limited Edition Products
+6. Referral/MLM System
+7. Real-Time Generation System
+
+====================================================
+
+1. INFRASTRUCTURE NODES SYSTEM
+   ====================================================
+
+This is the standard investment system.
+
+RULES:
+
+* User can only own ONE active node
+* User can only upgrade to higher node
+* Upgrading automatically refunds previous node investment
+* Lower nodes cannot be purchased
+* Equal nodes cannot be purchased
+
+Each node has:
+
+* image
+* name
+* amount
+* generation profit
+* technology level
+* duration
+* stock quantity
+* limited purchase count
+
+Node examples:
+
+* Nano Node S1
+* Silicon Core X
+* Quantum Node
+* Neural Matrix
+* Hyper AI Reactor
+* Infinity ARM Core
+
+====================================================
+REAL-TIME GENERATION SYSTEM
+===========================
+
+IMPORTANT:
+DO NOT use cron jobs.
+DO NOT use Laravel Scheduler.
+
+Generation happens ONLY when user clicks:
+
+* START
+* ACTIVATE
+* GENERATE
+
+Generation lasts exactly:
+2 minutes
+
+Flow:
+
+1. User starts generation
+2. Live futuristic generation animation begins
+3. Animated profit counters increase live
+4. Semiconductor effects activate
+5. After 2 minutes:
+
+   * user claims profits
+     OR
+   * frontend validates completion
+6. Backend securely validates session
+
+====================================================
+GENERATION EFFECTS
+==================
+
+The generation page must feel like:
+
+* AI processing
+* GPU rendering
+* semiconductor synchronization
+* quantum activity
+* futuristic energy systems
+
+Add:
+
+* glowing progress bars
+* neural activity animations
+* holographic processing indicators
+* server synchronization visuals
+* futuristic loading effects
+
+====================================================
+2. ARM VAULT SYSTEM
+===================
+
+This is the locked investment system.
+
+Users can have multiple vaults simultaneously.
+
+Vault durations:
+
+* 7 days
+* 15 days
+* 21 days
+* 35 days
+* 55 days
+* 90 days
+* 155 days
+* 365 days
+
+Each vault contains:
+
+* image
+* name
+* fixed investment amount
+* fixed return
+* profit amount
+* duration
+* countdown timer
+
+Vault examples:
+
+* Nano Vault
+* Silicon Vault
+* Quantum Vault
+* AI Core Vault
+* Neural Vault
+* HyperNode Vault
+* Infinity Vault
+* ARM Elite Reserve
+
+====================================================
+3. VIP / AVIP SYSTEM
+====================
+
+Create an advanced VIP system that encourages users to build teams.
+
+VIP levels:
+
+* VIP 1
+* VIP 2
+* VIP 3
+* VIP 4
+* VIP 5
+
+Advanced VIP:
+
+* AVIP 1
+* AVIP 2
+* AVIP 3
+* AVIP 4
+* AVIP 5
+
+====================================================
+VIP CONDITIONS
+==============
+
+VIP levels increase based on:
+
+* personal investments
+* team investments
+* referral activity
+* number of active members
+* total team turnover
+
+====================================================
+AVIP SYSTEM
+===========
+
+The AVIP system is a premium leadership system.
+
+To unlock AVIP levels:
+
+* users must develop active teams
+* users must reach team investment targets
+* users must maintain active referrals
+
+Example:
+AVIP 1:
+
+* 10 active referrals
+* 500,000 XAF team volume
+
+AVIP 2:
+
+* 25 active referrals
+* 2,000,000 XAF team volume
+
+AVIP 3:
+
+* 50 active referrals
+* 5,000,000 XAF team volume
+
+====================================================
+AVIP BENEFITS
+=============
+
+AVIP users receive:
+
+* higher commissions
+* faster withdrawals
+* special badges
+* exclusive products
+* limited edition access
+* premium support
+* higher generation rewards
+
+====================================================
+TEAM DEVELOPMENT SYSTEM
+=======================
+
+Create a powerful team dashboard.
+
+Features:
+
+* referral tree
+* team statistics
+* active members
+* inactive members
+* team investments
+* commissions
+* network growth charts
+* leadership rankings
+
+====================================================
+4. LIMITED EDITION PRODUCTS
+===========================
+
+Create a special category:
+“LIMITED EDITION”
+
+IMPORTANT:
+These products are ONLY available when admin activates them.
+
+Admin has full control over:
+
+* availability
+* visibility
+* activation
+* stock quantity
+* purchase limits
+* activation duration
+
+Limited products must:
+
+* appear with futuristic badges
+* contain countdown timers
+* have glowing premium effects
+* feel ultra exclusive
+
+Examples:
+
+* Quantum Black Edition
+* Neural Platinum Core
+* Titan GPU Cluster
+* ARM Genesis Reactor
+
+====================================================
+PRODUCT IMAGES
+==============
+
+IMPORTANT:
+Every product must support image upload.
+
+Admin can upload:
+
+* product image
+* node image
+* vault image
+* limited edition image
+
+Images must display beautifully using:
+
+* futuristic product cards
+* glow effects
+* hover animations
+* premium UI
+
+====================================================
+ADMIN CONTROL SYSTEM
+====================
+
+IMPORTANT:
+The admin has TOTAL CONTROL over the platform.
+
+Admin can:
+
+* create/edit/delete products
+* activate/deactivate products
+* control stock
+* control prices
+* control profits
+* manage withdrawals
+* manage deposits
+* manage users
+* edit balances
+* send notifications
+* create limited editions
+* manually activate promotions
+* manage VIP rules
+* manage AVIP rules
+* manage referral commissions
+* manage banners
+* manage announcements
+
+====================================================
+MAIN PAGES
+==========
+
+Create:
+
+* Register
+* Login
+* Dashboard
+* Nodes
+* ARM Vault
+* Generation Page
+* Team/Referral Page
+* VIP/AVIP Page
+* Transactions
+* Wallet
+* Notifications
+* Profile
+* Admin Dashboard
+
+====================================================
+DASHBOARD
+=========
+
+The dashboard must feel like:
+
+* futuristic AI command center
+* semiconductor monitoring system
+* cybersecurity control room
+
+Display:
+
+* balance
+* active node
+* active vaults
+* generation status
+* VIP status
+* AVIP status
+* team statistics
+* live transactions
+* referral earnings
+* announcements
+* limited edition products
+
+====================================================
+BOTTOM MOBILE NAVIGATION
+========================
+
+Create futuristic mobile navigation like:
+
+* Home
+* Team
+* Generate
+* Wallet
+* Profile
+
+Use:
+
+* glowing active states
+* holographic effects
+* neon icons
+
+====================================================
+REAL-TIME FEATURES
+==================
+
+Use:
+
+* WebSockets OR polling
+* live counters
+* live notifications
+* animated updates
+* smooth transitions
+
+====================================================
+DATABASE TABLES
+===============
+
+Create complete migrations and relationships for:
+
+* users
+* nodes
+* user_nodes
+* generation_sessions
+* vault_plans
+* vault_investments
+* vip_levels
+* avip_levels
+* referral_commissions
+* limited_products
+* transactions
+* deposits
+* withdrawals
+* notifications
+* admin_logs
+* banners
+* announcements
+
+====================================================
+BACKEND ARCHITECTURE
+====================
+
+Use clean architecture.
+
+Structure:
+app/
+├── Http/
+│   ├── Controllers/
+│   ├── Requests/
+│   ├── Middleware/
+│   ├── Resources/
+│
+├── Models/
+├── Services/
+├── Repositories/
+├── Policies/
+├── Notifications/
+├── Events/
+├── Listeners/
+
+====================================================
+SERVICES
+========
+
+Create:
+
+* AuthService
+* NodeService
+* GenerationService
+* VaultService
+* VIPService
+* AVIPService
+* ReferralService
+* PaymentService
+* WithdrawalService
+* ProductService
+* AdminService
+* NotificationService
+
+====================================================
+API + INERTIA STRUCTURE
+=======================
+
+Use:
+
+* Inertia pages
+* Vue components
+* Laravel controllers
+* Sanctum authentication
+* API resources
+* Form requests
+
+====================================================
+PAYMENT SYSTEM
+==============
+
+Supported:
+
+* MTN Mobile Money
+* Orange Money
+* USDT
+* NotchPay
+
+====================================================
+ANIMATIONS
+==========
+
+Add:
+
+* floating cards
+* glowing buttons
+* holographic flickers
+* AI particles
+* neon pulse
+* smooth page transitions
+* animated charts
+* futuristic loading screens
+
+====================================================
+IMPORTANT
+=========
+
+The final application must feel:
+
+* more beautiful than the reference screenshots
+* premium
+* immersive
+* futuristic
+* technological
+* mobile-first
+* addictive to use
+* like a real AI semiconductor ecosystem
+
+Avoid:
+
+* casino feeling
+* outdated UI
+* cheap gradients
+* cluttered interfaces
+* low-quality animations
+* generic fintech designs
+
+Generate:
+
+* complete Laravel backend
+* complete Vue + Inertia frontend
+* responsive layouts
+* reusable components
+* database architecture
+* authentication flow
+* admin system
+* generation system
+* VIP/AVIP system
+* team development system
+* limited edition products
+* futuristic UI
+* premium UX
+* production-ready architecture

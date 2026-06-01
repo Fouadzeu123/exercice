@@ -1,0 +1,469 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans:
+        Instrument Sans, ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+@layer utilities {
+    body,
+    html {
+        --font-sans:
+            'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+            'Noto Color Emoji';
+    }
+}
+
+:root {
+    --background: 265 65% 3.5%; /* Deep space purple/black approx #05020c */
+    --foreground: 0 0% 98%;
+    --card: 265 45% 7%; /* Deep violet-card */
+    --popover: 265 45% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 272 95% 65%; /* Neon purple */
+    --primary-foreground: 265 65% 3.5%;
+    --secondary: 255 85% 60%; /* Cosmic violet */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 265 35% 12%;
+    --muted-foreground: 265 15% 65%;
+    --accent: 300 100% 60%; /* Magenta/fuchsia glow */
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 265 35% 12%;
+    --input: 265 35% 12%;
+    --ring: 272 95% 65%;
+    --chart-1: 272 95% 65%;
+    --chart-2: 255 85% 60%;
+    --chart-3: 300 100% 60%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.75rem;
+    --sidebar-background: 265 50% 5.5%;
+    --sidebar-foreground: 0 0% 95.9%;
+    --sidebar-primary: 272 95% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 265 35% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 265 35% 12%;
+    --sidebar-ring: 272 95% 65%;
+    --sidebar: 265 50% 5.5%;
+}
+
+.dark {
+    /* Same as root because app is entirely dark mode */
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-feature-settings: "rlig" 1, "calt" 1;
+        overflow-x: hidden;
+    }
+}
+
+@layer utilities {
+    .server-bg {
+        @apply bg-cover bg-center bg-no-repeat rounded-xl overflow-hidden;
+        position: relative;
+        z-index: 0;
+        @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+    }
+    .neon-border {
+        @apply border border-primary/50 shadow-[0_0_15px_rgba(168,85,247,0.35)] transition-all duration-300;
+    }
+    .neon-border:hover {
+        @apply shadow-[0_0_25px_rgba(168,85,247,0.65)] border-primary;
+    }
+    .text-glow {
+        text-shadow: 0 0 10px hsl(var(--primary) / 0.7);
+    }
+    .bg-cyberpunk {
+        background: radial-gradient(circle at 50% 0%, #170732 0%, #05020c 100%);
+    }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 15px rgba(168,85,247,0.3); }
+    50% { box-shadow: 0 0 30px rgba(168,85,247,0.8); }
+    100% { box-shadow: 0 0 15px rgba(168,85,247,0.3); }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 3s infinite;
+}
+
+@keyframes shine-line {
+    0% { transform: translateY(-80vh) rotate(-30deg); opacity: 0; }
+    15% { opacity: 0.6; }
+    85% { opacity: 0.6; }
+    100% { transform: translateY(80vh) rotate(-30deg); opacity: 0; }
+}
+
+@keyframes pulse-particle {
+    0%, 100% { opacity: 0.1; transform: scale(0.8) translateY(0px); }
+    50% { opacity: 0.9; transform: scale(1.3) translateY(-15px); }
+}
+
+.animate-shine-1 {
+    animation: shine-line 8s ease-in-out infinite;
+}
+
+.animate-shine-2 {
+    animation: shine-line 14s ease-in-out infinite;
+    animation-delay: 3s;
+}
+
+.animate-pulse-particle {
+    animation: pulse-particle 5s ease-in-out infinite;
+}
+
+.bg-grid {
+    background-size: 60px 60px;
+    background-image: 
+        linear-gradient(to right, rgba(168, 85, 247, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
+}
+
+/* ============================================
+   REVEAL ANIMATION SYSTEM
+   ============================================ */
+
+/* Hidden state — all animated elements start here */
+.anim-hidden {
+    opacity: 0;
+    transition-property: opacity, transform, filter;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Visible state — elements transition to this */
+.anim-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+}
+
+/* Direction-specific hidden states */
+[data-animate="fade-up"].anim-hidden {
+    transform: translateY(32px);
+    transition-duration: 650ms;
+}
+
+[data-animate="fade-down"].anim-hidden {
+    transform: translateY(-32px);
+    transition-duration: 650ms;
+}
+
+[data-animate="fade-left"].anim-hidden {
+    transform: translateX(-40px);
+    transition-duration: 650ms;
+}
+
+[data-animate="fade-right"].anim-hidden {
+    transform: translateX(40px);
+    transition-duration: 650ms;
+}
+
+[data-animate="scale-up"].anim-hidden {
+    transform: scale(0.85);
+    transition-duration: 550ms;
+}
+
+[data-animate="flip-up"].anim-hidden {
+    transform: perspective(800px) rotateX(12deg) translateY(20px);
+    transition-duration: 700ms;
+}
+
+[data-animate="blur-in"].anim-hidden {
+    filter: blur(12px);
+    transform: scale(0.96);
+    transition-duration: 600ms;
+}
+
+[data-animate="slide-in"].anim-hidden {
+    transform: translateX(-100%);
+    transition-duration: 700ms;
+}
+
+[data-animate="zoom-rotate"].anim-hidden {
+    transform: scale(0.7) rotate(-5deg);
+    transition-duration: 700ms;
+}
+
+/* ============================================
+   PAGE ENTRANCE TRANSITIONS
+   ============================================ */
+
+.page-enter {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============================================
+   STAGGER CONTAINER — Children animate sequentially
+   ============================================ */
+
+[data-stagger] > [data-animate] {
+    transition-delay: calc(var(--stagger-index, 0) * 80ms);
+}
+
+/* ============================================
+   SHIMMER / SKELETON LOADING EFFECT
+   ============================================ */
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(168, 85, 247, 0.03) 25%,
+        rgba(168, 85, 247, 0.09) 50%,
+        rgba(168, 85, 247, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 12px;
+}
+
+/* ============================================
+   COUNTER PULSE — Numbers glow when updated
+   ============================================ */
+
+@keyframes counterPulse {
+    0% { text-shadow: 0 0 0 rgba(168, 85, 247, 0); transform: scale(1); }
+    50% { text-shadow: 0 0 20px rgba(168, 85, 247, 0.6); transform: scale(1.08); }
+    100% { text-shadow: 0 0 0 rgba(168, 85, 247, 0); transform: scale(1); }
+}
+
+.animate-counter-pulse {
+    animation: counterPulse 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================
+   CARD HOVER MICRO-INTERACTIONS
+   ============================================ */
+
+.card-hover-lift {
+    transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 350ms cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 350ms ease;
+}
+
+.card-hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.12), 0 0 20px rgba(168, 85, 247, 0.06);
+}
+
+/* ============================================
+   GLOW BORDER ANIMATION
+   ============================================ */
+
+@keyframes borderGlow {
+    0%, 100% { border-color: rgba(168, 85, 247, 0.15); }
+    50% { border-color: rgba(168, 85, 247, 0.4); }
+}
+
+.animate-border-glow {
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* ============================================
+   PROGRESS BAR FILL ANIMATION
+   ============================================ */
+
+@keyframes progressFill {
+    from { width: 0%; }
+}
+
+.animate-progress-fill {
+    animation: progressFill 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================
+   SLIDE-IN-BOUNCE for modals/overlays
+   ============================================ */
+
+@keyframes slideInBounce {
+    0% { transform: translateY(40px) scale(0.95); opacity: 0; }
+    60% { transform: translateY(-4px) scale(1.01); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.animate-slide-bounce {
+    animation: slideInBounce 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================
+   TYPEWRITER CURSOR BLINK
+   ============================================ */
+
+@keyframes cursorBlink {
+    0%, 50% { border-right-color: rgba(168, 85, 247, 0.8); }
+    51%, 100% { border-right-color: transparent; }
+}
+
+.animate-cursor-blink {
+    border-right: 2px solid rgba(168, 85, 247, 0.8);
+    animation: cursorBlink 1s step-end infinite;
+}
+
+/* ============================================
+   RIPPLE EFFECT ON TAP/CLICK
+   ============================================ */
+
+@keyframes ripple {
+    0% { transform: scale(0); opacity: 0.4; }
+    100% { transform: scale(4); opacity: 0; }
+}
+
+.ripple-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-effect::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ripple-effect:active::after {
+    animation: ripple 600ms linear;
+}
+
+/* ============================================
+   INERTIA PAGE TRANSITION OVERRIDES
+   ============================================ */
+
+@keyframes pageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-transition-enter {
+    animation: pageSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================
+   FADEOUT for Inertia page leave
+   ============================================ */
+
+@keyframes pageFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; transform: translateY(-8px); }
+}
+
+.page-transition-leave {
+    animation: pageFadeOut 200ms ease-in forwards;
+}
+

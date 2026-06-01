@@ -1,0 +1,408 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { useRevealAnimation } from '@/composables/useRevealAnimation';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { BreadcrumbItem } from '@/types';
+import { 
+    Award, 
+    Zap, 
+    ShieldCheck, 
+    UserCheck, 
+    Briefcase, 
+    HelpCircle,
+    BadgePercent,
+    Lock,
+    CheckCircle2
+} from 'lucide-vue-next';
+
+const props = defineProps<{
+    stats: {
+        personal_invested: number;
+        active_referrals: number;
+        team_volume: number;
+        vip_level: number;
+        avip_level: number;
+    };
+}>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Tableau de Bord',
+        href: '/dashboard',
+    },
+    {
+        title: 'Statut VIP',
+        href: '/vip',
+    },
+];
+
+const formatXAF = (value: number | string) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return new Intl.NumberFormat('fr-FR').format(num) + ' FCFA';
+};
+
+const vipLevels = [
+    {
+        level: 0,
+        title: 'VIP 0 - Débutant Silicon',
+        personal: 0,
+        volume: 0,
+        activeRefs: 0,
+        salary: 0,
+        bonus: 'Aucun',
+        description: 'Statut de base attribué automatiquement lors de votre inscription.'
+    },
+    {
+        level: 1,
+        title: 'VIP 1 - Pionnier Silicon',
+        personal: 5000,
+        volume: 0,
+        activeRefs: 0,
+        salary: 100,
+        bonus: 'Bonus Génération Base',
+        description: 'Statut de base activé dès votre premier investissement serveur.'
+    },
+    {
+        level: 2,
+        title: 'VIP 2 - Silicon Avancé',
+        personal: 15000,
+        volume: 50000,
+        activeRefs: 1,
+        salary: 250,
+        bonus: '+2% Commissions Affiliation',
+        description: 'Débloquez plus de gains sur votre premier affilié actif.'
+    },
+    {
+        level: 3,
+        title: 'VIP 3 - Quantum Master',
+        personal: 50000,
+        volume: 200000,
+        activeRefs: 3,
+        salary: 500,
+        bonus: '+5% Commissions Affiliation & Retrait Prioritaire',
+        description: 'Vitesse de retrait augmentée et gains accrus.'
+    },
+    {
+        level: 4,
+        title: 'VIP 4 - Neural Overlord',
+        personal: 150000,
+        volume: 1000000,
+        activeRefs: 5,
+        salary: 1000,
+        bonus: '+8% Commissions Affiliation & Produits Exclusifs',
+        description: 'Accès anticipé aux nœuds en édition limitée.'
+    },
+    {
+        level: 5,
+        title: 'VIP 5 - ARM Sovereign',
+        personal: 500000,
+        volume: 5000000,
+        activeRefs: 10,
+        salary: 2000,
+        bonus: '+12% Commissions & Retraits Instantanés',
+        description: 'Le statut VIP ultime de notre écosystème.'
+    }
+];
+
+const avipLevels = [
+    {
+        level: 1,
+        title: 'AVIP 1 - Leader Silicon',
+        activeRefs: 10,
+        volume: 500000,
+        bonus: 'Commissions de Génération +5%',
+        perks: 'Support premium prioritaire.'
+    },
+    {
+        level: 2,
+        title: 'AVIP 2 - Quantum Director',
+        activeRefs: 25,
+        volume: 2000000,
+        bonus: 'Commissions de Génération +8%',
+        perks: 'Accès complet aux Bêta-Produits.'
+    },
+    {
+        level: 3,
+        title: 'AVIP 3 - Neural Executive',
+        activeRefs: 50,
+        volume: 5000000,
+        bonus: 'Commissions de Génération +12%',
+        perks: 'Dividendes de pool de liquidité trimestriels.'
+    }
+];
+
+const { containerRef } = useRevealAnimation();
+
+const currentVipTitle = computed(() => {
+    const levelObj = vipLevels.find(l => l.level === props.stats.vip_level);
+    return levelObj ? levelObj.title.split(' - ')[1] : 'Débutant Silicon';
+});
+</script>
+
+<template>
+    <Head title="Privilèges VIP" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div ref="containerRef" class="flex flex-col gap-6 p-4 md:p-6 max-w-7xl mx-auto w-full">
+            
+            <!-- Header -->
+            <div data-animate="fade-down" class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-5">
+                <div>
+                    <h2 class="text-xl md:text-2xl font-semibold text-white">Privilèges Technologiques VIP & AVIP</h2>
+                    <p class="text-xs text-muted-foreground mt-0.5">Augmentez votre puissance de calcul et optimisez vos retours en gravissant les échelons du réseau.</p>
+                </div>
+            </div>
+
+            <!-- Current User Levels Overview -->
+            <div data-animate="fade-up" data-delay="100" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- VIP card -->
+                <div class="glass relative overflow-hidden rounded-2xl p-6 border border-primary/20 bg-primary/[0.01]">
+                    <div class="absolute right-[-10%] top-[-10%] w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
+                    <div class="flex items-center gap-4">
+                        <div class="h-14 w-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(168,85,247,0.25)] animate-pulse">
+                            <Award class="h-7 w-7" :stroke-width="2.5" />
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block">Votre Niveau Actuel</span>
+                            <h3 class="text-lg font-black text-white mt-1">VIP {{ stats.vip_level }} - {{ currentVipTitle }}</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 border-t border-white/5 pt-6 mt-6 text-xs">
+                        <div>
+                            <span class="text-muted-foreground block text-[10px] uppercase">Investi Personnel</span>
+                            <span class="font-bold text-white font-mono mt-1 block">{{ formatXAF(stats.personal_invested) }}</span>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground block text-[10px] uppercase">Volume Réseau Collecté</span>
+                            <span class="font-bold text-white font-mono mt-1 block">{{ formatXAF(stats.team_volume) }}</span>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground block text-[10px] uppercase">Affiliés Actifs</span>
+                            <span class="font-bold text-white font-mono mt-1 block">{{ stats.active_referrals }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AVIP Card -->
+                <div class="glass relative overflow-hidden rounded-2xl p-6 border border-secondary/20 bg-secondary/[0.01]">
+                    <div class="absolute right-[-10%] top-[-10%] w-32 h-32 bg-secondary/10 rounded-full blur-3xl"></div>
+                    <div class="flex items-center gap-4">
+                        <div class="h-14 w-14 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shadow-[0_0_15px_rgba(139,92,246,0.15)]">
+                            <Zap class="h-7 w-7" :stroke-width="2.5" />
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block">Votre Statut Leadership</span>
+                            <h3 class="text-lg font-black text-white mt-1">
+                                {{ stats.avip_level > 0 ? 'AVIP ' + stats.avip_level : 'Aucun Statut AVIP' }}
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-white/5 text-xs text-muted-foreground">
+                        <span v-if="stats.avip_level === 0" class="block">
+                            Vous n'avez pas encore atteint les critères d'admission AVIP 1. Parrainez 10 affiliés actifs pour débloquer votre premier bonus de co-traitement.
+                        </span>
+                        <span v-else class="block">
+                            Félicitations! Vous bénéficiez actuellement d'un bonus exclusif de co-traitement AI.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link to AVIP daily salary console -->
+            <div data-animate="fade-up" data-delay="120" class="glass relative overflow-hidden rounded-2xl p-5 border border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-[#13072b]/80 to-purple-950/40 shadow-lg glow-border">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.1),transparent)] opacity-60"></div>
+                <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-center sm:text-left">
+                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Console Dividendes & Équipements AVIP</h4>
+                        <p class="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                            Réclamez votre salaire journalier de <span class="text-purple-400 font-bold font-mono">VIP {{ stats.vip_level }}</span> ou louez du matériel AVIP exclusif.
+                        </p>
+                    </div>
+                    <Link href="/avip-products" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] text-center">
+                        ACCÉDER AU HUB AVIP
+                    </Link>
+                </div>
+            </div>
+
+            <!-- VIP Levels Cards Grid -->
+            <div data-animate="fade-up" data-delay="150" class="glass rounded-2xl p-6 border border-white/5">
+                <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <ShieldCheck class="h-4.5 w-4.5 text-primary" :stroke-width="2.5" />
+                        Grille des Rangs VIP Standard
+                    </h3>
+                    <span class="text-[9px] text-muted-foreground uppercase font-mono bg-white/5 px-2.5 py-1 rounded-lg">Réseau décentralisé</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div 
+                        v-for="v in vipLevels" 
+                        :key="v.level"
+                        class="group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 flex flex-col justify-between"
+                        :class="stats.vip_level === v.level 
+                            ? 'bg-gradient-to-b from-primary/10 via-primary/[0.02] to-transparent border-primary/50 shadow-[0_0_20px_rgba(168,85,247,0.2)]' 
+                            : (stats.vip_level > v.level 
+                                ? 'bg-emerald-950/[0.03] border-emerald-500/20' 
+                                : 'bg-white/[0.01] border-white/5 opacity-70')"
+                    >
+                        <!-- Glow effect behind active card -->
+                        <div v-if="stats.vip_level === v.level" class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.1),transparent_50%)] pointer-events-none"></div>
+
+                        <div>
+                            <!-- Card Header -->
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm transition-all"
+                                        :class="stats.vip_level === v.level 
+                                            ? 'bg-primary text-black shadow-[0_0_10px_rgba(168,85,247,0.4)]' 
+                                            : (stats.vip_level > v.level ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-slate-400')"
+                                    >
+                                        V{{ v.level }}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-white group-hover:text-primary transition-colors">
+                                            {{ v.title.split(' - ')[1] }}
+                                        </h4>
+                                        <span class="text-[9px] text-muted-foreground block mt-0.5">Rang {{ v.level }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Status Badge -->
+                                <span class="text-[8px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider font-mono border"
+                                    :class="stats.vip_level === v.level
+                                        ? 'bg-primary/10 text-primary border-primary/20 animate-pulse'
+                                        : (stats.vip_level > v.level 
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                            : 'bg-white/5 text-slate-500 border-white/5')"
+                                >
+                                    {{ stats.vip_level === v.level ? 'ACTUEL' : (stats.vip_level > v.level ? 'DÉBLOQUÉ' : 'VERROUILLÉ') }}
+                                </span>
+                            </div>
+
+                            <p class="text-[11px] text-slate-400 leading-relaxed mb-4 min-h-[32px]">
+                                {{ v.description }}
+                            </p>
+
+                            <!-- Daily Salary & Bonus Highlight Box -->
+                            <div class="bg-gradient-to-r rounded-xl p-3 border mb-5 flex items-center justify-between"
+                                :class="stats.vip_level >= v.level
+                                    ? 'from-purple-950/40 to-transparent border-purple-500/10'
+                                    : 'from-black/40 to-transparent border-white/5'"
+                            >
+                                <div>
+                                    <span class="text-[8px] text-slate-500 uppercase tracking-widest block font-bold font-mono">Dividende Quotidien</span>
+                                    <span class="text-xs font-mono font-black mt-0.5 block"
+                                        :class="v.salary > 0 ? 'text-primary' : 'text-slate-400'"
+                                    >
+                                        {{ v.salary > 0 ? '+' + formatXAF(v.salary) + ' / jour' : 'Aucun salaire' }}
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[8px] text-slate-500 uppercase tracking-widest block font-bold font-mono">Bonus Affiliation</span>
+                                    <span class="text-[10px] font-bold text-slate-300 block mt-0.5">{{ v.bonus }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Requirements Checklist -->
+                        <div class="border-t border-white/5 pt-4 space-y-2.5 text-[10px]">
+                            <span class="text-[8px] text-slate-500 uppercase tracking-wider block font-bold">Critères d'accès requis :</span>
+                            
+                            <!-- Criterion 1: Personal Investment -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-400">Investissement Personnel</span>
+                                <div class="flex items-center gap-1.5 font-mono font-bold">
+                                    <span :class="stats.personal_invested >= v.personal ? 'text-emerald-400' : 'text-slate-500'">
+                                        {{ formatXAF(stats.personal_invested) }}
+                                    </span>
+                                    <span class="text-slate-600">/</span>
+                                    <span class="text-slate-300 font-mono">{{ formatXAF(v.personal) }}</span>
+                                    
+                                    <CheckCircle2 v-if="stats.personal_invested >= v.personal" class="w-3.5 h-3.5 text-emerald-400" />
+                                    <Lock v-else class="w-3 h-3 text-slate-500" />
+                                </div>
+                            </div>
+
+                            <!-- Criterion 2: Team Volume -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-400">Volume Réseau Collecté</span>
+                                <div class="flex items-center gap-1.5 font-mono font-bold">
+                                    <span :class="stats.team_volume >= v.volume ? 'text-emerald-400' : 'text-slate-500'">
+                                        {{ formatXAF(stats.team_volume) }}
+                                    </span>
+                                    <span class="text-slate-600">/</span>
+                                    <span class="text-slate-300 font-mono">{{ formatXAF(v.volume) }}</span>
+
+                                    <CheckCircle2 v-if="stats.team_volume >= v.volume" class="w-3.5 h-3.5 text-emerald-400" />
+                                    <Lock v-else class="w-3 h-3 text-slate-500" />
+                                </div>
+                            </div>
+
+                            <!-- Criterion 3: Active Referrals -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-400">Affiliés Actifs Requis</span>
+                                <div class="flex items-center gap-1.5 font-mono font-bold">
+                                    <span :class="stats.active_referrals >= v.activeRefs ? 'text-emerald-400' : 'text-slate-500'">
+                                        {{ stats.active_referrals }}
+                                    </span>
+                                    <span class="text-slate-600">/</span>
+                                    <span class="text-slate-300 font-mono">{{ v.activeRefs }}</span>
+
+                                    <CheckCircle2 v-if="stats.active_referrals >= v.activeRefs" class="w-3.5 h-3.5 text-emerald-400" />
+                                    <Lock v-else class="w-3 h-3 text-slate-500" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- AVIP Levels Roadmap -->
+            <div data-animate="fade-up" data-delay="200" class="glass rounded-2xl p-6 border border-white/5">
+                <h3 class="text-sm font-bold text-white mb-6 flex items-center gap-2">
+                    <Zap class="h-4.5 w-4.5 text-secondary" :stroke-width="2.5" />
+                    Grille de Leadership AVIP Supérieure
+                </h3>
+
+                <div class="space-y-4">
+                    <div 
+                        v-for="a in avipLevels" 
+                        :key="a.level"
+                        class="p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all"
+                        :class="stats.avip_level >= a.level ? 'bg-secondary/5 border-secondary/30' : 'bg-white/[0.01] border-white/5 opacity-60'"
+                    >
+                        <div class="flex items-center gap-4">
+                            <div class="h-10 w-10 rounded-lg flex items-center justify-center font-bold text-sm" :class="stats.avip_level >= a.level ? 'bg-secondary text-white' : 'bg-white/5 text-muted-foreground'">
+                                L{{ a.level }}
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white flex items-center gap-2">
+                                    {{ a.title }}
+                                    <span v-if="stats.avip_level >= a.level" class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase font-black">Admis</span>
+                                </h4>
+                                <p class="text-[11px] text-muted-foreground mt-0.5">{{ a.perks }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Requirements -->
+                        <div class="grid grid-cols-2 gap-6 text-xs md:text-right">
+                            <div>
+                                <span class="text-[10px] text-muted-foreground uppercase block">Affiliés Actifs</span>
+                                <span class="font-bold text-white font-mono mt-0.5 block">{{ a.activeRefs }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-muted-foreground uppercase block">Volume Réseau Collecté</span>
+                                <span class="font-bold text-white font-mono mt-0.5 block">{{ formatXAF(a.volume) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </AppLayout>
+</template>
