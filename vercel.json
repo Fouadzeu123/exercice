@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "outputDirectory": "public",
+  "framework": "laravel",
+  "functions": {
+    "api/**/*.php": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "PHP_VERSION": "8.2"
+  }
+}

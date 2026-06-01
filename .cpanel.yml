@@ -5,11 +5,20 @@ deployment:
       domain: armicm.com
       root: /
       publish_dir: public
+      build_dir: public/build
       commands:
         pre_build:
-          - npm install
+          - echo "Starting pre-build checks..."
+          - node -v
+          - npm -v
         build:
+          - npm install
           - npm run build
+          - echo "Build completed successfully"
+          - ls -la public/build/
         post_build:
-          - echo "Deployment completed successfully"
+          - echo "Deployment completed"
+          - touch public/DEPLOYMENT_COMPLETE
+          - echo "Output directory: $(pwd)/public"
+
 

@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build && npm run build:success",
-        "build:success": "echo 'Build completed successfully at' $(date) > public/build/BUILD_SUCCESS.txt && echo 'Build output is ready in public/build/' && ls -la public/build/ 2>/dev/null || echo 'Build directory exists'",
+        "build": "vite build && npm run build:post",
+        "build:post": "echo 'Build completed successfully at' $(date) > public/build/BUILD_SUCCESS.txt && echo 'public/build' > .build-output && cat .build-output && echo '' && echo 'Build artifacts ready in public/build/' && echo 'Document root should point to: public/'",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
         "format": "prettier --write resources/",
