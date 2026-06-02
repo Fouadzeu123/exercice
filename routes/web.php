@@ -59,6 +59,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Gains (Detailed Earnings)
     Route::get('gains', [DashboardController::class, 'gains'])->name('gains');
 
+    // Presentation (Enterprise UK-Cameroon Certificate)
+    Route::get('presentation', [DashboardController::class, 'presentation'])->name('presentation');
+
     // Daily Check-In Route
     Route::post('daily-checkin', [DashboardController::class, 'checkin'])->name('daily-checkin');
 

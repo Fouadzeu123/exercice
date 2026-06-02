@@ -114,6 +114,18 @@ class AVIPProductController extends Controller
             return back()->withErrors(['error' => 'Les membres de niveau VIP 0 n\'ont pas de salaire journalier. Veuillez activer au moins un nœud de calcul (VIP 1) pour commencer à percevoir des dividendes journaliers.']);
         }
 
+        // VIP 1 limit to 7 claims
+        if ($userVipLevel === 1) {
+            $salaryClaimsCount = Transaction::where('user_id', $user->id)
+                ->where('type', 'salary')
+                ->where('status', 'completed')
+                ->count();
+            
+            if ($salaryClaimsCount >= 7) {
+                return back()->withErrors(['error' => 'Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.']);
+            }
+        }
+
         // Define daily salary amounts per VIP level
         $dailySalaries = [
             0 => 0.00,

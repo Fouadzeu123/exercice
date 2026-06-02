@@ -42,3 +42,4 @@ export default defineConfig({
         mainFields: ['browser', 'module', 'jsnext:main', 'jsnext', 'main'],
     },
 });
+// Vite configuration updated to trigger dev server cache reload.

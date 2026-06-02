@@ -24,7 +24,8 @@ import {
   BrainCircuit,
   TrendingUp,
   Volume2,
-  Radio
+  Radio,
+  FileText
 } from 'lucide-vue-next';
 
 import { t } from '@/utils/trans';
@@ -527,9 +528,9 @@ watch(
                                 <Share2 class="w-5.5 h-5.5 text-cyan-400 group-hover:text-cyan-300 transition-colors" :stroke-width="2.6" />
                                 <span class="text-[10px] font-medium text-cyan-400 group-hover:text-gray-100 select-none">inviter</span>
                             </Link>
-                            <Link href="/gains" class="flex flex-col items-center justify-center gap-1.5 py-2 group transition-transform hover:scale-105">
-                                <TrendingUp class="w-5.5 h-5.5 text-cyan-400 group-hover:text-cyan-300 transition-colors" :stroke-width="2.6" />
-                                <span class="text-[10px] font-medium text-cyan-400 group-hover:text-gray-100 select-none">gains</span>
+                            <Link href="/presentation" class="flex flex-col items-center justify-center gap-1.5 py-2 group transition-transform hover:scale-105">
+                                <FileText class="w-5.5 h-5.5 text-cyan-400 group-hover:text-cyan-300 transition-colors" :stroke-width="2.6" />
+                                <span class="text-[10px] font-medium text-cyan-400 group-hover:text-gray-100 select-none">Présentation</span>
                             </Link>
                             <Link href="/announcements" class="flex flex-col items-center justify-center gap-1.5 py-2 group transition-transform hover:scale-105">
                                 <Bell class="w-5.5 h-5.5 text-cyan-400 group-hover:text-cyan-300 transition-colors" :stroke-width="2.6" />

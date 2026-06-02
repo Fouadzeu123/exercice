@@ -385,4 +385,12 @@ class DashboardController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Page Presentation — Informations sur l'entreprise et contrat
+     */
+    public function presentation()
+    {
+        return Inertia::render('Presentation');
+    }
 }

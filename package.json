@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build && npm run build:post",
-        "build:post": "echo 'Build completed successfully at' $(date) > public/build/BUILD_SUCCESS.txt && echo 'public/build' > .build-output && cat .build-output && echo '' && echo 'Build artifacts ready in public/build/' && echo 'Document root should point to: public/'",
+        "build:post": "node -e \"const fs = require('fs'); const d = new Date().toISOString(); fs.writeFileSync('public/build/BUILD_SUCCESS.txt', 'Build completed successfully at ' + d); fs.writeFileSync('.build-output', 'public/build'); console.log('public/build'); console.log('\\nBuild artifacts ready in public/build/\\nDocument root should point to: public/');\"",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
         "format": "prettier --write resources/",

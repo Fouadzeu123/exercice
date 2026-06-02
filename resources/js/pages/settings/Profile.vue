@@ -452,8 +452,7 @@ onUnmounted(() => {
                             <h3 class="text-sm font-black text-white uppercase tracking-wider">Niveau du Compte</h3>
                             <div class="text-[10px] text-slate-400 mt-2 font-mono leading-relaxed bg-black/40 border border-purple-500/10 p-3 rounded-xl text-left space-y-2">
                                 <div class="flex justify-between border-b border-white/5 pb-1"><span class="font-bold">Niveau Actuel:</span><span class="text-purple-400 font-extrabold uppercase">VIP {{ user.vip_level || 1 }}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-1"><span class="font-bold">Commission Réseau:</span><span class="text-purple-400 font-extrabold font-mono">10% - 5% - 2%</span></div>
-                                <div class="flex justify-between"><span class="font-bold">Statut AVIP:</span><span class="text-purple-400 font-extrabold font-mono">Niveau {{ user.avip_level || 0 }}</span></div>
+                                <div class="flex justify-between"><span class="font-bold">Commission Réseau:</span><span class="text-purple-400 font-extrabold font-mono">10% - 5% - 2%</span></div>
                             </div>
                             <button 
                                 @click="showInfoModal = null" 

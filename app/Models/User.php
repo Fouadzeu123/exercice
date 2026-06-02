@@ -139,18 +139,11 @@ class User extends Authenticatable
             $newVip = 3;
         } elseif ($personalInvested >= 15000 && $teamVolume >= 50000 && $activeReferrals >= 1) {
             $newVip = 2;
-        } elseif ($personalInvested >= 5000) {
+        } elseif ($personalInvested >= 15000) {
             $newVip = 1;
         }
 
         $newAvip = 0;
-        if ($activeReferrals >= 50 && $teamVolume >= 5000000) {
-            $newAvip = 3;
-        } elseif ($activeReferrals >= 25 && $teamVolume >= 2000000) {
-            $newAvip = 2;
-        } elseif ($activeReferrals >= 10 && $teamVolume >= 500000) {
-            $newAvip = 1;
-        }
 
         // Mise à jour seulement si nécessaire (optimisation écriture BDD)
         if ($this->vip_level !== $newVip || $this->avip_level !== $newAvip) {

@@ -6,12 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { 
     Award, 
-    Zap, 
     ShieldCheck, 
-    UserCheck, 
-    Briefcase, 
-    HelpCircle,
-    BadgePercent,
     Lock,
     CheckCircle2
 } from 'lucide-vue-next';
@@ -22,7 +17,6 @@ const props = defineProps<{
         active_referrals: number;
         team_volume: number;
         vip_level: number;
-        avip_level: number;
     };
 }>();
 
@@ -50,18 +44,16 @@ const vipLevels = [
         volume: 0,
         activeRefs: 0,
         salary: 0,
-        bonus: 'Aucun',
         description: 'Statut de base attribué automatiquement lors de votre inscription.'
     },
     {
         level: 1,
         title: 'VIP 1 - Pionnier Silicon',
-        personal: 5000,
+        personal: 15000,
         volume: 0,
         activeRefs: 0,
         salary: 100,
-        bonus: 'Bonus Génération Base',
-        description: 'Statut de base activé dès votre premier investissement serveur.'
+        description: 'Activé dès 15 000 FCFA d\'investissement personnel. Donne droit au salaire journalier pendant 7 jours.'
     },
     {
         level: 2,
@@ -70,17 +62,15 @@ const vipLevels = [
         volume: 50000,
         activeRefs: 1,
         salary: 250,
-        bonus: '+2% Commissions Affiliation',
         description: 'Débloquez plus de gains sur votre premier affilié actif.'
     },
     {
         level: 3,
         title: 'VIP 3 - Quantum Master',
-        personal: 50000,
+        personal: 5000, // wait! In original DB, let's keep the original requirements: 50000, 200000, 3 refs
         volume: 200000,
         activeRefs: 3,
         salary: 500,
-        bonus: '+5% Commissions Affiliation & Retrait Prioritaire',
         description: 'Vitesse de retrait augmentée et gains accrus.'
     },
     {
@@ -90,7 +80,6 @@ const vipLevels = [
         volume: 1000000,
         activeRefs: 5,
         salary: 1000,
-        bonus: '+8% Commissions Affiliation & Produits Exclusifs',
         description: 'Accès anticipé aux nœuds en édition limitée.'
     },
     {
@@ -100,37 +89,12 @@ const vipLevels = [
         volume: 5000000,
         activeRefs: 10,
         salary: 2000,
-        bonus: '+12% Commissions & Retraits Instantanés',
         description: 'Le statut VIP ultime de notre écosystème.'
     }
 ];
 
-const avipLevels = [
-    {
-        level: 1,
-        title: 'AVIP 1 - Leader Silicon',
-        activeRefs: 10,
-        volume: 500000,
-        bonus: 'Commissions de Génération +5%',
-        perks: 'Support premium prioritaire.'
-    },
-    {
-        level: 2,
-        title: 'AVIP 2 - Quantum Director',
-        activeRefs: 25,
-        volume: 2000000,
-        bonus: 'Commissions de Génération +8%',
-        perks: 'Accès complet aux Bêta-Produits.'
-    },
-    {
-        level: 3,
-        title: 'AVIP 3 - Neural Executive',
-        activeRefs: 50,
-        volume: 5000000,
-        bonus: 'Commissions de Génération +12%',
-        perks: 'Dividendes de pool de liquidité trimestriels.'
-    }
-];
+// Let's adjust VIP 3 personal amount back to original (50000) so we don't change logic!
+vipLevels[3].personal = 50000;
 
 const { containerRef } = useRevealAnimation();
 
@@ -149,13 +113,13 @@ const currentVipTitle = computed(() => {
             <!-- Header -->
             <div data-animate="fade-down" class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-5">
                 <div>
-                    <h2 class="text-xl md:text-2xl font-semibold text-white">Privilèges Technologiques VIP & AVIP</h2>
+                    <h2 class="text-xl md:text-2xl font-semibold text-white">Privilèges Technologiques VIP</h2>
                     <p class="text-xs text-muted-foreground mt-0.5">Augmentez votre puissance de calcul et optimisez vos retours en gravissant les échelons du réseau.</p>
                 </div>
             </div>
 
             <!-- Current User Levels Overview -->
-            <div data-animate="fade-up" data-delay="100" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div data-animate="fade-up" data-delay="100" class="grid grid-cols-1 gap-6">
                 <!-- VIP card -->
                 <div class="glass relative overflow-hidden rounded-2xl p-6 border border-primary/20 bg-primary/[0.01]">
                     <div class="absolute right-[-10%] top-[-10%] w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
@@ -184,39 +148,14 @@ const currentVipTitle = computed(() => {
                         </div>
                     </div>
                 </div>
-
-                <!-- AVIP Card -->
-                <div class="glass relative overflow-hidden rounded-2xl p-6 border border-secondary/20 bg-secondary/[0.01]">
-                    <div class="absolute right-[-10%] top-[-10%] w-32 h-32 bg-secondary/10 rounded-full blur-3xl"></div>
-                    <div class="flex items-center gap-4">
-                        <div class="h-14 w-14 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shadow-[0_0_15px_rgba(139,92,246,0.15)]">
-                            <Zap class="h-7 w-7" :stroke-width="2.5" />
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block">Votre Statut Leadership</span>
-                            <h3 class="text-lg font-black text-white mt-1">
-                                {{ stats.avip_level > 0 ? 'AVIP ' + stats.avip_level : 'Aucun Statut AVIP' }}
-                            </h3>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 pt-6 border-t border-white/5 text-xs text-muted-foreground">
-                        <span v-if="stats.avip_level === 0" class="block">
-                            Vous n'avez pas encore atteint les critères d'admission AVIP 1. Parrainez 10 affiliés actifs pour débloquer votre premier bonus de co-traitement.
-                        </span>
-                        <span v-else class="block">
-                            Félicitations! Vous bénéficiez actuellement d'un bonus exclusif de co-traitement AI.
-                        </span>
-                    </div>
-                </div>
             </div>
 
-            <!-- Link to AVIP daily salary console -->
+            <!-- Link to VIP daily salary console -->
             <div data-animate="fade-up" data-delay="120" class="glass relative overflow-hidden rounded-2xl p-5 border border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-[#13072b]/80 to-purple-950/40 shadow-lg glow-border">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.1),transparent)] opacity-60"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="text-center sm:text-left">
-                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Console Dividendes & Équipements AVIP</h4>
+                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Console Dividendes & Équipements VIP</h4>
                         <p class="text-[10px] text-slate-400 mt-1 leading-relaxed">
                             Réclamez votre salaire journalier de <span class="text-purple-400 font-bold font-mono">VIP {{ stats.vip_level }}</span> ou louez du matériel AVIP exclusif.
                         </p>
@@ -286,7 +225,7 @@ const currentVipTitle = computed(() => {
                                 {{ v.description }}
                             </p>
 
-                            <!-- Daily Salary & Bonus Highlight Box -->
+                            <!-- Daily Salary Highlight Box -->
                             <div class="bg-gradient-to-r rounded-xl p-3 border mb-5 flex items-center justify-between"
                                 :class="stats.vip_level >= v.level
                                     ? 'from-purple-950/40 to-transparent border-purple-500/10'
@@ -299,10 +238,6 @@ const currentVipTitle = computed(() => {
                                     >
                                         {{ v.salary > 0 ? '+' + formatXAF(v.salary) + ' / jour' : 'Aucun salaire' }}
                                     </span>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-[8px] text-slate-500 uppercase tracking-widest block font-bold font-mono">Bonus Affiliation</span>
-                                    <span class="text-[10px] font-bold text-slate-300 block mt-0.5">{{ v.bonus }}</span>
                                 </div>
                             </div>
                         </div>
@@ -357,48 +292,6 @@ const currentVipTitle = computed(() => {
                             </div>
                         </div>
 
-                    </div>
-                </div>
-            </div>
-
-            <!-- AVIP Levels Roadmap -->
-            <div data-animate="fade-up" data-delay="200" class="glass rounded-2xl p-6 border border-white/5">
-                <h3 class="text-sm font-bold text-white mb-6 flex items-center gap-2">
-                    <Zap class="h-4.5 w-4.5 text-secondary" :stroke-width="2.5" />
-                    Grille de Leadership AVIP Supérieure
-                </h3>
-
-                <div class="space-y-4">
-                    <div 
-                        v-for="a in avipLevels" 
-                        :key="a.level"
-                        class="p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all"
-                        :class="stats.avip_level >= a.level ? 'bg-secondary/5 border-secondary/30' : 'bg-white/[0.01] border-white/5 opacity-60'"
-                    >
-                        <div class="flex items-center gap-4">
-                            <div class="h-10 w-10 rounded-lg flex items-center justify-center font-bold text-sm" :class="stats.avip_level >= a.level ? 'bg-secondary text-white' : 'bg-white/5 text-muted-foreground'">
-                                L{{ a.level }}
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-white flex items-center gap-2">
-                                    {{ a.title }}
-                                    <span v-if="stats.avip_level >= a.level" class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase font-black">Admis</span>
-                                </h4>
-                                <p class="text-[11px] text-muted-foreground mt-0.5">{{ a.perks }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Requirements -->
-                        <div class="grid grid-cols-2 gap-6 text-xs md:text-right">
-                            <div>
-                                <span class="text-[10px] text-muted-foreground uppercase block">Affiliés Actifs</span>
-                                <span class="font-bold text-white font-mono mt-0.5 block">{{ a.activeRefs }}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-muted-foreground uppercase block">Volume Réseau Collecté</span>
-                                <span class="font-bold text-white font-mono mt-0.5 block">{{ formatXAF(a.volume) }}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
