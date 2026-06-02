@@ -24,8 +24,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('generation/start', [NodeController::class, 'startGeneration'])->name('generation.start');
     Route::post('generation/{id}/claim', [NodeController::class, 'claimProfit'])->name('generation.claim');
 
-    // ARM Vault Routes
-    Route::get('vaults', [\App\Http\Controllers\VaultController::class, 'index'])->name('vaults.index');
+    // ARM Vault Routes - Redirected to Dashboard
+    Route::get('vaults', function () {
+        return redirect()->route('dashboard');
+    })->name('vaults.index');
     Route::post('vaults/{id}/invest', [\App\Http\Controllers\VaultController::class, 'invest'])->name('vaults.invest');
 
     // Wallet Routes
@@ -43,7 +45,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('vip', [\App\Http\Controllers\VIPController::class, 'index'])->name('vip.index');
 
     // AVIP Products Routes
-    Route::get('avip-products', [\App\Http\Controllers\AVIPProductController::class, 'index'])->name('avip-products.index');
+    Route::get('avip-products', function () {
+        return redirect()->route('vip.index');
+    });
     Route::post('avip-products/{id}/purchase', [\App\Http\Controllers\AVIPProductController::class, 'purchase'])->name('avip-products.purchase');
     Route::post('avip-products/claim-salary', [\App\Http\Controllers\AVIPProductController::class, 'claimSalary'])->name('avip-products.claim-salary');
 

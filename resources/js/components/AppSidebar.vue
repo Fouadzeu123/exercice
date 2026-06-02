@@ -33,11 +33,6 @@ const mainNavItems: NavItem[] = [
         icon: Zap,
     },
     {
-        title: 'ARM Vaults',
-        href: '/vaults',
-        icon: Lock,
-    },
-    {
         title: 'Mon Réseau',
         href: '/team',
         icon: Users,

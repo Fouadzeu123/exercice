@@ -154,7 +154,11 @@ const showTermsModal = ref(false);
                         :tabindex="4"
                         name="referral_code"
                         placeholder="Ex: AB12CD34"
-                        class="bg-black/50 border-purple-500/20 text-white focus-visible:ring-purple-400 focus-visible:border-purple-400 transition-all duration-300 neon-border font-mono text-sm pl-4 h-12 rounded-xl"
+                        :readonly="!!initialReferral"
+                        :class="[
+                            'bg-black/50 border-purple-500/20 text-white focus-visible:ring-purple-400 focus-visible:border-purple-400 transition-all duration-300 neon-border font-mono text-sm pl-4 h-12 rounded-xl',
+                            initialReferral ? 'opacity-50 cursor-not-allowed select-none bg-purple-950/10' : ''
+                        ]"
                     />
                     <InputError :message="errors.referral_code" class="text-[10px] text-rose-400" />
                 </div>

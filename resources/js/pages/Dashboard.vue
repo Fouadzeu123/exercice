@@ -68,6 +68,17 @@ const props = defineProps<{
         image: string | null;
         active: boolean;
     }>;
+    avipProducts?: Array<{
+        id: number;
+        name: string;
+        description: string;
+        amount: number;
+        daily_salary: number;
+        required_vip_level: number;
+        avip_level: number;
+        image: string;
+        active: boolean;
+    }>;
     stats?: {
         total_generated: number;
         vip_level: number;
@@ -159,6 +170,7 @@ const combinedProducts = computed(() => {
     const mappedNodes = props.nodes.map(n => ({
         ...n,
         isVault: false,
+        isAvip: false,
         category: n.technology_level >= 4 ? 'avip' : (n.stock_quantity !== null && n.stock_quantity < 50 ? 'limited' : 'node')
     }));
     const mappedVaults = (props.vaultPlans || []).map(v => ({
@@ -170,19 +182,36 @@ const combinedProducts = computed(() => {
         duration: v.duration,
         stock_quantity: null,
         isVault: true,
+        isAvip: false,
         fixed_return: v.fixed_return,
         profit_amount: v.profit_amount,
         category: 'vault'
     }));
+    const mappedAvips = (props.avipProducts || []).map(a => ({
+        id: a.id,
+        name: a.name,
+        amount: a.amount,
+        generation_profit: a.daily_salary,
+        technology_level: 0,
+        duration: 7,
+        stock_quantity: null,
+        isVault: false,
+        isAvip: true,
+        category: 'avip',
+        image_url: a.image,
+        description: a.description,
+        required_vip_level: a.required_vip_level,
+        avip_level: a.avip_level,
+    }));
 
     if (activeCategory.value === 'all') {
-        return [...mappedNodes, ...mappedVaults];
+        return [...mappedNodes.filter(n => n.technology_level < 4), ...mappedAvips, ...mappedVaults];
     }
     if (activeCategory.value === 'node') {
         return mappedNodes.filter(n => n.technology_level >= 1 && n.technology_level <= 3);
     }
     if (activeCategory.value === 'avip') {
-        return mappedNodes.filter(n => n.technology_level >= 4);
+        return mappedAvips;
     }
     if (activeCategory.value === 'limited') {
         return mappedNodes.filter(n => n.stock_quantity !== null && n.stock_quantity < 50);
@@ -355,7 +384,7 @@ const initCosmicParticles = () => {
 
 // --- REDIRECTION DETAILS PRODUIT ---
 const viewProductDetails = (node: any) => {
-    const type = node.isVault ? 'vault' : 'node';
+    const type = node.isVault ? 'vault' : (node.isAvip ? 'avip' : 'node');
     router.visit(`/products/${type}/${node.id}`);
 };
 
@@ -640,29 +669,30 @@ watch(
 
                         <!-- cartes produit -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div v-for="(node, idx) in combinedProducts" :key="node.id + '-' + node.isVault" @click="viewProductDetails(node)" class="group relative bg-[#0a0416] border border-[#00f3ff]/15 rounded-3xl overflow-hidden hover:border-[#00f3ff]/40 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-cyan-500/10 flex flex-col justify-between animate-fadeInUp" :style="{ animationDelay: (idx * 0.05) + 's' }">
+                            <div v-for="(node, idx) in combinedProducts" :key="node.id + '-' + node.isVault + '-' + (node.isAvip ?? false)" @click="viewProductDetails(node)" class="group relative bg-[#0a0416] border border-[#00f3ff]/15 rounded-3xl overflow-hidden hover:border-[#00f3ff]/40 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-cyan-500/10 flex flex-col justify-between animate-fadeInUp" :style="{ animationDelay: (idx * 0.05) + 's' }">
                                 <!-- Top Header Info -->
                                 <div class="p-3 bg-[#0e071d] flex items-center justify-between border-b border-white/5">
                                     <span class="text-[10px] font-black text-white uppercase tracking-wider truncate max-w-[70%]">
-                                        {{ node.isVault ? t('Vault d\'Épargne ARM', 'ARM Savings Vault') : t('Location Carte Unique ' + node.name, 'Rental Single Card ' + node.name) }}
+                                        {{ node.isAvip ? t('Unité d\'Accélération AVIP', 'AVIP Acceleration Unit') : (node.isVault ? t('Vault d\'Épargne ARM', 'ARM Savings Vault') : t('Location Carte Unique ' + node.name, 'Rental Single Card ' + node.name)) }}
                                     </span>
                                     <!-- Duration Badge -->
                                     <span class="text-[12px] font-black bg-cyan-500 text-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md">
-                                        {{ node.duration }} {{ t('Jours', 'Days') }}
+                                        {{ node.isAvip ? t('Illimité', 'Unlimited') : node.duration + ' ' + t('Jours', 'Days') }}
                                     </span>
                                 </div>
 
                                 <!-- GPU Image Area -->
                                 <div class="w-full h-44 overflow-hidden relative bg-black/20">
                                     <!-- Show server image or custom vault graphics image -->
-                                    <img :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : getProductImage(node)" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" :alt="node.name">
+                                    <img :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : (node.isAvip ? node.image_url : getProductImage(node))" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" :alt="node.name">
                                 </div>
 
                                 <!-- Brand Purple/Cyan Banner (Premium ARM design) -->
                                 <div class="bg-gradient-to-r from-cyan-600 via-purple-600 to-indigo-800 px-4 py-2.5 flex items-center gap-3 justify-between text-white">
                                     <div class="flex items-center gap-1.5 shrink-0">
                                         <img src="/images/logo.jpg" class="h-4.5 w-4.5 rounded object-cover border border-white/20 shrink-0 shadow-sm" alt="Logo" />
-                                        <div class="bg-black/40 text-cyan-200 font-extrabold text-[7px] px-1 py-0.5 rounded border border-cyan-400/20 leading-none shrink-0 tracking-tighter font-mono" v-if="!node.isVault">AI CPU</div>
+                                        <div class="bg-black/40 text-cyan-200 font-extrabold text-[7px] px-1 py-0.5 rounded border border-cyan-400/20 leading-none shrink-0 tracking-tighter font-mono" v-if="!node.isVault && !node.isAvip">AI CPU</div>
+                                        <div class="bg-black/40 text-purple-200 font-extrabold text-[7px] px-1 py-0.5 rounded border border-purple-400/20 leading-none shrink-0 tracking-tighter font-mono" v-else-if="node.isAvip">AVIP CORE</div>
                                         <div class="bg-black/40 text-emerald-300 font-extrabold text-[7px] px-1 py-0.5 rounded border border-emerald-400/20 leading-none shrink-0 tracking-tighter font-mono" v-else>STAKING</div>
                                     </div>
                                     <div class="text-xs font-black text-white uppercase tracking-wider overflow-hidden flex-1 font-mono text-right max-w-[150px] shrink-0">
@@ -674,24 +704,24 @@ watch(
 
                                 <!-- Stats Grid 2x2 with borders -->
                                 <div class="grid grid-cols-2 bg-[#0e071d]/50">
-                                    <!-- Stock -->
+                                    <!-- Stock / Req VIP -->
                                     <div class="p-3 border-r border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
-                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isVault ? t('Garantie:', 'Guaranteed:') : t('Qté en stock:', 'Stock Qty:') }}</span>
-                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isVault ? '100% SEC' : (node.stock_quantity ?? '12018') }}</span>
+                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isAvip ? t('Requis:', 'Required:') : (node.isVault ? t('Garantie:', 'Guaranteed:') : t('Qté en stock:', 'Stock Qty:')) }}</span>
+                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isAvip ? 'VIP ' + node.required_vip_level : (node.isVault ? '100% SEC' : (node.stock_quantity ?? '12018')) }}</span>
                                     </div>
-                                    <!-- Purchase Limit -->
+                                    <!-- Purchase Limit / AVIP Rank -->
                                     <div class="p-3 border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
-                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isVault ? t('Contrat:', 'Contract:') : t("Lim. d'achat:", 'Limit:') }}</span>
-                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isVault ? 'LOCK TERM' : (node.max_purchase_limit ?? 0) }}</span>
+                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isAvip ? t('Rang AVIP:', 'AVIP Rank:') : (node.isVault ? t('Contrat:', 'Contract:') : t("Lim. d'achat:", 'Limit:')) }}</span>
+                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isAvip ? 'AVIP ' + node.avip_level : (node.isVault ? 'LOCK TERM' : (node.max_purchase_limit ?? 0)) }}</span>
                                     </div>
-                                    <!-- Total Revenue -->
+                                    <!-- Total Revenue / Daily Yield -->
                                     <div class="p-3 border-r border-white/5 flex flex-col gap-1">
-                                        <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ node.isVault ? t('Retour final', 'Final return') : t('Revenu total', 'Total revenue') }}</span>
-                                        <span class="text-[14.5px] font-black text-emerald-400 font-mono tracking-tight">{{ node.isVault ? formatXAF(node.fixed_return) : formatXAF(node.generation_profit * node.duration) }}</span>
+                                        <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ node.isAvip ? t('Salaire journalier', 'Daily salary') : (node.isVault ? t('Retour final', 'Final return') : t('Revenu total', 'Total revenue')) }}</span>
+                                        <span class="text-[14.5px] font-black text-emerald-400 font-mono tracking-tight">{{ node.isAvip ? '+' + formatXAF(node.generation_profit) + '/j' : (node.isVault ? formatXAF(node.fixed_return) : formatXAF(node.generation_profit * node.duration)) }}</span>
                                     </div>
-                                    <!-- Rental Price -->
+                                    <!-- Rental Price / License Fee -->
                                     <div class="p-3 flex flex-col gap-1">
-                                        <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ node.isVault ? t('Dépôt requis', 'Required deposit') : t('Montant location', 'Rental fee') }}</span>
+                                        <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ node.isAvip ? t('Frais Licence', 'License Fee') : (node.isVault ? t('Dépôt requis', 'Required deposit') : t('Montant location', 'Rental fee')) }}</span>
                                         <span class="text-[14.5px] font-black text-yellow-400 font-mono tracking-tight">{{ formatXAF(node.amount) }}</span>
                                     </div>
                                 </div>

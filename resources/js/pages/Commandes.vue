@@ -86,7 +86,7 @@ const { containerRef } = useRevealAnimation();
                     <p class="text-xs font-black text-white uppercase tracking-wider mb-2">Aucun serveur actif</p>
                     <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto mb-5">Visitez la console de calcul ou le marché des nœuds pour activer votre premier serveur technologique.</p>
                     <Link 
-                        href="/nodes"
+                        href="/dashboard"
                         class="inline-flex py-2.5 px-6 rounded-xl bg-purple-500 text-black font-extrabold text-[10px] uppercase tracking-wider shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:bg-purple-400 transition-all duration-300"
                     >
                         Acheter un Serveur

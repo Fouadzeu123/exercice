@@ -75,7 +75,6 @@
                 </div>
             </div>
         </div>
-
         <script>
             (function() {
                 const loader = document.getElementById('global-loader');
@@ -87,8 +86,8 @@
                 
                 function updateProgress() {
                     if (progress < 90) {
-                        // Accelerates early and slows down near 90%
-                        const increment = progress < 45 ? 6 : (progress < 75 ? 2 : 0.6);
+                        // Fast cosmic acceleration for 1s max runtime
+                        const increment = progress < 45 ? 12 : (progress < 75 ? 5 : 2);
                         progress = Math.min(90, progress + increment);
                         
                         if (percentText) percentText.innerText = Math.round(progress) + '%';
@@ -96,10 +95,13 @@
                     }
                 }
                 
-                interval = setInterval(updateProgress, 35);
+                interval = setInterval(updateProgress, 20);
+
+                // Fail-safe backup timer to guarantee loader clears in max 1000ms (700ms progress + 300ms fadeout)
+                const backupTimeout = setTimeout(dismissLoader, 700);
                 
-                // Hide when assets have finished loading
-                window.addEventListener('load', function() {
+                function dismissLoader() {
+                    clearTimeout(backupTimeout);
                     clearInterval(interval);
                     progress = 100;
                     if (percentText) percentText.innerText = '100%';
@@ -111,13 +113,15 @@
                             loader.style.visibility = 'hidden';
                             setTimeout(function() {
                                 loader.remove();
-                            }, 450);
+                            }, 250);
                         }
-                    }, 250);
-                });
+                    }, 50);
+                }
+                
+                // Hide when assets have finished loading
+                window.addEventListener('load', dismissLoader);
             })();
         </script>
-
         @inertia
     </body>
 </html>

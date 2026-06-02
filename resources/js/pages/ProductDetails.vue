@@ -39,10 +39,14 @@ const props = defineProps<{
         image?: string | null;
         image_url?: string | null;
         isVault: boolean;
+        isAvip?: boolean;
         fixed_return?: string;
         profit_amount?: string;
+        required_vip_level?: number;
+        avip_level?: number;
+        description?: string;
     };
-    type: 'node' | 'vault';
+    type: 'node' | 'vault' | 'avip';
     activeUserNode?: {
         id: number;
         node_id: number;
@@ -52,10 +56,8 @@ const props = defineProps<{
         technology_level: number;
     } | null;
 }>();
-
 const breadcrumbs: BreadcrumbItem[] = [
     { title: t('console principale', 'main console'), href: '/dashboard' },
-    { title: props.product.isVault ? 'ARM Vaults' : t('marché des nœuds', 'nodes market'), href: props.product.isVault ? '/vaults' : '/nodes' },
     { title: props.product.name, href: '' },
 ];
 
@@ -99,17 +101,25 @@ const handlePurchase = () => {
         showErrorCard.value = true;
         return;
     }
+
+    if (props.type === 'avip' && props.product.required_vip_level && (user.value?.vip_level ?? 0) < props.product.required_vip_level) {
+        errorMessage.value = t(`Vous devez être VIP ${props.product.required_vip_level} minimum pour louer ce produit. Votre niveau actuel : VIP ${user.value?.vip_level ?? 0}.`, `You must be at least VIP ${props.product.required_vip_level} to rent this product.`);
+        showErrorCard.value = true;
+        return;
+    }
     
     isProcessing.value = true;
     const url = props.product.isVault 
         ? `/vaults/${props.product.id}/invest` 
-        : `/nodes/${props.product.id}/rent`;
+        : (props.type === 'avip' ? `/avip-products/${props.product.id}/purchase` : `/nodes/${props.product.id}/rent`);
 
     rentForm.post(url, {
         onSuccess: () => {
             successMessage.value = props.product.isVault 
                 ? t('Votre investissement dans le Vault a été validé avec succès !', 'Your Vault investment was successfully approved!')
-                : t('La location de votre nœud de calcul GPU a été activée !', 'Your GPU computing node lease was successfully activated!');
+                : (props.type === 'avip' 
+                    ? t('L\'accélérateur AVIP a été loué avec succès ! Votre dividende quotidien a été mis à jour.', 'AVIP accelerator rented successfully! Your daily dividend has been updated.')
+                    : t('La location de votre nœud de calcul GPU a été activée !', 'Your GPU computing node lease was successfully activated!'));
             showSuccessCard.value = true;
         },
         onFinish: () => {
@@ -150,7 +160,7 @@ onUnmounted(() => {
             
             <!-- Header Nav Back -->
             <div class="flex items-center justify-between bg-[#0c0f1d] p-3 rounded-2xl border border-purple-500/10 shadow-lg">
-                <Link :href="product.isVault ? '/vaults' : '/nodes'" class="flex items-center gap-2 text-xs font-black text-purple-400 hover:text-white uppercase transition-colors select-none">
+                <Link href="/dashboard" class="flex items-center gap-2 text-xs font-black text-purple-400 hover:text-white uppercase transition-colors select-none">
                     <ArrowLeft class="h-4.5 w-4.5" :stroke-width="2.5" />
                     {{ t('Retour', 'Back') }}
                 </Link>
@@ -207,18 +217,22 @@ onUnmounted(() => {
                         <span class="font-extrabold text-white text-[11px] font-mono">{{ product.name }}</span>
                     </div>
 
-                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-if="!product.isVault">
+                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-if="type === 'node'">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Niveau Technologique', 'Tech Level') }}</span>
                         <span class="font-black text-purple-400 text-[11px] font-mono">LEVEL {{ product.technology_level }}</span>
                     </div>
-                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-else>
+                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-else-if="type === 'vault'">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Type d\'Épargne', 'Savings Type') }}</span>
                         <span class="font-black text-emerald-400 text-[11px] font-mono">ARM VAULT STAKING</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-else-if="type === 'avip'">
+                        <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Requis / Type', 'Required / Type') }}</span>
+                        <span class="font-black text-purple-400 text-[11px] font-mono">REQUIS VIP {{ product.required_vip_level }} / AVIP LEVEL {{ product.avip_level }}</span>
                     </div>
 
                     <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Durée de Co-Calcul', 'Co-Processing Term') }}</span>
-                        <span class="font-extrabold text-white text-[11px] font-mono">{{ product.duration }} Jours</span>
+                        <span class="font-extrabold text-white text-[11px] font-mono">{{ type === 'avip' ? t('Illimitée', 'Unlimited') : product.duration + ' Jours' }}</span>
                     </div>
 
                     <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
@@ -230,7 +244,7 @@ onUnmounted(() => {
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Retour Final Brut', 'Gross Final Return') }}</span>
                         <span class="font-black text-emerald-400 text-[12px] font-mono">{{ formatXAF(product.fixed_return || 0) }}</span>
                     </div>
-                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-else>
+                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5" v-else-if="type === 'node'">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Gains Globaux Estimés', 'Total Estimated Gains') }}</span>
                         <span class="font-black text-emerald-400 text-[12px] font-mono">{{ formatXAF(product.generation_profit * product.duration) }}</span>
                     </div>
@@ -238,7 +252,7 @@ onUnmounted(() => {
                     <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ product.isVault ? t('Sécurité', 'Security') : t('Disponibilité Stock', 'Stock Qty') }}</span>
                         <span class="font-bold text-white text-[10px] font-mono">
-                            {{ product.isVault ? '100% GARANTI' : (product.stock_quantity ?? '12018') }}
+                            {{ type === 'avip' ? t('GARANTI AVIP SYSTEM', 'GUARANTEED AVIP SYSTEM') : (product.isVault ? '100% GARANTI' : (product.stock_quantity ?? '12018')) }}
                         </span>
                     </div>
                 </div>

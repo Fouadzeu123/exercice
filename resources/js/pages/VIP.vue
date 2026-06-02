@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import axios from 'axios';
 import { 
     Award, 
     ShieldCheck, 
     Lock,
-    CheckCircle2
+    CheckCircle2,
+    Coins,
+    X
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -17,8 +20,61 @@ const props = defineProps<{
         active_referrals: number;
         team_volume: number;
         vip_level: number;
+        avip_level: number;
     };
 }>();
+
+// Page and Auth Context
+const page = usePage();
+const user = computed(() => page.props.auth?.user as any);
+
+// State for salary claim
+const claimProcessing = ref(false);
+const showClaimSuccessModal = ref(false);
+const claimedAmount = ref(0);
+const showErrorModal = ref(false);
+const errorMessage = ref('');
+
+const dailySalaries = {
+    0: 0,
+    1: 100,
+    2: 250,
+    3: 500,
+    4: 1000,
+    5: 2000,
+};
+
+const userDailyRate = computed(() => {
+    const rate = dailySalaries[props.stats.vip_level as keyof typeof dailySalaries];
+    return rate !== undefined ? rate : 0;
+});
+
+const isSalaryClaimedToday = computed(() => {
+    if (!user.value?.last_salary_claim_date) return false;
+    const lastClaim = new Date(user.value.last_salary_claim_date).getTime();
+    const now = Date.now();
+    return (now - lastClaim) < 24 * 60 * 60 * 1000;
+});
+
+const handleClaimSalary = async () => {
+    if (claimProcessing.value || isSalaryClaimedToday.value || props.stats.vip_level < 1) return;
+    claimProcessing.value = true;
+    try {
+        const res = await axios.post('/avip-products/claim-salary');
+        router.reload({
+            only: ['auth', 'stats'],
+            onSuccess: () => {
+                claimedAmount.value = userDailyRate.value;
+                showClaimSuccessModal.value = true;
+                claimProcessing.value = false;
+            }
+        });
+    } catch (e: any) {
+        claimProcessing.value = false;
+        errorMessage.value = e.response?.data?.error || "Une erreur est survenue lors de la réclamation.";
+        showErrorModal.value = true;
+    }
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -150,19 +206,31 @@ const currentVipTitle = computed(() => {
                 </div>
             </div>
 
-            <!-- Link to VIP daily salary console -->
+            <!-- Console de Réclamation de Salaire Journalier -->
             <div data-animate="fade-up" data-delay="120" class="glass relative overflow-hidden rounded-2xl p-5 border border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-[#13072b]/80 to-purple-950/40 shadow-lg glow-border">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.1),transparent)] opacity-60"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="text-center sm:text-left">
-                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Console Dividendes & Équipements VIP</h4>
+                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Réclamation de Salaire Journalier</h4>
                         <p class="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                            Réclamez votre salaire journalier de <span class="text-purple-400 font-bold font-mono">VIP {{ stats.vip_level }}</span> ou louez du matériel AVIP exclusif.
+                            Chaque jour, réclamez votre salaire d'infrastructure calculé directement sur votre niveau VIP.
                         </p>
                     </div>
-                    <Link href="/avip-products" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] text-center">
-                        ACCÉDER AU HUB AVIP
-                    </Link>
+                    
+                    <button
+                        @click="handleClaimSalary"
+                        :disabled="isSalaryClaimedToday || claimProcessing || stats.vip_level < 1"
+                        class="w-full sm:w-auto px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2"
+                        :class="stats.vip_level < 1
+                            ? 'bg-purple-950/20 text-slate-500 border border-white/5 cursor-not-allowed'
+                            : (isSalaryClaimedToday
+                                ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/30 cursor-not-allowed'
+                                : 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] active:scale-[0.98]')"
+                    >
+                        <CheckCircle2 v-if="isSalaryClaimedToday" class="w-4 h-4" />
+                        <Coins v-else class="w-4 h-4" :class="claimProcessing ? 'animate-spin' : ''" />
+                        {{ stats.vip_level < 1 ? 'AUCUN SALAIRE DISPONIBLE (VIP 0)' : (isSalaryClaimedToday ? 'SALAIRE RÉCLAMÉ' : (claimProcessing ? 'SYNCHRONISATION...' : 'RÉCLAMER MON SALAIRE (' + formatXAF(userDailyRate) + ')')) }}
+                    </button>
                 </div>
             </div>
 
@@ -295,7 +363,56 @@ const currentVipTitle = computed(() => {
                     </div>
                 </div>
             </div>
-
         </div>
+
+        <!-- DIVIDEND SUCCESS CLAIM MODAL -->
+        <div v-if="showClaimSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-hidden" @touchmove.prevent>
+            <div class="w-full max-w-sm bg-[#0a0414] border border-emerald-500/30 rounded-3xl overflow-hidden shadow-2xl animate-scaleIn relative glow-border">
+                <div class="absolute -top-12 -right-12 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="p-6 text-center">
+                    <div class="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mx-auto mb-4 animate-bounce">
+                        <CheckCircle2 class="h-7 w-7" :stroke-width="2.5" />
+                    </div>
+                    
+                    <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Salaire Réclamé</h3>
+                    <p class="text-[10px] text-slate-400 leading-relaxed mb-6">
+                        Votre dividende quotidien de co-traitement a été versé avec succès sur votre solde.
+                    </p>
+                    
+                    <div class="bg-emerald-950/20 border border-emerald-500/10 rounded-2xl p-4.5 mb-6">
+                        <span class="text-[8px] text-emerald-400 uppercase tracking-widest font-black block mb-1">Montant crédité</span>
+                        <span class="text-xl font-mono font-black text-white block">
+                            +{{ formatXAF(claimedAmount) }}
+                        </span>
+                    </div>
+                    
+                    <button @click="showClaimSuccessModal = false" class="w-full py-3.5 rounded-2xl bg-emerald-500 text-black font-black uppercase tracking-wider text-xs hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+                        CONFIRMER
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR MODAL -->
+        <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-hidden" @touchmove.prevent>
+            <div class="w-full max-w-sm bg-[#0a0414] border border-rose-500/30 rounded-3xl overflow-hidden shadow-2xl animate-scaleIn relative glow-border">
+                <div class="absolute -top-12 -right-12 w-28 h-28 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="p-6 text-center">
+                    <div class="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 mx-auto mb-4">
+                        <X class="h-6 w-6" :stroke-width="3" />
+                    </div>
+                    
+                    <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Opération Échouée</h3>
+                    <p class="text-[10.5px] text-slate-400 leading-relaxed mb-6">
+                        {{ errorMessage }}
+                    </p>
+                    
+                    <button @click="showErrorModal = false" class="w-full py-3.5 rounded-2xl bg-rose-500 text-black font-black uppercase tracking-wider text-xs hover:bg-rose-400 transition-all shadow-[0_0_15px_rgba(244,63,94,0.4)]">
+                        RETOUR
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </AppLayout>
 </template>

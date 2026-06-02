@@ -54,6 +54,9 @@ class DashboardController extends Controller
         // Retrieve active vault plans to show in combined marketplace
         $vaultPlans = \App\Models\VaultPlan::where('active', true)->get();
 
+        // Retrieve active AVIP products to show in AVIP tab
+        $avipProducts = \App\Models\AVIPProduct::where('active', true)->orderBy('avip_level', 'asc')->get();
+
         return Inertia::render('Dashboard', [
             'activeUserNode' => $activeUserNode,
             'activeSession' => $activeSession ? [
@@ -67,6 +70,7 @@ class DashboardController extends Controller
             'announcements' => $announcements,
             'nodes' => $nodes,
             'vaultPlans' => $vaultPlans,
+            'avipProducts' => $avipProducts,
             'stats' => [
                 'total_generated' => (float) $totalGenerated,
                 'daily_profit_rate' => (float) $dailyProfitRate,
@@ -266,12 +270,20 @@ class DashboardController extends Controller
         if ($type === 'node') {
             $product = \App\Models\Node::findOrFail($id);
             $product->isVault = false;
+            $product->isAvip = false;
         } elseif ($type === 'vault') {
             $product = \App\Models\VaultPlan::findOrFail($id);
             $product->isVault = true;
+            $product->isAvip = false;
             // Assurer la compatibilité avec les clés de Node
             $product->amount = (float) $product->fixed_investment_amount;
             $product->generation_profit = (float) $product->profit_amount / $product->duration;
+        } elseif ($type === 'avip') {
+            $product = \App\Models\AVIPProduct::findOrFail($id);
+            $product->isVault = false;
+            $product->isAvip = true;
+            $product->duration = 7;
+            $product->generation_profit = (float) $product->daily_salary;
         } else {
             abort(404, 'Type de produit inconnu');
         }

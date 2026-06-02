@@ -111,7 +111,7 @@ class AVIPProductController extends Controller
         $userVipLevel = $user->vip_level ?? 0;
 
         if ($userVipLevel < 1) {
-            return back()->withErrors(['error' => 'Les membres de niveau VIP 0 n\'ont pas de salaire journalier. Veuillez activer au moins un nœud de calcul (VIP 1) pour commencer à percevoir des dividendes journaliers.']);
+            return response()->json(['error' => 'Les membres de niveau VIP 0 n\'ont pas de salaire journalier. Veuillez activer au moins un nœud de calcul (VIP 1) pour commencer à percevoir des dividendes journaliers.'], 422);
         }
 
         // VIP 1 limit to 7 claims
@@ -122,7 +122,7 @@ class AVIPProductController extends Controller
                 ->count();
             
             if ($salaryClaimsCount >= 7) {
-                return back()->withErrors(['error' => 'Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.']);
+                return response()->json(['error' => 'Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.'], 422);
             }
         }
 
@@ -137,6 +137,7 @@ class AVIPProductController extends Controller
         ];
 
         $salaryAmount = $dailySalaries[$userVipLevel] ?? 0.00;
+
         // 1. Enforce first salary claim only 24 hours after the first purchased product (node or avip)
         $earliestProduct = DB::table('user_nodes')
             ->where('user_id', $user->id)
@@ -161,14 +162,14 @@ class AVIPProductController extends Controller
 
         if ($activationTime && Carbon::parse($activationTime)->addHours(24)->isFuture()) {
             $availableTime = Carbon::parse($activationTime)->addHours(24);
-            return back()->withErrors(['error' => "Vous pourrez réclamer votre premier salaire journalier 24 heures après l'achat de votre premier produit. Disponible le : " . $availableTime->format('d/m/Y H:i:s')]);
+            return response()->json(['error' => "Vous pourrez réclamer votre premier salaire journalier 24 heures après l'achat de votre premier produit. Disponible le : " . $availableTime->format('d/m/Y H:i:s')], 422);
         }
 
         // 2. Enforce subsequent claims only 24 hours after the last salary claim
         $lastClaimDate = $user->last_salary_claim_date;
         if ($lastClaimDate && Carbon::parse($lastClaimDate)->addHours(24)->isFuture()) {
             $nextAvailable = Carbon::parse($lastClaimDate)->addHours(24);
-            return back()->withErrors(['error' => "Vous ne pouvez réclamer votre salaire qu'une seule fois toutes les 24 heures. Prochaine réclamation disponible à partir de : " . $nextAvailable->format('d/m/Y H:i:s')]);
+            return response()->json(['error' => "Vous ne pouvez réclamer votre salaire qu'une seule fois toutes les 24 heures. Prochaine réclamation disponible à partir de : " . $nextAvailable->format('d/m/Y H:i:s')], 422);
         }
 
         try {
@@ -188,10 +189,14 @@ class AVIPProductController extends Controller
                 ]);
             });
 
-            return redirect()->route('avip-products.index')->with('success', "Votre salaire de {$salaryAmount} a été réclamé avec succès.");
+            return response()->json([
+                'success' => true,
+                'salary_amount' => $salaryAmount,
+                'new_balance' => $user->balance
+            ]);
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Erreur lors de la réclamation du salaire : ' . $e->getMessage()]);
+            return response()->json(['error' => 'Erreur lors de la réclamation du salaire : ' . $e->getMessage()], 500);
         }
     }
 }
