@@ -4,7 +4,7 @@ import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     Lock,
     Key,
     CheckCircle2,
@@ -37,7 +37,7 @@ const successMsg = ref('');
 const handleSubmit = () => {
     isSubmitting.value = true;
     successMsg.value = '';
-    
+
     pinForm.post('/settings/withdrawal-password', {
         onSuccess: () => {
             pinForm.reset();
@@ -64,7 +64,7 @@ const { containerRef } = useRevealAnimation();
             <!-- HEADER -->
             <div data-animate="fade-down" class="flex items-center justify-between bg-[#0c0f1d] p-4 rounded-2xl border border-purple-500/10 shadow-lg">
                 <div class="flex items-center gap-3">
-                    <Link 
+                    <Link
                         href="/settings/profile"
                         class="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center text-white hover:bg-black transition-colors"
                     >
@@ -80,7 +80,7 @@ const { containerRef } = useRevealAnimation();
                     </div>
                 </div>
                 <!-- Language selector -->
-                <div 
+                <div
                     @click="toggleLocale"
                     class="border border-white/10 bg-white/5 px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wide flex items-center gap-1.5 hover:border-purple-400/50 transition-colors cursor-pointer uppercase select-none"
                 >
@@ -91,7 +91,7 @@ const { containerRef } = useRevealAnimation();
 
             <!-- FORM CARD -->
             <div data-animate="fade-up" data-delay="100" class="bg-gradient-to-b from-[#0a0f1d]/90 to-[#070b14]/90 border border-purple-500/15 rounded-3xl p-5 shadow-2xl backdrop-blur-sm">
-                
+
                 <div class="flex items-center gap-2 mb-4 border-b border-purple-500/10 pb-3">
                     <Lock class="h-4.5 w-4.5 text-purple-400" :stroke-width="2.5" />
                     <h3 class="text-xs font-black text-white uppercase tracking-wider">
@@ -113,8 +113,8 @@ const { containerRef } = useRevealAnimation();
                         </label>
                         <div class="relative">
                             <Key class="absolute left-3.5 top-3.5 h-4 w-4 text-purple-500/50" :stroke-width="2.5" />
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 v-model="pinForm.current_password"
                                 required
                                 placeholder="••••"
@@ -122,7 +122,7 @@ const { containerRef } = useRevealAnimation();
                                 class="w-full bg-black/50 border border-purple-500/20 rounded-xl py-3.5 pl-11 pr-4 text-white font-mono text-center tracking-widest text-xs focus:border-purple-400 outline-none transition-all placeholder:text-white/20"
                             />
                         </div>
-                        <span v-if="pinForm.errors.current_password" class="text-[9px] text-rose-400 font-bold uppercase tracking-wider mt-1 flex items-center gap-1">
+                        <span v-if="pinForm.errors.current_password" class="text-[12px] text-rose-400 font-bold uppercase tracking-wider mt-1 flex items-center gap-1">
                             <AlertCircle class="h-3.5 w-3.5 shrink-0" />
                             {{ pinForm.errors.current_password }}
                         </span>
@@ -135,8 +135,8 @@ const { containerRef } = useRevealAnimation();
                         </label>
                         <div class="relative">
                             <Lock class="absolute left-3.5 top-3.5 h-4 w-4 text-purple-500/50" :stroke-width="2.5" />
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 v-model="pinForm.withdrawal_password"
                                 required
                                 placeholder="••••"
@@ -157,8 +157,8 @@ const { containerRef } = useRevealAnimation();
                         </label>
                         <div class="relative">
                             <Lock class="absolute left-3.5 top-3.5 h-4 w-4 text-purple-500/50" :stroke-width="2.5" />
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 v-model="pinForm.withdrawal_password_confirmation"
                                 required
                                 placeholder="••••"
@@ -168,7 +168,7 @@ const { containerRef } = useRevealAnimation();
                         </div>
                     </div>
 
-                    <button 
+                    <button
                         type="submit"
                         :disabled="isSubmitting || pinForm.processing"
                         class="w-full py-3.5 rounded-xl bg-purple-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:bg-purple-400 transition-all duration-300 disabled:opacity-50"
@@ -183,10 +183,10 @@ const { containerRef } = useRevealAnimation();
                 <div class="flex items-start gap-2.5">
                     <ShieldCheck class="h-4.5 w-4.5 text-purple-400 shrink-0 mt-0.5" :stroke-width="2.5" />
                     <div>
-                        <span class="text-[10px] font-black text-white uppercase tracking-wider block mb-1">
+                        <span class="text-[13px] font-black text-white uppercase tracking-wider block mb-1">
                             {{ t('Code PIN de retrait réglementaire', 'Regulatory Withdrawal PIN') }}
                         </span>
-                        <span class="text-[9px] text-slate-400 leading-relaxed block">
+                        <span class="text-[13px] text-slate-400 leading-relaxed block">
                             {{ t('Ce code PIN de fonds (ou mot de passe de retrait) vous sera demandé pour valider chaque retrait. Ne le communiquez jamais et évitez les suites simples.', 'This funds PIN (or withdrawal password) will be required to validate each withdrawal. Never share it and avoid simple sequences.') }}
                         </span>
                     </div>

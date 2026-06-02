@@ -4,7 +4,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     ArrowLeft,
     History,
     Globe,
@@ -72,7 +72,7 @@ const { containerRef } = useRevealAnimation();
 
             <!-- HEADER -->
             <div data-animate="fade-down" class="flex items-center justify-between bg-[#0c0f1d] p-4 rounded-2xl border border-cyan-500/10 shadow-lg">
-                <Link 
+                <Link
                     href="/dashboard"
                     class="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center text-white hover:bg-black transition-colors"
                 >
@@ -84,7 +84,7 @@ const { containerRef } = useRevealAnimation();
                     {{ t('Mes Retraits', 'My Withdrawals') }}
                 </h2>
 
-                <div 
+                <div
                     @click="toggleLocale"
                     class="border border-white/10 bg-white/5 px-2.5 py-1 rounded-xl text-[9px] font-bold tracking-wide flex items-center gap-1.5 hover:border-cyan-400/50 transition-colors cursor-pointer uppercase select-none"
                 >
@@ -99,7 +99,7 @@ const { containerRef } = useRevealAnimation();
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                         {{ t('Historique des transactions', 'Transaction History') }}
                     </span>
-                    <span class="text-[9px] font-mono text-cyan-400 uppercase font-black bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+                    <span class="text-[12px] font-mono text-cyan-400 uppercase font-black bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
                         {{ withdrawals.length }} Retrait(s)
                     </span>
                 </div>
@@ -111,8 +111,8 @@ const { containerRef } = useRevealAnimation();
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                         {{ t('Aucun retrait enregistré', 'No withdrawals registered') }}
                     </span>
-                    <Link 
-                        href="/retirer" 
+                    <Link
+                        href="/retirer"
                         class="mt-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white text-[9px] font-black uppercase tracking-wider rounded-xl transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     >
                         {{ t('Faire un retrait', 'Make a Withdrawal') }}
@@ -120,7 +120,7 @@ const { containerRef } = useRevealAnimation();
                 </div>
 
                 <div v-else class="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
-                    <div 
+                    <div
                         v-for="wth in withdrawals" :key="wth.id"
                         class="bg-[#121625]/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between hover:border-cyan-500/20 transition-all duration-300 group relative overflow-hidden"
                     >
@@ -133,7 +133,7 @@ const { containerRef } = useRevealAnimation();
                                 <Clock v-else-if="wth.status === 'pending'" class="w-4.5 h-4.5" />
                                 <XCircle v-else class="w-4.5 h-4.5" />
                             </div>
-                            
+
                             <div>
                                 <div class="text-[12.5px] font-black font-mono text-white leading-none">
                                     -{{ formatXAF(Math.abs(wth.amount)) }}
@@ -145,7 +145,7 @@ const { containerRef } = useRevealAnimation();
                         </div>
 
                         <div class="text-right flex flex-col items-end gap-1.5">
-                            <span 
+                            <span
                                 class="text-[8px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider font-mono"
                                 :class="getStatusColor(wth.status)"
                             >
@@ -160,7 +160,7 @@ const { containerRef } = useRevealAnimation();
             </div>
 
             <!-- FOOTER INFO BOX -->
-            <div data-animate="fade-up" data-delay="120" class="p-4 rounded-2xl bg-cyan-950/10 border border-cyan-500/10 text-[9px] text-slate-400 leading-relaxed font-mono">
+            <div data-animate="fade-up" data-delay="120" class="p-4 rounded-2xl bg-cyan-950/10 border border-cyan-500/10 text-[13px] text-slate-400 leading-relaxed font-mono">
                 <span class="font-bold text-white uppercase tracking-wider block mb-1">
                     {{ t('Information sur les Retraits', 'Withdrawals Information') }}
                 </span>

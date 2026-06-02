@@ -220,7 +220,7 @@ const { containerRef } = useRevealAnimation();
                 <div v-if="activeAnnouncements.length === 0" class="bg-gradient-to-b from-[#0a0416]/90 to-[#05020c]/90 border border-purple-500/15 rounded-3xl p-10 text-center shadow-2xl backdrop-blur-sm">
                     <Server class="h-10 w-10 text-purple-400/20 mx-auto mb-3.5" />
                     <p class="text-xs font-black text-white uppercase tracking-wider">Aucune actualité disponible</p>
-                    <p class="text-[9px] text-slate-400 mt-1.5 font-mono">[ ARM SECURE NET - CONNECTED ]</p>
+                    <p class="text-[15px] text-slate-400 mt-1.5 font-mono">[ ARM SECURE NET - CONNECTED ]</p>
                 </div>
 
                 <div
@@ -240,7 +240,7 @@ const { containerRef } = useRevealAnimation();
                         />
                         <div class="absolute top-3 right-3 z-20">
                             <span
-                                class="text-[8px] font-black px-2 py-0.5 rounded border uppercase tracking-wider shadow"
+                                class="text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider shadow"
                                 :class="ann.type === 'warning' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400'
                                       : ann.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                                       : ann.type === 'alert' ? 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-400'
@@ -257,12 +257,12 @@ const { containerRef } = useRevealAnimation();
                             <h3 class="text-xs font-black text-white uppercase tracking-wider line-clamp-2 group-hover:text-purple-400 transition-colors">
                                 {{ ann.title }}
                             </h3>
-                            <p class="text-[10px] text-slate-300 leading-relaxed mt-2.5 line-clamp-3">
+                            <p class="text-[12px] text-slate-300 leading-relaxed mt-2.5 line-clamp-3">
                                 {{ ann.content }}
                             </p>
                         </div>
 
-                        <div class="flex items-center justify-between border-t border-white/5 pt-3.5 mt-4 text-[9px] text-slate-500 font-mono">
+                        <div class="flex items-center justify-between border-t border-white/5 pt-3.5 mt-4 text-[15px] text-slate-500 font-mono">
                             <div class="flex items-center gap-1.5">
                                 <Clock class="h-3.5 w-3.5 text-purple-400" />
                                 <span>{{ formatDate(ann.created_at) }}</span>
@@ -278,20 +278,20 @@ const { containerRef } = useRevealAnimation();
 
             <!-- PAGINATION CONTROLS -->
             <div v-if="totalPages > 1" data-animate="fade-up" class="flex items-center justify-between bg-black/40 border border-purple-500/10 px-4 py-3 rounded-2xl mx-4 shadow-lg shrink-0">
-                <button 
-                    @click="prevPage" 
+                <button
+                    @click="prevPage"
                     :disabled="currentPage === 1"
                     class="w-10 h-10 rounded-xl bg-purple-950/20 border border-purple-500/20 flex items-center justify-center text-purple-400 hover:bg-purple-500/20 disabled:opacity-30 disabled:hover:bg-purple-950/20 transition-all cursor-pointer"
                 >
                     <ChevronLeft class="h-5 w-5" />
                 </button>
-                
+
                 <span class="text-xs font-black text-slate-300 font-mono">
                     PAGE {{ currentPage }} SUR {{ totalPages }}
                 </span>
-                
-                <button 
-                    @click="nextPage" 
+
+                <button
+                    @click="nextPage"
                     :disabled="currentPage === totalPages"
                     class="w-10 h-10 rounded-xl bg-purple-950/20 border border-purple-500/20 flex items-center justify-center text-purple-400 hover:bg-purple-500/20 disabled:opacity-30 disabled:hover:bg-purple-950/20 transition-all cursor-pointer"
                 >
@@ -366,7 +366,7 @@ const { containerRef } = useRevealAnimation();
                     </div>
                     <button
                         @click="selectedAnnouncement = null"
-                        class="py-2 px-5 rounded-xl bg-purple-600 text-white font-extrabold uppercase tracking-wider text-[9px] hover:bg-purple-500 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                        class="py-2 px-5 rounded-xl bg-purple-600 text-white font-extrabold uppercase tracking-wider text-[15px] hover:bg-purple-500 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                     >
                         Fermer
                     </button>

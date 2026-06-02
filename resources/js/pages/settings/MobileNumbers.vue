@@ -4,7 +4,7 @@ import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     CreditCard,
     PlusCircle,
     Smartphone,
@@ -104,7 +104,7 @@ const { containerRef } = useRevealAnimation();
                     </div>
                 </div>
                 <!-- Language selector -->
-                <div 
+                <div
                     @click="toggleLocale"
                     class="border border-white/10 bg-white/5 px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wide flex items-center gap-1.5 hover:border-purple-400/50 transition-colors cursor-pointer uppercase select-none"
                 >
@@ -129,7 +129,7 @@ const { containerRef } = useRevealAnimation();
                             {{ t('Opérateur Réseau', 'Network Operator') }}
                         </label>
                         <div class="grid grid-cols-2 gap-3">
-                            <button 
+                            <button
                                 type="button"
                                 @click="mobileForm.operator = 'mtn'"
                                 class="py-3.5 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300"
@@ -139,7 +139,7 @@ const { containerRef } = useRevealAnimation();
                                 <span class="text-[10px] font-black uppercase tracking-wider">MTN MoMo</span>
                             </button>
 
-                            <button 
+                            <button
                                 type="button"
                                 @click="mobileForm.operator = 'orange'"
                                 class="py-3.5 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300"
@@ -158,7 +158,7 @@ const { containerRef } = useRevealAnimation();
                         </label>
                         <div class="relative">
                             <User class="absolute left-3.5 top-3.5 h-4 w-4 text-purple-500/50" :stroke-width="2.5" />
-                            <input 
+                            <input
                                 type="text"
                                 v-model="mobileForm.full_name"
                                 required
@@ -175,7 +175,7 @@ const { containerRef } = useRevealAnimation();
                         </label>
                         <div class="relative">
                             <Smartphone class="absolute left-3.5 top-3.5 h-4 w-4 text-purple-500/50" :stroke-width="2.5" />
-                            <input 
+                            <input
                                 type="tel"
                                 v-model="mobileForm.phone"
                                 required
@@ -183,13 +183,13 @@ const { containerRef } = useRevealAnimation();
                                 class="w-full bg-black/50 border border-purple-500/20 rounded-xl py-3.5 pl-11 pr-4 text-white font-mono text-xs focus:border-purple-400 outline-none transition-all placeholder:text-white/25"
                             />
                         </div>
-                        <span v-if="mobileForm.errors.phone" class="text-[9px] text-rose-400 font-bold uppercase tracking-wider mt-1 flex items-center gap-1">
+                        <span v-if="mobileForm.errors.phone" class="text-[12px] text-rose-400 font-bold uppercase tracking-wider mt-1 flex items-center gap-1">
                             <AlertCircle class="h-3.5 w-3.5 shrink-0" />
                             {{ mobileForm.errors.phone }}
                         </span>
                     </div>
 
-                    <button 
+                    <button
                         type="submit"
                         :disabled="isSubmitting || mobileForm.processing"
                         class="w-full py-3.5 rounded-xl bg-purple-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:bg-purple-400 transition-all duration-300 disabled:opacity-50"
@@ -209,7 +209,7 @@ const { containerRef } = useRevealAnimation();
                     {{ t('Aucun numéro configuré actuellement', 'No numbers currently configured') }}
                 </div>
 
-                <div 
+                <div
                     v-for="method in methods" :key="method.id"
                     data-animate="fade-up"
                     class="bg-gradient-to-b from-[#0a0f1d]/90 to-[#070b14]/90 border rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all duration-300"
@@ -230,7 +230,7 @@ const { containerRef } = useRevealAnimation();
 
                         <!-- Star to make default -->
                         <div class="flex items-center gap-2">
-                            <button 
+                            <button
                                 v-if="!method.is_default"
                                 @click="makeDefault(method.id)"
                                 class="w-7 h-7 rounded-lg border border-purple-500/10 bg-black/40 flex items-center justify-center text-slate-500 hover:text-purple-400 hover:border-purple-500/30 transition-all"
@@ -238,8 +238,8 @@ const { containerRef } = useRevealAnimation();
                             >
                                 <Star class="h-4 w-4" :stroke-width="2.5" />
                             </button>
-                            <span 
-                                v-else 
+                            <span
+                                v-else
                                 class="text-[8px] font-black bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"
                             >
                                 <CheckCircle2 class="h-3 w-3" :stroke-width="2.5" />
@@ -247,7 +247,7 @@ const { containerRef } = useRevealAnimation();
                             </span>
 
                             <!-- Delete button -->
-                            <button 
+                            <button
                                 @click="deleteMethod(method.id)"
                                 class="w-7 h-7 rounded-lg border border-rose-500/15 bg-rose-500/5 hover:bg-rose-500/15 flex items-center justify-center text-rose-400 transition-all"
                                 :title="t('Supprimer', 'Delete')"
@@ -270,10 +270,10 @@ const { containerRef } = useRevealAnimation();
                 <div class="flex items-start gap-2.5">
                     <Shield class="h-4.5 w-4.5 text-purple-400 shrink-0 mt-0.5" :stroke-width="2.5" />
                     <div>
-                        <span class="text-[10px] font-black text-white uppercase tracking-wider block mb-1">
+                        <span class="text-[13px] font-black text-white uppercase tracking-wider block mb-1">
                             {{ t('Sécurité des transactions', 'Transaction Security') }}
                         </span>
-                        <span class="text-[9px] text-slate-400 leading-relaxed block">
+                        <span class="text-[13px] text-slate-400 leading-relaxed block">
                             {{ t('Pour votre sécurité, chaque numéro de retrait ne peut être utilisé que par un seul compte ARM Holdings. Veillez à renseigner le nom exact associé à votre opérateur mobile.', 'For your security, each withdrawal number can only be used by a single ARM Holdings account. Make sure to enter the exact name associated with your mobile operator.') }}
                         </span>
                     </div>
@@ -287,21 +287,21 @@ const { containerRef } = useRevealAnimation();
                         <div class="h-16 w-16 rounded-full bg-purple-500/10 border-2 border-purple-500/30 flex items-center justify-center text-purple-400 mb-6 mx-auto animate-pulse">
                             <Shield class="h-8 w-8" />
                         </div>
-                        
+
                         <span class="text-purple-400 font-extrabold uppercase text-[10px] tracking-widest block mb-1">Sécurité Réseau</span>
                         <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Sécuriser vos Retraits</h3>
                         <p class="text-slate-300 text-xs leading-relaxed font-sans mb-6">
                             Votre numéro de retrait a été enregistré avec succès ! Pour des raisons de sécurité, vous devez définir un code PIN secret avant d'initier tout transfert externe. Souhaitez-vous le définir maintenant ?
                         </p>
                         <div class="flex gap-3">
-                            <button 
-                                @click="showProposePinModal = false" 
+                            <button
+                                @click="showProposePinModal = false"
                                 class="flex-1 py-2.5 rounded-xl border border-white/10 text-white font-semibold text-xs hover:bg-white/5 transition-all duration-300"
                             >
                                 Plus tard
                             </button>
-                            <Link 
-                                href="/settings/withdrawal-password" 
+                            <Link
+                                href="/settings/withdrawal-password"
                                 class="flex-1 py-2.5 rounded-xl bg-primary text-black font-extrabold text-xs uppercase shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:bg-primary/95 transition-all duration-300 flex items-center justify-center gap-2"
                             >
                                 Définir mon PIN

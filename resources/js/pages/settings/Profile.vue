@@ -5,14 +5,14 @@ import { isNative } from '@/plugins/capacitor';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     User,
-    Wallet, 
-    ArrowUpRight, 
-    Gift, 
-    TrendingUp, 
-    Smartphone, 
-    Share2, 
+    Wallet,
+    ArrowUpRight,
+    Gift,
+    TrendingUp,
+    Smartphone,
+    Share2,
     Box,
     Users,
     Lock,
@@ -50,7 +50,7 @@ const showInfoModal = ref<string | null>(null);
 const claimGift = () => {
     giftSuccessMsg.value = '';
     giftCodeForm.clearErrors();
-    
+
     giftCodeForm.post('/gift/claim', {
         onSuccess: () => {
             const flashSuccess = page.props.flash?.success;
@@ -170,16 +170,16 @@ onUnmounted(() => {
     <Head title="Profil" />
     <AppLayout :breadcrumbs="breadcrumbs" class="bg-black">
         <div class="relative min-h-screen text-white pb-28 pt-4">
-            
+
             <!-- Glow background items -->
             <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 <div class="absolute top-[5%] left-[10%] w-72 h-72 rounded-full bg-purple-500/5 blur-[100px]"></div>
                 <div class="absolute top-[40%] right-[5%] w-80 h-80 rounded-full bg-purple-600/5 blur-[120px]"></div>
             </div>
- 
+
             <!-- Profile Content Wrapper -->
             <div ref="containerRef" class="relative z-10 w-full max-w-xl mx-auto px-4 flex flex-col gap-5">
-                
+
                 <!-- HEADER: User Profile Info Banner -->
                 <div data-animate="fade-down" class="flex items-center justify-between mt-3 bg-gradient-to-r from-cyan-950/20 via-black/40 to-transparent p-3 rounded-2xl border border-cyan-500/10">
                     <div class="flex items-center gap-3">
@@ -192,23 +192,23 @@ onUnmounted(() => {
                                 <Check class="h-3 w-3 text-black font-black" :stroke-width="2.5" />
                             </div>
                         </div>
-                        
+
                         <!-- User phone, level badge, referral code -->
                         <div class="flex flex-col">
                             <h2 class="text-lg font-black text-cyan-400 tracking-wide font-mono select-all">
                                 {{ user.phone }}
                             </h2>
-                            <div 
-                                @click="showInfoModal = 'level'" 
+                            <div
+                                @click="showInfoModal = 'level'"
                                 class="mt-1 flex items-center gap-1 border border-cyan-500/30 bg-cyan-950/30 text-cyan-400 font-extrabold text-[9px] px-2 py-0.5 rounded-full w-max cursor-pointer hover:bg-cyan-500/10 transition-colors uppercase tracking-wider animate-pulse"
                             >
                                 <span>{{ user.role === 'admin' ? 'ADMINISTRATEUR' : 'MEMBRE VIP ' + (user.vip_level !== undefined ? user.vip_level : 0) }}</span>
                                 <ChevronRight class="h-2.5 w-2.5" :stroke-width="2.5" />
                             </div>
-                            
+
                             <!-- Invitation code -->
-                            <div 
-                                @click="copyReferralCode" 
+                            <div
+                                @click="copyReferralCode"
                                 class="mt-1 text-[10px] text-white/70 font-bold tracking-wide flex items-center gap-1.5 cursor-pointer hover:text-cyan-400 transition-colors"
                             >
                                 <span>Code d'invitation <span class="text-cyan-400 font-mono underline font-bold">{{ user.referral_code }}</span></span>
@@ -271,7 +271,7 @@ onUnmounted(() => {
                 <!-- ACTION BUTTONS: Recharge, Retirer, Recharges, Retraits -->
                 <div data-animate="fade-up" data-delay="200" class="grid grid-cols-4 gap-2.5">
                     <!-- Recharger -->
-                    <Link 
+                    <Link
                         href="/recharger"
                         class="flex flex-col items-center justify-center gap-1.5 bg-[#070a13] border border-purple-500/10 py-3 rounded-2xl shadow hover:border-purple-400/50 hover:bg-purple-950/10 transition-all group"
                     >
@@ -282,7 +282,7 @@ onUnmounted(() => {
                     </Link>
 
                     <!-- Retirer -->
-                    <Link 
+                    <Link
                         href="/retirer"
                         class="flex flex-col items-center justify-center gap-1.5 bg-[#070a13] border border-purple-500/10 py-3 rounded-2xl shadow hover:border-purple-400/50 hover:bg-purple-950/10 transition-all group"
                     >
@@ -293,8 +293,8 @@ onUnmounted(() => {
                     </Link>
 
                     <!-- Recharges -->
-                    <Link 
-                        href="/recharger"
+                    <Link
+                        href="/recharges"
                         class="flex flex-col items-center justify-center gap-1.5 bg-[#070a13] border border-purple-500/10 py-3 rounded-2xl shadow hover:border-purple-400/50 hover:bg-purple-950/10 transition-all group"
                     >
                         <div class="w-10 h-10 rounded-full border border-purple-500/20 bg-purple-950/20 flex items-center justify-center text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.1)] group-hover:scale-105 transition-transform">
@@ -304,8 +304,8 @@ onUnmounted(() => {
                     </Link>
 
                     <!-- Retraits -->
-                    <Link 
-                        href="/retirer"
+                    <Link
+                        href="/retraits"
                         class="flex flex-col items-center justify-center gap-1.5 bg-[#070a13] border border-purple-500/10 py-3 rounded-2xl shadow hover:border-purple-400/50 hover:bg-purple-950/10 transition-all group"
                     >
                         <div class="w-10 h-10 rounded-full border border-purple-500/20 bg-purple-950/20 flex items-center justify-center text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.1)] group-hover:scale-105 transition-transform">
@@ -318,7 +318,7 @@ onUnmounted(() => {
                 <!-- REDEEM GIFT CODE: Échanger le Code Cadeau -->
                 <div data-animate="fade-up" data-delay="250" class="bg-gradient-to-r from-[#060b13] to-[#07140f] border border-emerald-500/15 rounded-2xl p-4.5 shadow-lg relative overflow-hidden">
                     <div class="absolute right-[-10%] top-[-10%] w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
-                    
+
                     <div class="flex items-center gap-3">
                         <!-- Round emerald gift icon badge -->
                         <div class="w-11 h-11 shrink-0 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
@@ -344,16 +344,16 @@ onUnmounted(() => {
 
                     <!-- Form input and Claim Button -->
                     <form @submit.prevent="claimGift" class="mt-4 flex items-center gap-2.5">
-                        <input 
+                        <input
                             v-model="giftCodeForm.code"
-                            type="text" 
-                            placeholder="ENTREZ LE CODE CADEAU" 
+                            type="text"
+                            placeholder="ENTREZ LE CODE CADEAU"
                             class="flex-1 bg-black/60 border border-emerald-500/20 rounded-xl px-4 h-11 text-white placeholder:text-white/20 text-center focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/20 transition-all text-xs font-black uppercase font-mono tracking-wider"
                         />
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             :disabled="giftCodeForm.processing"
-                            class="bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] text-emerald-400 font-extrabold px-5 h-11 rounded-xl text-xs uppercase tracking-widest transition-all duration-300 disabled:opacity-50 shrink-0"
+                            class="bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] text-emerald-400 font-extrabold px-3 h-11 rounded-xl text-[12px] uppercase tracking-widest transition-all duration-300 disabled:opacity-50 shrink-0"
                         >
                             {{ giftCodeForm.processing ? '...' : 'Réclamer' }}
                         </button>
@@ -363,8 +363,8 @@ onUnmounted(() => {
                 <!-- NAVIGATION GRID: Grid of 12 items + stand-alone Quitter button -->
                 <div data-animate="fade-up" data-delay="300" class="bg-[#070a13]/80 border border-purple-500/10 rounded-3xl p-4.5 shadow-lg backdrop-blur-sm relative">
                     <div class="grid grid-cols-4 gap-y-6 gap-x-2">
-                        <div 
-                            v-for="item in menuGrid" 
+                        <div
+                            v-for="item in menuGrid"
                             :key="item.title"
                             @click="handleItemClick(item)"
                             class="flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
@@ -378,7 +378,7 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Quitter (Orange button standalone at the bottom left) -->
-                        <div 
+                        <div
                             @click="handleLogout"
                             class="flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
                         >
@@ -407,8 +407,8 @@ onUnmounted(() => {
                             <p class="text-[10px] text-slate-400 mt-2 font-mono leading-relaxed bg-black/40 border border-purple-500/10 p-3 rounded-xl">
                                 Le tirage au sort hebdomadaire est réservé aux membres VIP. Prochain lancement dans 48 heures.
                             </p>
-                            <button 
-                                @click="showInfoModal = null" 
+                            <button
+                                @click="showInfoModal = null"
                                 class="mt-5 w-full py-2.5 rounded-xl bg-purple-500 text-black font-extrabold uppercase tracking-widest text-[10px] hover:bg-purple-400 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                             >
                                 Fermer
@@ -430,15 +430,15 @@ onUnmounted(() => {
                             <p class="text-[10px] text-slate-400 mt-2 font-mono leading-relaxed bg-black/40 border border-purple-500/10 p-3 rounded-xl">
                                 L'application Android native (.APK) est disponible pour une expérience optimisée ultra-fluide.
                             </p>
-                            <a 
-                                href="/downloads/arm-holding.apk" 
+                            <a
+                                href="/downloads/arm-holding.apk"
                                 download
                                 class="mt-5 block text-center w-full py-2.5 rounded-xl bg-purple-500 text-black font-extrabold uppercase tracking-widest text-[10px] hover:bg-purple-400 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                             >
                                 Télécharger l'APK
                             </a>
-                            <button 
-                                @click="showInfoModal = null" 
+                            <button
+                                @click="showInfoModal = null"
                                 class="mt-2.5 w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all"
                             >
                                 Plus tard
@@ -461,8 +461,8 @@ onUnmounted(() => {
                                 <div class="flex justify-between border-b border-white/5 pb-1"><span class="font-bold">Niveau Actuel:</span><span class="text-purple-400 font-extrabold uppercase">VIP {{ user.vip_level || 1 }}</span></div>
                                 <div class="flex justify-between"><span class="font-bold">Commission Réseau:</span><span class="text-purple-400 font-extrabold font-mono">10% - 5% - 2%</span></div>
                             </div>
-                            <button 
-                                @click="showInfoModal = null" 
+                            <button
+                                @click="showInfoModal = null"
                                 class="mt-5 w-full py-2.5 rounded-xl bg-purple-500 text-black font-extrabold uppercase tracking-widest text-[10px] hover:bg-purple-400 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                             >
                                 Fermer
@@ -485,16 +485,16 @@ onUnmounted(() => {
                                 "Bonjour ! Je suis votre assistante d'infrastructure réseau. Vos serveurs tournent à plein régime avec un taux d'efficacité de 99.8%. Avez-vous réclamé vos profits journaliers ?"
                             </p>
                             <div class="flex gap-2 mt-5">
-                                <Link 
-                                    href="/generate" 
+                                <Link
+                                    href="/generate"
                                     class="flex-1 py-2.5 rounded-xl bg-purple-500 text-black font-extrabold uppercase tracking-widest text-[9px] hover:bg-purple-400 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center justify-center gap-1"
                                     @click="showInfoModal = null"
                                 >
                                     <Play class="h-3 w-3 fill-current" />
                                     Console AI
                                 </Link>
-                                <button 
-                                    @click="showInfoModal = null" 
+                                <button
+                                    @click="showInfoModal = null"
                                     class="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-[9px] hover:bg-white/10 transition-all"
                                 >
                                     Revenir

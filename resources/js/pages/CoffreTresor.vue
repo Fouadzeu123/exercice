@@ -4,7 +4,7 @@ import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     Gift,
     Users,
     TrendingUp,
@@ -148,7 +148,7 @@ const { containerRef } = useRevealAnimation();
                         <span>{{ todayInvitations }} / {{ maxInvitations }}</span>
                     </div>
                     <div class="w-full h-3.5 bg-black/60 rounded-full border border-cyan-500/20 p-0.5 overflow-hidden">
-                        <div 
+                        <div
                             class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
                             :style="{ width: progressPercent + '%' }"
                         ></div>
@@ -160,7 +160,7 @@ const { containerRef } = useRevealAnimation();
             <div data-animate="scale-up" data-delay="150" class="p-4 rounded-2xl border border-cyan-500/10 bg-cyan-950/5 relative overflow-hidden shadow text-center mx-4">
                 <HelpCircle class="h-5 w-5 text-cyan-400 mx-auto mb-2" :stroke-width="2.5" />
                 <p class="text-[10px] text-slate-300 font-bold uppercase tracking-wider mb-1">Règlement du Coffre au Trésor</p>
-                <p class="text-[9px] text-slate-400 leading-relaxed">
+                <p class="text-[12px] text-slate-400 leading-relaxed">
                     Invitez des partenaires à recharger et activer un nœud de calcul le même jour pour déverrouiller les paliers correspondants. Les récompenses sont automatiquement créditées sur votre balance.
                 </p>
             </div>
@@ -169,7 +169,7 @@ const { containerRef } = useRevealAnimation();
             <div data-stagger="true" class="space-y-3.5 mx-4">
                 <h3 class="text-xs font-black text-white uppercase tracking-wider mb-2">Paliers de Récompenses</h3>
 
-                <div 
+                <div
                     v-for="tier in tiers" :key="tier.invitations"
                     data-animate="fade-up"
                     class="group relative bg-[#0a0416] border rounded-3xl overflow-hidden transition-all duration-300 shadow-lg flex flex-col sm:flex-row items-stretch min-h-[140px]"
@@ -192,20 +192,20 @@ const { containerRef } = useRevealAnimation();
                                 <h4 class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
                                     Coffre {{ tier.label }}
                                     <!-- Completed Badge -->
-                                    <span 
+                                    <span
                                         v-if="getTierStatus(tier.invitations) === 'completed'"
                                         class="text-[8px] font-black bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-lg uppercase tracking-wider animate-pulse shrink-0 font-mono"
                                     >
                                         Débloqué
                                     </span>
-                                    <span 
+                                    <span
                                         v-else
                                         class="text-[8px] font-black bg-white/5 border border-white/10 text-slate-400 px-1.5 py-0.5 rounded-lg uppercase tracking-wider shrink-0 font-mono"
                                     >
                                         Verrouillé
                                     </span>
                                 </h4>
-                                
+
                                 <!-- Premium Status Icon -->
                                 <div class="shrink-0">
                                     <CheckCircle2 v-if="getTierStatus(tier.invitations) === 'completed'" class="h-4.5 w-4.5 text-emerald-400 drop-shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
@@ -225,7 +225,7 @@ const { containerRef } = useRevealAnimation();
                                 <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Prime de palier</span>
                                 <div class="text-xs font-mono font-black text-emerald-400 mt-0.5">+{{ formatXAF(tier.reward) }}</div>
                             </div>
-                            
+
                             <!-- Invite progress helper -->
                             <div class="text-[9px] font-mono font-black text-slate-500" :class="getTierStatus(tier.invitations) === 'completed' ? 'text-emerald-400 animate-pulse' : ''">
                                 {{ todayInvitations }} / {{ tier.invitations }}
@@ -239,7 +239,7 @@ const { containerRef } = useRevealAnimation();
             <!-- SHARE LINK SHORTCUT -->
             <div data-animate="fade-up" class="bg-gradient-to-b from-[#0a0f1d]/90 to-[#070b14]/90 border border-cyan-500/15 rounded-3xl p-5 shadow-2xl backdrop-blur-sm text-center mx-4">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-3">Besoin de plus d'invitations ?</p>
-                <Link 
+                <Link
                     href="/share"
                     class="inline-flex items-center gap-1.5 py-3 px-6 rounded-xl bg-cyan-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 transition-all duration-300 w-full justify-center"
                 >

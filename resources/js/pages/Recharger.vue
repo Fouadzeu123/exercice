@@ -4,7 +4,7 @@ import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import { Head, useForm, usePage, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     ArrowLeft,
     Check,
     Smartphone,
@@ -147,7 +147,7 @@ onUnmounted(() => {
 
             <!-- HEADER (Top Navbar match) -->
             <div data-animate="fade-down" class="flex items-center justify-between bg-[#0c0f1d] p-4 rounded-2xl border border-purple-500/10 shadow-lg relative">
-                <Link 
+                <Link
                     href="/dashboard"
                     class="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center text-white hover:bg-black transition-colors"
                 >
@@ -159,7 +159,7 @@ onUnmounted(() => {
                 </h2>
 
                 <div class="flex items-center gap-2">
-                    <div 
+                    <div
                         @click="toggleLocale"
                         class="border border-white/10 bg-white/5 px-2.5 py-1 rounded-xl text-[9px] font-bold tracking-wide flex items-center gap-1.5 hover:border-purple-400/50 transition-colors cursor-pointer uppercase select-none mr-1"
                     >
@@ -167,7 +167,7 @@ onUnmounted(() => {
                         <span>{{ currentLocale }}</span>
                     </div>
 
-                    <Link 
+                    <Link
                         href="/recharges"
                         class="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center text-white hover:bg-black transition-colors"
                         :title="t('Historique', 'History')"
@@ -184,24 +184,24 @@ onUnmounted(() => {
                 </span>
 
                 <div class="space-y-3">
-                    <button 
+                    <button
                         v-for="channel in paymentChannels" :key="channel.id"
                         type="button"
                         @click="selectChannel(channel)"
                         class="w-full p-4 rounded-2xl border flex items-center justify-between transition-all duration-300"
-                        :class="selectedChannel.id === channel.id 
-                            ? 'bg-purple-500/10 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
+                        :class="selectedChannel.id === channel.id
+                            ? 'bg-purple-500/10 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.15)]'
                             : 'bg-black/30 border-white/5 text-slate-400 hover:text-white'"
                     >
                         <div class="flex items-center gap-3">
                             <!-- Radio Indicator Circle -->
-                            <div 
+                            <div
                                 class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0"
                                 :class="selectedChannel.id === channel.id ? 'border-purple-400 bg-purple-400' : 'border-white/20'"
                             >
                                 <span v-if="selectedChannel.id === channel.id" class="w-1.5 h-1.5 rounded-full bg-[#070b14]"></span>
                             </div>
-                            
+
                             <!-- Icon inside grey capsule -->
                             <div class="w-10 h-10 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center text-purple-400">
                                 <component :is="channel.icon" class="h-5 w-5" :stroke-width="2.5" />
@@ -214,9 +214,9 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Checkmark icon on the right side if active -->
-                        <Check 
+                        <Check
                             v-if="selectedChannel.id === channel.id"
-                            class="h-4.5 w-4.5 text-purple-400 shrink-0" 
+                            class="h-4.5 w-4.5 text-purple-400 shrink-0"
                             :stroke-width="2.5"
                         />
                     </button>
@@ -225,14 +225,14 @@ onUnmounted(() => {
 
             <!-- INPUT AMOUNT (Mockup Enter input match) -->
             <div data-animate="fade-up" data-delay="150" class="bg-gradient-to-b from-[#0c0f1d]/90 to-[#070b14]/90 border border-purple-500/15 rounded-3xl p-5 shadow-2xl backdrop-blur-md flex flex-col gap-4">
-                
+
                 <form @submit.prevent="handleDepositSubmit" class="space-y-4">
                     <div class="flex flex-col gap-1.5">
                         <div class="relative">
                             <!-- Prefix FCFA inside -->
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-extrabold text-purple-400 uppercase tracking-widest">FCFA</span>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 v-model="depositForm.amount"
                                 required
                                 min="500"
@@ -248,7 +248,7 @@ onUnmounted(() => {
                         <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider">
                             {{ t('Numéro Mobile Money de Débit', 'Debit Mobile Money Number') }}
                         </label>
-                        <input 
+                        <input
                             type="tel"
                             v-model="depositForm.phone"
                             placeholder="Ex: 237690000000"
@@ -266,7 +266,7 @@ onUnmounted(() => {
                             <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider">
                                 {{ t('Hash de Transaction (TXID) TRC-20', 'TRC-20 Transaction Hash (TXID)') }}
                             </label>
-                            <input 
+                            <input
                                 type="text"
                                 v-model="depositForm.usdt_hash"
                                 :placeholder="t('Entrez le hash de transaction', 'Enter transaction hash')"
@@ -275,7 +275,7 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <button 
+                    <button
                         type="submit"
                         :disabled="depositForm.processing"
                         class="w-full py-3.5 rounded-xl bg-purple-500 text-black font-extrabold text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:bg-purple-400 transition-all duration-300 disabled:opacity-50"
@@ -285,7 +285,7 @@ onUnmounted(() => {
                 </form>
 
                 <!-- RECHARGE GUIDELINES (Mockup footer match) -->
-                <div class="border-t border-purple-500/10 pt-4.5 text-[9px] text-slate-400 leading-relaxed font-mono">
+                <div class="border-t border-purple-500/10 pt-4.5 text-[15px] text-slate-400 leading-relaxed font-mono">
                     <p class="font-bold text-white mb-2 uppercase tracking-wide">
                         {{ t('Conseils de recharge :', 'Recharge Guidelines:') }}
                     </p>

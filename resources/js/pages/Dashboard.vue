@@ -341,7 +341,7 @@ const initCosmicParticles = () => {
   const animate = () => {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     for (let p of particles) {
       p.x += p.vx;
       p.y += p.vy;
@@ -350,7 +350,7 @@ const initCosmicParticles = () => {
       if (p.y < 0) p.y = canvas.height;
       if (p.y > canvas.height) p.y = 0;
     }
-    
+
     // Lignes entre particules proches
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
@@ -368,17 +368,17 @@ const initCosmicParticles = () => {
         }
       }
     }
-    
+
     for (let p of particles) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fillStyle = p.color;
       ctx.fill();
     }
-    
+
     particlesAnimationId = requestAnimationFrame(animate);
   };
-  
+
   animate();
 };
 
@@ -443,7 +443,7 @@ watch(
         </div>
 
         <div ref="containerRef" class="relative z-10 min-h-screen pb-24">
-            
+
             <!-- SKELETON SCREEN LOADING -->
             <div v-if="isLoading" class="space-y-6 px-4 pt-6">
                 <!-- Shimmering Header -->
@@ -526,10 +526,10 @@ watch(
 
             <!-- Main Responsive 3-Column Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 mb-8">
-                
+
                 <!-- Left Column (Main Panel) - occupies 2 columns on desktop -->
                 <div class="lg:col-span-2 space-y-6 flex flex-col justify-start">
-                    
+
                     <!-- grille d'icônes -->
                     <div data-animate="fade-up" data-delay="300" class="w-full bg-[#0f071d]/60 border border-white/10 rounded-2xl p-4 shadow-xl backdrop-blur-sm glow-border">
                         <div class="grid grid-cols-4 gap-3">
@@ -672,7 +672,7 @@ watch(
                             <div v-for="(node, idx) in combinedProducts" :key="node.id + '-' + node.isVault + '-' + (node.isAvip ?? false)" @click="viewProductDetails(node)" class="group relative bg-[#0a0416] border border-[#00f3ff]/15 rounded-3xl overflow-hidden hover:border-[#00f3ff]/40 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-cyan-500/10 flex flex-col justify-between animate-fadeInUp" :style="{ animationDelay: (idx * 0.05) + 's' }">
                                 <!-- Top Header Info -->
                                 <div class="p-3 bg-[#0e071d] flex items-center justify-between border-b border-white/5">
-                                    <span class="text-[10px] font-black text-white uppercase tracking-wider truncate max-w-[70%]">
+                                    <span class="text-[15px] font-black text-white uppercase tracking-wider truncate max-w-[70%]">
                                         {{ node.isAvip ? t('Unité d\'Accélération AVIP', 'AVIP Acceleration Unit') : (node.isVault ? t('Vault d\'Épargne ARM', 'ARM Savings Vault') : t('Location Carte Unique ' + node.name, 'Rental Single Card ' + node.name)) }}
                                     </span>
                                     <!-- Duration Badge -->
@@ -733,10 +733,10 @@ watch(
 
                 <!-- Right Column (Sidebar) - occupies 1 column on desktop -->
                 <div class="lg:col-span-1 space-y-6 flex flex-col justify-start">
-                    
+
                     <!-- En direct (Live withdrawals feed) -->
                     <div data-animate="fade-up" data-delay="200" class="w-full">
-                        
+
                         <!-- header with scintillating cyan icon -->
                         <div class="flex items-center gap-3 mb-4">
                             <div class="relative flex items-center justify-center">
@@ -807,7 +807,7 @@ watch(
                         </div>
 
                         <!-- Sync Trigger button -->
-                        <button 
+                        <button
                             @click="handleCheckinTrigger"
                             :disabled="checkinProcessing"
                             class="w-full py-3.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2"
@@ -832,7 +832,7 @@ watch(
                             </h3>
                             <button @click="showInviteModal = false" class="hover:rotate-90 transition-transform"><XIcon class="w-5 h-5 text-gray-400" /></button>
                         </div>
-                        
+
                         <p class="text-xs text-gray-400 mb-6 font-mono leading-relaxed">
                             Développez votre maillage d'infrastructure en parrainant de nouveaux nœuds de calcul semi-conducteurs.
                         </p>
@@ -880,7 +880,7 @@ watch(
                         <p class="text-xs text-gray-400 mt-2 font-mono leading-relaxed">
                             Le nœud principal de votre console AI s'est synchronisé avec succès sur la grille globale ARM.
                         </p>
-                        
+
                         <div class="my-6 p-4 rounded-xl bg-black/40 border border-emerald-500/15">
                             <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Énergie Captée</div>
                             <div class="text-2xl font-mono font-black text-emerald-400 mt-1">+77 FCFA</div>

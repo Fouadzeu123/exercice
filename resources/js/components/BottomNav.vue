@@ -59,19 +59,19 @@ const isActive = (href: string) => {
         </div>
 
         <div class="flex justify-around items-center max-w-lg mx-auto h-14">
-            <Link 
-                v-for="item in items" 
+            <Link
+                v-for="item in items"
                 :key="item.href"
                 :href="item.href"
                 class="flex flex-col items-center justify-center gap-1 flex-1 py-1 group transition-all duration-300"
                 :class="isActive(item.href) ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]' : 'text-gray-500 hover:text-gray-300'"
             >
-                <component 
-                    :is="item.icon" 
+                <component
+                    :is="item.icon"
                     class="w-6 h-6 transition-transform duration-200 group-active:scale-95 group-hover:scale-110"
                     :class="isActive(item.href) ? 'stroke-[3.2px]' : 'stroke-[2.6px]'"
                 />
-                <span class="text-[9px] font-mono tracking-wider font-bold">
+                <span class="text-[12px] font-mono tracking-wider font-bold">
                     {{ item.title }}
                 </span>
             </Link>
