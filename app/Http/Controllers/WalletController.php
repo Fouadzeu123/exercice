@@ -84,8 +84,9 @@ class WalletController extends Controller
      */
     public function deposit(Request $request)
     {
+        $minDeposit = \App\Services\SettingsService::get('min_deposit', 1000);
         $request->validate([
-            'amount' => 'required|numeric|min:100',
+            'amount' => 'required|numeric|min:' . $minDeposit,
             'method' => 'required|string|in:mtn,orange,usdt',
             'phone' => 'nullable|string',
             'usdt_hash' => 'nullable|string',
@@ -118,8 +119,9 @@ class WalletController extends Controller
      */
     public function withdraw(Request $request)
     {
+        $minWithdrawal = \App\Services\SettingsService::get('min_withdrawal', 1000);
         $request->validate([
-            'amount' => 'required|numeric|in:1000,5000,15000,50000,150000,500000,1500000,5000000',
+            'amount' => 'required|numeric|min:' . $minWithdrawal,
             'method' => 'required|string|in:mtn,orange,usdt',
             'phone' => 'nullable|string',
             'wallet_address' => 'nullable|string',

@@ -35,17 +35,19 @@ const claimedAmount = ref(0);
 const showErrorModal = ref(false);
 const errorMessage = ref('');
 
-const dailySalaries = {
-    0: 0,
-    1: 100,
-    2: 250,
-    3: 500,
-    4: 1000,
-    5: 2000,
-};
+const dailySalaries = computed(() => {
+    return (page.props.settings as any)?.vip_salaries || {
+        0: 0,
+        1: 100,
+        2: 250,
+        3: 500,
+        4: 1000,
+        5: 2000,
+    };
+});
 
 const userDailyRate = computed(() => {
-    const rate = dailySalaries[props.stats.vip_level as keyof typeof dailySalaries];
+    const rate = dailySalaries.value[props.stats.vip_level as keyof typeof dailySalaries.value];
     return rate !== undefined ? rate : 0;
 });
 
@@ -152,10 +154,20 @@ const vipLevels = [
 // Let's adjust VIP 3 personal amount back to original (50000) so we don't change logic!
 vipLevels[3].personal = 50000;
 
+const dynamicVipLevels = computed(() => {
+    const salaries = dailySalaries.value;
+    return vipLevels.map(v => ({
+        ...v,
+        salary: salaries[v.level as keyof typeof salaries] !== undefined 
+            ? parseFloat(salaries[v.level as keyof typeof salaries] as any) 
+            : v.salary
+    }));
+});
+
 const { containerRef } = useRevealAnimation();
 
 const currentVipTitle = computed(() => {
-    const levelObj = vipLevels.find(l => l.level === props.stats.vip_level);
+    const levelObj = dynamicVipLevels.value.find(l => l.level === props.stats.vip_level);
     return levelObj ? levelObj.title.split(' - ')[1] : 'Débutant Silicon';
 });
 </script>
@@ -246,7 +258,7 @@ const currentVipTitle = computed(() => {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div 
-                        v-for="v in vipLevels" 
+                        v-for="v in dynamicVipLevels" 
                         :key="v.level"
                         class="group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 flex flex-col justify-between"
                         :class="stats.vip_level === v.level 

@@ -93,6 +93,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('admin/node/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteNode'])->name('admin.node.delete');
         Route::post('admin/avip-product/{id}/update', [\App\Http\Controllers\AdminController::class, 'updateAvipProduct'])->name('admin.avipproduct.update');
         Route::delete('admin/avip-product/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteAvipProduct'])->name('admin.avipproduct.delete');
+
+        // Admin Announcements CRUD Routes
+        Route::post('admin/announcement', [\App\Http\Controllers\AdminController::class, 'createAnnouncement'])->name('admin.announcement.create');
+        Route::post('admin/announcement/{id}/update', [\App\Http\Controllers\AdminController::class, 'updateAnnouncement'])->name('admin.announcement.update');
+        Route::delete('admin/announcement/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteAnnouncement'])->name('admin.announcement.delete');
+
+        // Admin Settings Route
+        Route::post('admin/settings', [\App\Http\Controllers\AdminController::class, 'updateSettings'])->name('admin.settings.update');
     });
 });
 

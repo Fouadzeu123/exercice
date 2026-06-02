@@ -33,12 +33,17 @@ class AdminController extends Controller
         $totalWithdrawals = abs(Transaction::where('type', 'withdrawal')->where('status', 'completed')->sum('amount'));
         $activeNodesCount = \App\Models\UserNode::where('active', true)->count();
 
+        $announcements = \App\Models\Announcement::orderBy('created_at', 'desc')->get();
+        $settings = \App\Services\SettingsService::all();
+
         return Inertia::render('admin/AdminDashboard', [
             'pendingTransactions' => $pendingTransactions,
             'users' => $users,
             'giftCodes' => $giftCodes,
             'nodes' => $nodes,
             'avipProducts' => $avipProducts,
+            'announcements' => $announcements,
+            'settings' => $settings,
             'metrics' => [
                 'total_deposits' => (float)$totalDeposits,
                 'total_withdrawals' => (float)$totalWithdrawals,
@@ -379,6 +384,119 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Nouvel équipement AVIP créé avec succès.');
+    }
+
+    /**
+     * Create a new announcement.
+     */
+    public function createAnnouncement(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image_url' => 'nullable|string',
+            'image_file' => 'nullable|file|image|max:5120',
+            'link' => 'nullable|string',
+            'active' => 'required|boolean',
+        ]);
+
+        $imageUrl = $request->image_url;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $file->move(public_path('images'), $fileName);
+            $imageUrl = '/images/' . $fileName;
+        }
+
+        \App\Models\Announcement::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'image_url' => $imageUrl,
+            'link' => $request->link,
+            'active' => $request->active,
+        ]);
+
+        return back()->with('success', 'Nouvelle annonce créée et publiée avec succès.');
+    }
+
+    /**
+     * Update an announcement.
+     */
+    public function updateAnnouncement(Request $request, $id)
+    {
+        $announcement = \App\Models\Announcement::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image_url' => 'nullable|string',
+            'image_file' => 'nullable|file|image|max:5120',
+            'link' => 'nullable|string',
+            'active' => 'required|boolean',
+        ]);
+
+        $imageUrl = $request->image_url;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $file->move(public_path('images'), $fileName);
+            $imageUrl = '/images/' . $fileName;
+        }
+
+        $announcement->update([
+            'title' => $request->title,
+            'content' => $request->content,
+            'image_url' => $imageUrl,
+            'link' => $request->link,
+            'active' => $request->active,
+        ]);
+
+        return back()->with('success', 'Annonce mise à jour avec succès.');
+    }
+
+    /**
+     * Delete an announcement.
+     */
+    public function deleteAnnouncement($id)
+    {
+        $announcement = \App\Models\Announcement::findOrFail($id);
+        $announcement->delete();
+
+        return back()->with('success', 'Annonce supprimée avec succès.');
+    }
+
+    /**
+     * Update global system settings and VIP salaries.
+     */
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'min_deposit' => 'required|numeric|min:0',
+            'min_withdrawal' => 'required|numeric|min:0',
+            'support_telegram' => 'nullable|string',
+            'support_whatsapp' => 'nullable|string',
+            'lucky_draw_cost' => 'required|integer|min:0',
+            'generation_duration' => 'required|integer|min:1',
+            'vip_salaries' => 'required|array',
+            'vip_salaries.0' => 'required|numeric|min:0',
+            'vip_salaries.1' => 'required|numeric|min:0',
+            'vip_salaries.2' => 'required|numeric|min:0',
+            'vip_salaries.3' => 'required|numeric|min:0',
+            'vip_salaries.4' => 'required|numeric|min:0',
+            'vip_salaries.5' => 'required|numeric|min:0',
+        ]);
+
+        \App\Services\SettingsService::setMultiple([
+            'min_deposit' => (float) $request->min_deposit,
+            'min_withdrawal' => (float) $request->min_withdrawal,
+            'support_telegram' => $request->support_telegram,
+            'support_whatsapp' => $request->support_whatsapp,
+            'lucky_draw_cost' => (int) $request->lucky_draw_cost,
+            'generation_duration' => (int) $request->generation_duration,
+            'vip_salaries' => array_map('floatval', $request->vip_salaries),
+        ]);
+
+        return back()->with('success', 'Configuration globale du système enregistrée.');
     }
 }
 ?>

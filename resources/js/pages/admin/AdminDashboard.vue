@@ -24,7 +24,9 @@ import {
     Lock,
     PlusCircle,
     Activity,
-    Gift
+    Gift,
+    Megaphone as MegaphoneIcon,
+    Coins
 } from 'lucide-vue-next';
 
 // Props passed from backend AdminController
@@ -85,6 +87,24 @@ const props = defineProps<{
         active: boolean;
         deleted_at: string | null;
     }>;
+    announcements: Array<{
+        id: number;
+        title: string;
+        content: string;
+        image_url: string | null;
+        link: string | null;
+        active: boolean;
+        created_at: string;
+    }>;
+    settings: {
+        vip_salaries: Record<number, number>;
+        min_deposit: number;
+        min_withdrawal: number;
+        support_telegram: string;
+        support_whatsapp: string;
+        lucky_draw_cost: number;
+        generation_duration: number;
+    };
     metrics: {
         total_deposits: number;
         total_withdrawals: number;
@@ -103,7 +123,7 @@ const formatXAF = (value: number | string) => {
     return new Intl.NumberFormat('fr-FR').format(num) + ' XAF';
 };
 
-// Tabs: 'transactions' | 'users' | 'giftcodes' | 'products'
+// Tabs: 'transactions' | 'users' | 'giftcodes' | 'products' | 'announcements' | 'settings'
 const activeTab = ref('transactions');
 const searchQuery = ref('');
 
@@ -111,7 +131,7 @@ const searchQuery = ref('');
 const syncTabWithUrl = () => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    if (tabParam && ['transactions', 'users', 'giftcodes', 'products'].includes(tabParam)) {
+    if (tabParam && ['transactions', 'users', 'giftcodes', 'products', 'announcements', 'settings'].includes(tabParam)) {
         activeTab.value = tabParam;
     }
 };
@@ -402,8 +422,79 @@ const handleCreateAvip = () => {
     });
 };
 
+// ANNOUNCEMENT FORM & MODALS
+const selectedAnnouncement = ref<any | null>(null);
+const showCreateAnnouncementModal = ref(false);
+
+const announcementForm = useForm({
+    title: '',
+    content: '',
+    image_url: '',
+    image_file: null as File | null,
+    link: '',
+    active: true,
+});
+
+const openAnnouncementModal = (announcement: any) => {
+    selectedAnnouncement.value = announcement;
+    announcementForm.title = announcement.title;
+    announcementForm.content = announcement.content;
+    announcementForm.image_url = announcement.image_url || '';
+    announcementForm.image_file = null;
+    announcementForm.link = announcement.link || '';
+    announcementForm.active = !!announcement.active;
+};
+
+const handleCreateAnnouncement = () => {
+    announcementForm.post('/admin/announcement', {
+        onSuccess: () => {
+            showCreateAnnouncementModal.value = false;
+            announcementForm.reset();
+            showToast("Nouvelle annonce publiée.");
+        },
+        onError: (err: any) => showToast("Erreur lors de la publication de l'annonce.", true)
+    });
+};
+
+const handleUpdateAnnouncement = () => {
+    if (!selectedAnnouncement.value) return;
+    announcementForm.post(`/admin/announcement/${selectedAnnouncement.value.id}/update`, {
+        onSuccess: () => {
+            selectedAnnouncement.value = null;
+            showToast("Annonce mise à jour avec succès.");
+        },
+        onError: (err: any) => showToast("Erreur de mise à jour.", true)
+    });
+};
+
+const handleDeleteAnnouncement = (id: number) => {
+    if (!confirm("Voulez-vous supprimer cette annonce ?")) return;
+    router.delete(`/admin/announcement/${id}/delete`, {
+        onSuccess: () => showToast("Annonce supprimée."),
+        onError: (err: any) => showToast("Échec de suppression.", true)
+    });
+};
+
+// SYSTEM CONFIGURATION FORM
+const settingsForm = useForm({
+    min_deposit: props.settings.min_deposit,
+    min_withdrawal: props.settings.min_withdrawal,
+    support_telegram: props.settings.support_telegram,
+    support_whatsapp: props.settings.support_whatsapp,
+    lucky_draw_cost: props.settings.lucky_draw_cost,
+    generation_duration: props.settings.generation_duration,
+    vip_salaries: { ...props.settings.vip_salaries },
+});
+
+const handleUpdateSettings = () => {
+    settingsForm.post('/admin/settings', {
+        onSuccess: () => showToast("Configuration globale du système enregistrée."),
+        onError: (err: any) => showToast("Erreur d'enregistrement des paramètres.", true)
+    });
+};
+
 // Scroll Lock Watcher
-watch([selectedUser, selectedNode, selectedAvip, showCreateNodeModal, showCreateAvipModal], (states) => {
+watch([selectedUser, selectedNode, selectedAvip, showCreateNodeModal, showCreateAvipModal, selectedAnnouncement, showCreateAnnouncementModal], (states) => {
     if (states.some(Boolean)) {
         document.body.style.overflow = 'hidden';
     } else {
@@ -540,6 +631,20 @@ onUnmounted(() => {
                         :class="activeTab === 'products' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]' : 'text-slate-400 hover:text-white'"
                     >
                         Catalogue Produits ({{ nodes.length + avipProducts.length }})
+                    </button>
+                    <button 
+                        @click="activeTab = 'announcements'" 
+                        class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+                        :class="activeTab === 'announcements' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]' : 'text-slate-400 hover:text-white'"
+                    >
+                        Annonces ({{ announcements.length }})
+                    </button>
+                    <button 
+                        @click="activeTab = 'settings'" 
+                        class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+                        :class="activeTab === 'settings' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]' : 'text-slate-400 hover:text-white'"
+                    >
+                        Paramètres Système
                     </button>
                 </div>
 
@@ -946,6 +1051,190 @@ onUnmounted(() => {
                             >
                                 <Settings class="w-3 h-3" /> Configurer
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT 5: ANNOUNCEMENTS CRUD -->
+            <div v-else-if="activeTab === 'announcements'" class="space-y-6">
+                <div class="glass rounded-3xl p-5 border border-white/5 bg-black/10">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                            <MegaphoneIcon class="h-4.5 w-4.5 text-purple-400 animate-pulse" />
+                            Gestion des Annonces & Actualités Système
+                        </h3>
+                        <button 
+                            @click="showCreateAnnouncementModal = true"
+                            class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-wider text-[8px] rounded-lg transition-all shadow-[0_0_8px_rgba(168,85,247,0.2)] flex items-center gap-1"
+                        >
+                            <Plus class="w-3.5 h-3.5" /> Publier une Annonce
+                        </button>
+                    </div>
+
+                    <div v-if="announcements.length === 0" class="py-16 text-center text-xs text-slate-500 font-mono border border-dashed border-white/5 rounded-2xl">
+                        [ INFOS ] : Aucune annonce système publiée pour le moment.
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div v-for="ann in announcements" :key="ann.id" class="p-5 rounded-2xl border border-purple-500/10 bg-black/25 flex flex-col justify-between hover:border-purple-500/30 transition-all duration-300">
+                            <div>
+                                <div class="flex justify-between items-start gap-2 mb-3">
+                                    <h4 class="text-xs font-bold text-white leading-snug">{{ ann.title }}</h4>
+                                    <span class="text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider font-mono shrink-0"
+                                        :class="ann.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'"
+                                    >
+                                        {{ ann.active ? 'ACTIF' : 'INACTIF' }}
+                                    </span>
+                                </div>
+                                
+                                <p class="text-[11px] text-slate-400 leading-relaxed mb-4 whitespace-pre-line line-clamp-3">
+                                    {{ ann.content }}
+                                </p>
+
+                                <div v-if="ann.image_url" class="h-28 w-full rounded-xl overflow-hidden mb-4 border border-white/5">
+                                    <img :src="ann.image_url" class="h-full w-full object-cover" />
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 text-[9px] font-mono text-slate-500 mb-4">
+                                    <span>Créé le: {{ new Date(ann.created_at).toLocaleDateString() }}</span>
+                                    <span v-if="ann.link">• Lien: <a :href="ann.link" target="_blank" class="text-cyan-400 underline">{{ ann.link }}</a></span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 border-t border-white/5 pt-3">
+                                <button 
+                                    @click="openAnnouncementModal(ann)"
+                                    class="flex-1 py-2 bg-purple-600/10 hover:bg-purple-600 hover:text-white text-purple-400 border border-purple-500/20 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1"
+                                >
+                                    <Edit3 class="w-3 h-3" /> Configurer
+                                </button>
+                                <button 
+                                    @click="handleDeleteAnnouncement(ann.id)"
+                                    class="p-2 bg-rose-950/20 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-black rounded-xl transition-all"
+                                >
+                                    <Trash2 class="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT 6: SYSTEM PARAMETERS -->
+            <div v-else-if="activeTab === 'settings'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- System Config Form (Left Column) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <form @submit.prevent="handleUpdateSettings" class="space-y-6">
+                        <!-- Card 1: Limits & Support links -->
+                        <div class="glass rounded-3xl p-6 border border-white/5 bg-black/10 space-y-4">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2 border-b border-white/5 pb-3">
+                                <Settings class="h-4.5 w-4.5 text-purple-400" />
+                                Variables de Contrôle de l'Écosystème
+                            </h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Minimum de Dépôt (XAF)</label>
+                                    <input 
+                                        v-model="settingsForm.min_deposit" 
+                                        type="number" 
+                                        required 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 h-11 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Minimum de Retrait (XAF)</label>
+                                    <input 
+                                        v-model="settingsForm.min_withdrawal" 
+                                        type="number" 
+                                        required 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 h-11 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Canal Support Telegram</label>
+                                    <input 
+                                        v-model="settingsForm.support_telegram" 
+                                        type="url" 
+                                        placeholder="https://t.me/..." 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 h-11 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Canal Support WhatsApp</label>
+                                    <input 
+                                        v-model="settingsForm.support_whatsapp" 
+                                        type="url" 
+                                        placeholder="https://wa.me/..." 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 h-11 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Spins de bienvenue par Parrainage</label>
+                                    <input 
+                                        v-model="settingsForm.lucky_draw_cost" 
+                                        type="number" 
+                                        required 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 h-11 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Durée de Génération Node (secondes)</label>
+                                    <input 
+                                        v-model="settingsForm.generation_duration" 
+                                        type="number" 
+                                        required 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 h-11 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <button 
+                            type="submit" 
+                            :disabled="settingsForm.processing"
+                            class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50"
+                        >
+                            {{ settingsForm.processing ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA CONFIGURATION GLOBAL SYSTEM' }}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right Column: Salaries Configurations (VIP 1 to 5) -->
+                <div class="lg:col-span-1">
+                    <div class="glass rounded-3xl p-6 border border-white/5 bg-black/10 space-y-4">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2 border-b border-white/5 pb-3">
+                            <Coins class="h-4.5 w-4.5 text-purple-400 animate-pulse" />
+                            Configuration des Salaires VIP
+                        </h3>
+                        <p class="text-[10px] text-slate-400 leading-relaxed uppercase tracking-wider">
+                            Définit les dividendes journaliers automatiques réclamés par les investisseurs selon leur rang VIP.
+                        </p>
+
+                        <div class="space-y-4 pt-2">
+                            <div v-for="level in [1, 2, 3, 4, 5]" :key="level" class="space-y-1.5 p-3 rounded-2xl border border-purple-500/5 bg-purple-950/[0.02]">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] font-black text-white uppercase tracking-wider">Palier VIP {{ level }}</span>
+                                    <span class="text-[9px] font-mono text-purple-400 font-bold">Actuel: {{ formatXAF(props.settings.vip_salaries[level] || 0) }}</span>
+                                </div>
+                                <div class="relative">
+                                    <input 
+                                        v-model="settingsForm.vip_salaries[level]" 
+                                        type="number" 
+                                        required 
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3.5 pr-12 h-10 rounded-xl focus:border-purple-400 outline-none"
+                                    />
+                                    <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-500 font-mono">XAF</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1522,6 +1811,161 @@ onUnmounted(() => {
                             class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
                         >
                             {{ createAvipForm.processing ? 'Création...' : 'Créer l\'Équipement' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL OVERLAY 6: CREATE ANNOUNCEMENT -->
+        <div v-if="showCreateAnnouncementModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+            <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                            <MegaphoneIcon class="w-4 h-4 text-purple-400" />
+                            Créer une Annonce
+                        </h3>
+                        <button @click="showCreateAnnouncementModal = false" class="hover:rotate-90 transition-transform"><X class="w-5 h-5 text-slate-400" /></button>
+                    </div>
+
+                    <form @submit.prevent="handleCreateAnnouncement" class="space-y-3.5 text-xs">
+                        <!-- Title -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Titre de l'Annonce</label>
+                            <input v-model="announcementForm.title" type="text" required placeholder="Titre accrocheur..." class="w-full bg-black/50 border border-purple-500/20 text-white font-sans text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
+                        <!-- Content -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Contenu textuel</label>
+                            <textarea v-model="announcementForm.content" rows="4" required placeholder="Tapez votre message ici..." class="w-full bg-black/50 border border-purple-500/20 text-white font-sans text-xs pl-3 py-2 rounded-xl focus:outline-none"></textarea>
+                        </div>
+
+                        <!-- Fichier Image Upload -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Fichier de l'image (Upload)</label>
+                            <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                        <img v-if="announcementForm.image_file" :src="URL.createObjectURL(announcementForm.image_file)" class="h-full w-full object-cover" />
+                                        <MegaphoneIcon v-else class="h-5 w-5 text-slate-600" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-bold text-white truncate max-w-[150px]">
+                                            {{ announcementForm.image_file ? announcementForm.image_file.name : 'Aucun fichier choisi' }}
+                                        </p>
+                                        <p class="text-[8px] text-slate-500">Cliquez pour modifier</p>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    @change="(e: any) => announcementForm.image_file = e.target.files[0]"
+                                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                />
+                                <div class="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[9px] font-black uppercase tracking-wider group-hover:bg-cyan-500/20 transition-all font-mono">
+                                    Parcourir
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Link (optional) -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Lien externe redirection (Optionnel)</label>
+                            <input v-model="announcementForm.link" type="text" placeholder="https://..." class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
+                        <!-- Active status -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="announcementForm.active" type="checkbox" id="create_ann_active" class="accent-purple-500 rounded cursor-pointer" />
+                            <label for="create_ann_active" class="text-[10px] text-slate-300 font-black cursor-pointer uppercase">Publier immédiatement</label>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            :disabled="announcementForm.processing"
+                            class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                        >
+                            {{ announcementForm.processing ? 'Publication...' : 'Publier' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL OVERLAY 7: EDIT ANNOUNCEMENT -->
+        <div v-if="selectedAnnouncement" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+            <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                            <MegaphoneIcon class="w-4 h-4 text-purple-400" />
+                            Modifier l'Annonce
+                        </h3>
+                        <button @click="selectedAnnouncement = null" class="hover:rotate-90 transition-transform"><X class="w-5 h-5 text-slate-400" /></button>
+                    </div>
+
+                    <form @submit.prevent="handleUpdateAnnouncement" class="space-y-3.5 text-xs">
+                        <!-- Title -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Titre de l'Annonce</label>
+                            <input v-model="announcementForm.title" type="text" required class="w-full bg-black/50 border border-purple-500/20 text-white font-sans text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
+                        <!-- Content -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Contenu textuel</label>
+                            <textarea v-model="announcementForm.content" rows="4" required class="w-full bg-black/50 border border-purple-500/20 text-white font-sans text-xs pl-3 py-2 rounded-xl focus:outline-none"></textarea>
+                        </div>
+
+                        <!-- Image File Upload or URL -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Fichier de l'image (Upload)</label>
+                            <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                        <img v-if="announcementForm.image_file" :src="URL.createObjectURL(announcementForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-else-if="announcementForm.image_url" :src="announcementForm.image_url" class="h-full w-full object-cover" />
+                                        <MegaphoneIcon v-else class="h-5 w-5 text-slate-600" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-bold text-white truncate max-w-[150px]">
+                                            {{ announcementForm.image_file ? announcementForm.image_file.name : 'Aucun fichier choisi' }}
+                                        </p>
+                                        <p class="text-[8px] text-slate-500">Cliquez pour modifier</p>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    @change="(e: any) => announcementForm.image_file = e.target.files[0]"
+                                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                />
+                                <div class="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[9px] font-black uppercase tracking-wider group-hover:bg-cyan-500/20 transition-all font-mono">
+                                    Parcourir
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Link (optional) -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Lien externe redirection (Optionnel)</label>
+                            <input v-model="announcementForm.link" type="text" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
+                        <!-- Active status -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="announcementForm.active" type="checkbox" id="edit_ann_active" class="accent-purple-500 rounded cursor-pointer" />
+                            <label for="edit_ann_active" class="text-[10px] text-slate-300 font-black cursor-pointer uppercase">Afficher l'annonce (Actif)</label>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            :disabled="announcementForm.processing"
+                            class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                        >
+                            {{ announcementForm.processing ? 'Enregistrement...' : 'Enregistrer' }}
                         </button>
                     </form>
                 </div>

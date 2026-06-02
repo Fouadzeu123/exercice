@@ -126,15 +126,8 @@ class AVIPProductController extends Controller
             }
         }
 
-        // Define daily salary amounts per VIP level
-        $dailySalaries = [
-            0 => 0.00,
-            1 => 100.00,
-            2 => 250.00,
-            3 => 500.00,
-            4 => 1000.00,
-            5 => 2000.00,
-        ];
+        // Define daily salary amounts per VIP level dynamically from settings
+        $dailySalaries = \App\Services\SettingsService::get('vip_salaries');
 
         $salaryAmount = $dailySalaries[$userVipLevel] ?? 0.00;
 
