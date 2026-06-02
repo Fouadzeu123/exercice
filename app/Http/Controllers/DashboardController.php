@@ -104,8 +104,8 @@ class DashboardController extends Controller
 
         try {
             \DB::transaction(function () use ($user, $reference) {
-                // Montant du bonus quotidien : 500 XAF
-                $bonusAmount = 500.00;
+                // Montant du bonus quotidien : 77 FCFA
+                $bonusAmount = 77.00;
 
                 // Ajouter au solde
                 $user->balance += $bonusAmount;
@@ -123,7 +123,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Synchronisation du nœud principal réussie. +500 XAF injectés.',
+                'message' => 'Synchronisation du nœud principal réussie. +77 FCFA injectés.',
                 'new_balance' => $user->balance
             ]);
 

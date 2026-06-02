@@ -802,7 +802,7 @@ watch(
                         <!-- Bonus detail -->
                         <div class="my-5 p-4 rounded-xl bg-black/40 border border-white/5">
                             <span class="text-[9px] text-slate-500 uppercase tracking-widest block font-bold">Crédit Énergétique</span>
-                            <span class="text-xl font-mono font-black text-purple-400 mt-1 block">+500 XAF</span>
+                            <span class="text-xl font-mono font-black text-purple-400 mt-1 block">+77 FCFA</span>
                             <span class="text-[8px] text-slate-500 font-mono block mt-1">[ Prêt pour la synchronisation ]</span>
                         </div>
 
@@ -883,7 +883,7 @@ watch(
                         
                         <div class="my-6 p-4 rounded-xl bg-black/40 border border-emerald-500/15">
                             <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Énergie Captée</div>
-                            <div class="text-2xl font-mono font-black text-emerald-400 mt-1">+500 XAF</div>
+                            <div class="text-2xl font-mono font-black text-emerald-400 mt-1">+77 FCFA</div>
                             <div class="text-[9px] text-gray-500 font-mono mt-1">[ Injecté dans le portefeuille ]</div>
                         </div>
 

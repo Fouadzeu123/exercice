@@ -12,7 +12,8 @@ import {
     AlertCircle,
     Building2,
     Coins,
-    X
+    X,
+    History
 } from 'lucide-vue-next';
 import { t, currentLocale, toggleLocale } from '@/utils/trans';
 
@@ -38,6 +39,34 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: t('Tableau de Bord', 'Dashboard'), href: '/dashboard' },
     { title: t('Recharger', 'Recharge'), href: '/recharger' },
 ];
+
+const showHistory = ref(false);
+
+const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+};
+
+const getStatusColor = (status: string) => {
+    switch(status) {
+        case 'completed': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        case 'pending': return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
+        case 'rejected': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+        default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+    }
+};
+
+const getStatusLabel = (status: string) => {
+    switch(status) {
+        case 'completed': return t('Validé', 'Approved');
+        case 'pending': return t('En attente', 'Pending');
+        case 'rejected': return t('Rejeté', 'Rejected');
+        default: return status;
+    }
+};
 
 // Payment channels from mockup screenshot
 const paymentChannels = [
@@ -129,12 +158,22 @@ onUnmounted(() => {
                     {{ t('Recharger', 'Recharge') }}
                 </h2>
 
-                <div 
-                    @click="toggleLocale"
-                    class="border border-white/10 bg-white/5 px-2.5 py-1 rounded-xl text-[9px] font-bold tracking-wide flex items-center gap-1.5 hover:border-purple-400/50 transition-colors cursor-pointer uppercase select-none"
-                >
-                    <Globe class="h-3.5 w-3.5 text-purple-400" :stroke-width="2.5" />
-                    <span>{{ currentLocale }}</span>
+                <div class="flex items-center gap-2">
+                    <div 
+                        @click="toggleLocale"
+                        class="border border-white/10 bg-white/5 px-2.5 py-1 rounded-xl text-[9px] font-bold tracking-wide flex items-center gap-1.5 hover:border-purple-400/50 transition-colors cursor-pointer uppercase select-none mr-1"
+                    >
+                        <Globe class="h-3.5 w-3.5 text-purple-400" :stroke-width="2.5" />
+                        <span>{{ currentLocale }}</span>
+                    </div>
+
+                    <Link 
+                        href="/recharges"
+                        class="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center text-white hover:bg-black transition-colors"
+                        :title="t('Historique', 'History')"
+                    >
+                        <History class="h-4.5 w-4.5" :stroke-width="2.5" />
+                    </Link>
                 </div>
             </div>
 

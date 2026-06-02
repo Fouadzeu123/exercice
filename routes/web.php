@@ -34,6 +34,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('wallet', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallet.index');
     Route::get('recharger', [\App\Http\Controllers\WalletController::class, 'rechargerPage'])->name('wallet.recharger');
     Route::get('retirer', [\App\Http\Controllers\WalletController::class, 'retirerPage'])->name('wallet.retirer');
+    Route::get('recharges', [\App\Http\Controllers\WalletController::class, 'rechargesHistoryPage'])->name('wallet.recharges');
+    Route::get('retraits', [\App\Http\Controllers\WalletController::class, 'retraitsHistoryPage'])->name('wallet.retraits');
     Route::post('wallet/deposit', [\App\Http\Controllers\WalletController::class, 'deposit'])->name('wallet.deposit');
     Route::post('wallet/withdraw', [\App\Http\Controllers\WalletController::class, 'withdraw'])->name('wallet.withdraw');
 

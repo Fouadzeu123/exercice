@@ -220,48 +220,13 @@ onUnmounted(() => {
                         <span>{{ currentLocale }}</span>
                     </div>
 
-                    <button 
-                        @click="showHistory = !showHistory"
+                    <Link 
+                        href="/retraits"
                         class="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center text-white hover:bg-black transition-colors"
                         :title="t('Historique', 'History')"
                     >
                         <History class="h-4.5 w-4.5" :stroke-width="2.5" />
-                    </button>
-                </div>
-            </div>
-
-            <!-- WITHDRAWAL HISTORY DRAWER / VIEW OVERLAY -->
-            <div v-if="showHistory" class="bg-gradient-to-b from-[#060b13] to-[#02050c] border border-cyan-500/15 rounded-3xl p-5 shadow-2xl backdrop-blur-sm animate-fadeIn duration-300">
-                <div class="flex items-center justify-between mb-4 border-b border-cyan-500/10 pb-3">
-                    <h3 class="text-xs font-black uppercase tracking-wider flex items-center gap-2 text-cyan-400">
-                        <History class="h-4.5 w-4.5" :stroke-width="2.5" />
-                        {{ t('Historique des retraits', 'Withdrawals History') }}
-                    </h3>
-                    <button @click="showHistory = false" class="text-xs font-bold text-slate-400 hover:text-white uppercase">
-                        {{ t('Fermer', 'Close') }}
-                    </button>
-                </div>
-
-                <div v-if="!withdrawals || withdrawals.length === 0" class="py-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {{ t('Aucun retrait effectué', 'No withdrawals made') }}
-                </div>
-
-                <div class="space-y-3 max-h-64 overflow-y-auto">
-                    <div 
-                        v-for="wth in withdrawals" :key="wth.id"
-                        class="bg-black/40 border border-white/5 rounded-xl p-3.5 flex items-center justify-between"
-                    >
-                        <div>
-                            <div class="text-xs font-black font-mono text-cyan-400">-{{ formatXAF(Math.abs(wth.amount)) }}</div>
-                            <span class="text-[9px] text-slate-500 font-mono mt-0.5 block">{{ formatDate(wth.created_at) }}</span>
-                        </div>
-                        <span 
-                            class="text-[8px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider"
-                            :class="getStatusColor(wth.status)"
-                        >
-                            {{ getStatusLabel(wth.status) }}
-                        </span>
-                    </div>
+                    </Link>
                 </div>
             </div>
 

@@ -233,4 +233,38 @@ class WalletController extends Controller
             return back()->withErrors(['code' => 'Échec de la réclamation : ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Show dedicated Deposits History page
+     */
+    public function rechargesHistoryPage()
+    {
+        $user = Auth::user();
+
+        $deposits = Transaction::where('user_id', $user->id)
+            ->where('type', 'deposit')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return Inertia::render('Recharges', [
+            'deposits' => $deposits,
+        ]);
+    }
+
+    /**
+     * Show dedicated Withdrawals History page
+     */
+    public function retraitsHistoryPage()
+    {
+        $user = Auth::user();
+
+        $withdrawals = Transaction::where('user_id', $user->id)
+            ->where('type', 'withdrawal')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return Inertia::render('Retraits', [
+            'withdrawals' => $withdrawals,
+        ]);
+    }
 }
