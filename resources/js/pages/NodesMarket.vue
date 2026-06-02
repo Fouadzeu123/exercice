@@ -199,7 +199,7 @@ const { containerRef } = useRevealAnimation();
                             {{ t('Location Carte Unique ' + node.name, 'Rental Single Card ' + node.name) }}
                         </span>
                         <!-- Duration Badge -->
-                        <span class="text-[9px] font-black bg-purple-400 text-black px-3 py-1 rounded-lg uppercase tracking-wider">
+                        <span class="text-[12px] font-black bg-purple-400 text-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md">
                             {{ node.duration }} {{ t('Jours', 'Days') }}
                         </span>
                     </div>
@@ -228,24 +228,24 @@ const { containerRef } = useRevealAnimation();
                     <!-- Stats Grid 2x2 with borders -->
                     <div class="grid grid-cols-2 bg-[#0c0f1d]/50">
                         <!-- Stock -->
-                        <div class="p-3 border-r border-b border-white/5 flex items-center justify-between gap-1 text-[9px] uppercase tracking-wider">
-                            <span class="text-slate-400 font-bold text-[9px]">{{ t('Qté en stock:', 'Stock Qty:') }}</span>
-                            <span class="text-purple-400 font-black font-mono text-[9px]">{{ node.stock_quantity ?? '12018' }}</span>
+                        <div class="p-3 border-r border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
+                            <span class="text-slate-400 font-bold text-[11px]">{{ t('Qté en stock:', 'Stock Qty:') }}</span>
+                            <span class="text-purple-400 font-black font-mono text-[11px]">{{ node.stock_quantity ?? '12018' }}</span>
                         </div>
                         <!-- Purchase Limit -->
-                        <div class="p-3 border-b border-white/5 flex items-center justify-between gap-1 text-[9px] uppercase tracking-wider">
-                            <span class="text-slate-400 font-bold text-[9px]">{{ t("Lim. d'achat:", 'Limit:') }}</span>
-                            <span class="text-purple-400 font-black font-mono text-[9px]">{{ node.limited_purchase_count ?? 0 }}</span>
+                        <div class="p-3 border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
+                            <span class="text-slate-400 font-bold text-[11px]">{{ t("Lim. d'achat:", 'Limit:') }}</span>
+                            <span class="text-purple-400 font-black font-mono text-[11px]">{{ node.limited_purchase_count ?? 0 }}</span>
                         </div>
                         <!-- Total Revenue -->
                         <div class="p-3 border-r border-white/5 flex flex-col gap-1">
                             <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ t('Revenu total', 'Total revenue') }}</span>
-                            <span class="text-[11px] font-black text-emerald-400 font-mono">{{ formatXAF(parseFloat(node.generation_profit) * node.duration) }}</span>
+                            <span class="text-[14.5px] font-black text-emerald-400 font-mono tracking-tight">{{ formatXAF(parseFloat(node.generation_profit) * node.duration) }}</span>
                         </div>
                         <!-- Rental Price -->
                         <div class="p-3 flex flex-col gap-1">
                             <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ t('Montant location', 'Rental fee') }}</span>
-                            <span class="text-[11px] font-black text-yellow-400 font-mono">{{ formatXAF(node.amount) }}</span>
+                            <span class="text-[14.5px] font-black text-yellow-400 font-mono tracking-tight">{{ formatXAF(node.amount) }}</span>
                         </div>
                     </div>
 

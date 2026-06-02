@@ -646,7 +646,7 @@ watch(
                                         {{ node.isVault ? t('Vault d\'Épargne ARM', 'ARM Savings Vault') : t('Location Carte Unique ' + node.name, 'Rental Single Card ' + node.name) }}
                                     </span>
                                     <!-- Duration Badge -->
-                                    <span class="text-[9px] font-black bg-cyan-500 text-black px-3 py-1 rounded-lg uppercase tracking-wider">
+                                    <span class="text-[12px] font-black bg-cyan-500 text-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md">
                                         {{ node.duration }} {{ t('Jours', 'Days') }}
                                     </span>
                                 </div>
@@ -674,24 +674,24 @@ watch(
                                 <!-- Stats Grid 2x2 with borders -->
                                 <div class="grid grid-cols-2 bg-[#0e071d]/50">
                                     <!-- Stock -->
-                                    <div class="p-3 border-r border-b border-white/5 flex items-center justify-between gap-1 text-[9px] uppercase tracking-wider">
-                                        <span class="text-slate-400 font-bold text-[9px]">{{ node.isVault ? t('Garantie:', 'Guaranteed:') : t('Qté en stock:', 'Stock Qty:') }}</span>
-                                        <span class="text-cyan-400 font-black font-mono text-[9px]">{{ node.isVault ? '100% SEC' : (node.stock_quantity ?? '12018') }}</span>
+                                    <div class="p-3 border-r border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
+                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isVault ? t('Garantie:', 'Guaranteed:') : t('Qté en stock:', 'Stock Qty:') }}</span>
+                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isVault ? '100% SEC' : (node.stock_quantity ?? '12018') }}</span>
                                     </div>
                                     <!-- Purchase Limit -->
-                                    <div class="p-3 border-b border-white/5 flex items-center justify-between gap-1 text-[9px] uppercase tracking-wider">
-                                        <span class="text-slate-400 font-bold text-[9px]">{{ node.isVault ? t('Contrat:', 'Contract:') : t("Lim. d'achat:", 'Limit:') }}</span>
-                                        <span class="text-cyan-400 font-black font-mono text-[9px]">{{ node.isVault ? 'LOCK TERM' : (node.max_purchase_limit ?? 0) }}</span>
+                                    <div class="p-3 border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
+                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isVault ? t('Contrat:', 'Contract:') : t("Lim. d'achat:", 'Limit:') }}</span>
+                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isVault ? 'LOCK TERM' : (node.max_purchase_limit ?? 0) }}</span>
                                     </div>
                                     <!-- Total Revenue -->
                                     <div class="p-3 border-r border-white/5 flex flex-col gap-1">
                                         <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ node.isVault ? t('Retour final', 'Final return') : t('Revenu total', 'Total revenue') }}</span>
-                                        <span class="text-[11px] font-black text-emerald-400 font-mono">{{ node.isVault ? formatXAF(node.fixed_return) : formatXAF(node.generation_profit * node.duration) }}</span>
+                                        <span class="text-[14.5px] font-black text-emerald-400 font-mono tracking-tight">{{ node.isVault ? formatXAF(node.fixed_return) : formatXAF(node.generation_profit * node.duration) }}</span>
                                     </div>
                                     <!-- Rental Price -->
                                     <div class="p-3 flex flex-col gap-1">
                                         <span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">{{ node.isVault ? t('Dépôt requis', 'Required deposit') : t('Montant location', 'Rental fee') }}</span>
-                                        <span class="text-[11px] font-black text-yellow-400 font-mono">{{ formatXAF(node.amount) }}</span>
+                                        <span class="text-[14.5px] font-black text-yellow-400 font-mono tracking-tight">{{ formatXAF(node.amount) }}</span>
                                     </div>
                                 </div>
                             </div>

@@ -243,16 +243,79 @@ const { containerRef } = useRevealAnimation();
                 </div>
             </div>
 
-            <!-- COMMISSION SCHEME -->
-            <div class="p-4 rounded-2xl border border-purple-500/10 bg-purple-950/5 relative overflow-hidden shadow mx-4">
-                <div class="flex items-center gap-2 mb-3">
-                    <Award class="h-4.5 w-4.5 text-purple-400" :stroke-width="2.5" />
-                    <span class="text-xs font-black text-white uppercase tracking-wider">Grille de commissions</span>
+            <!-- COMMISSION SCHEME (Premium responsive cards grid) -->
+            <div data-animate="fade-up" class="mx-4 flex flex-col gap-4">
+                <div class="flex items-center gap-2 border-b border-purple-500/10 pb-2">
+                    <Award class="h-5 w-5 text-purple-400" :stroke-width="2.5" />
+                    <span class="text-xs font-black text-white uppercase tracking-wider">Grille de Commissions</span>
                 </div>
-                <div class="space-y-1.5 text-[10px] text-slate-400 font-mono">
-                    <div class="flex justify-between border-b border-white/5 pb-1"><span>Niveau 1 (Directs):</span><span class="text-purple-400 font-black font-mono">10% commission</span></div>
-                    <div class="flex justify-between border-b border-white/5 pb-1"><span>Niveau 2 (Indirects):</span><span class="text-purple-400 font-black font-mono">5% commission</span></div>
-                    <div class="flex justify-between"><span>Niveau 3 (Équipe):</span><span class="text-purple-400 font-black font-mono">2% commission</span></div>
+                
+                <div class="grid grid-cols-1 gap-3">
+                    <!-- Niveau 1 Card (Purple Theme) -->
+                    <div class="relative overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-purple-900/10 to-black/60 p-4 shadow-lg hover:border-purple-400/50 transition-all flex items-center justify-between">
+                        <!-- Glow highlight -->
+                        <div class="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-purple-500/10 blur-md pointer-events-none"></div>
+                        
+                        <div class="flex items-center gap-3">
+                            <!-- Icon badge -->
+                            <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400 shrink-0">
+                                <Award class="h-5 w-5" :stroke-width="2.5" />
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black text-purple-400 uppercase tracking-widest block font-mono">Niveau 1</span>
+                                <span class="text-[12px] font-bold text-white block mt-0.5">Membres Directs</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right flex flex-col items-end">
+                            <span class="text-2xl font-black font-mono text-purple-400 leading-none">10%</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black font-mono tracking-tighter mt-1">Commission</span>
+                        </div>
+                    </div>
+
+                    <!-- Niveau 2 Card (Cyan Theme) -->
+                    <div class="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/30 via-cyan-900/10 to-black/60 p-4 shadow-lg hover:border-cyan-400/50 transition-all flex items-center justify-between">
+                        <!-- Glow highlight -->
+                        <div class="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-cyan-500/10 blur-md pointer-events-none"></div>
+                        
+                        <div class="flex items-center gap-3">
+                            <!-- Icon badge -->
+                            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
+                                <Award class="h-5 w-5" :stroke-width="2.5" />
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest block font-mono">Niveau 2</span>
+                                <span class="text-[12px] font-bold text-white block mt-0.5">Membres Indirects</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right flex flex-col items-end">
+                            <span class="text-2xl font-black font-mono text-cyan-400 leading-none">5%</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black font-mono tracking-tighter mt-1">Commission</span>
+                        </div>
+                    </div>
+
+                    <!-- Niveau 3 Card (Amber/Gold Theme) -->
+                    <div class="relative overflow-hidden rounded-2xl border border-yellow-500/30 bg-gradient-to-r from-yellow-950/30 via-yellow-900/10 to-black/60 p-4 shadow-lg hover:border-yellow-400/50 transition-all flex items-center justify-between">
+                        <!-- Glow highlight -->
+                        <div class="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-yellow-500/10 blur-md pointer-events-none"></div>
+                        
+                        <div class="flex items-center gap-3">
+                            <!-- Icon badge -->
+                            <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/25 flex items-center justify-center text-yellow-400 shrink-0">
+                                <Award class="h-5 w-5" :stroke-width="2.5" />
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black text-yellow-400 uppercase tracking-widest block font-mono">Niveau 3</span>
+                                <span class="text-[12px] font-bold text-white block mt-0.5">Membres de l'Équipe</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right flex flex-col items-end">
+                            <span class="text-2xl font-black font-mono text-yellow-400 leading-none">2%</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black font-mono tracking-tighter mt-1">Commission</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 

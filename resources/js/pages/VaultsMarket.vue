@@ -172,8 +172,8 @@ onUnmounted(() => {
                         <div class="h-12 w-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shadow-[0_0_15px_rgba(139,92,246,0.2)]">
                             <Lock class="h-6 w-6" :stroke-width="2.5" />
                         </div>
-                        <span class="text-[10px] font-bold text-white tracking-wide px-2.5 py-1 rounded-md bg-white/5 border border-white/10 flex items-center gap-1">
-                            <Clock class="h-3 w-3" :stroke-width="2.5" />
+                        <span class="text-[12px] font-black text-white tracking-wide px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 flex items-center gap-1 shadow-sm">
+                            <Clock class="h-3.5 w-3.5 text-secondary animate-pulse" :stroke-width="2.5" />
                             {{ vault.duration }} Jours
                         </span>
                     </div>
@@ -189,11 +189,11 @@ onUnmounted(() => {
                         <div class="grid grid-cols-2 gap-4 border-y border-white/5 py-4 my-4">
                             <div>
                                 <span class="text-[10px] text-muted-foreground block">Dépôt Requis</span>
-                                <span class="text-sm font-bold text-white font-mono">{{ formatXAF(vault.fixed_investment_amount) }}</span>
+                                <span class="text-[14.5px] font-black text-white font-mono tracking-tight">{{ formatXAF(vault.fixed_investment_amount) }}</span>
                             </div>
                             <div>
                                 <span class="text-[10px] text-muted-foreground block">Profit Total</span>
-                                <span class="text-sm font-extrabold text-secondary font-mono">+{{ formatXAF(vault.profit_amount) }}</span>
+                                <span class="text-[14.5px] font-black text-secondary font-mono tracking-tight">+{{ formatXAF(vault.profit_amount) }}</span>
                             </div>
                         </div>
                     </div>
@@ -202,7 +202,7 @@ onUnmounted(() => {
                     <div class="z-10 mt-auto">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-xs text-muted-foreground">Retour Final:</span>
-                            <span class="text-lg font-extrabold text-emerald-400 font-mono">{{ formatXAF(vault.fixed_return) }}</span>
+                            <span class="text-xl font-black text-emerald-400 font-mono tracking-tight">{{ formatXAF(vault.fixed_return) }}</span>
                         </div>
 
                         <button 

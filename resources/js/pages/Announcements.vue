@@ -14,7 +14,9 @@ import {
     X,
     Server,
     Cpu,
-    ArrowRight
+    ArrowRight,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -108,6 +110,30 @@ const fallbackAnnouncements = [
         type: 'alert',
         created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
         active: true
+    },
+    {
+        id: 104,
+        title: 'Inauguration du Quantum Grid ARM à Singapour',
+        content: 'Le consortium ARM Secure Net vient de déployer un cluster de calcul hybride silicium-quantique à Singapour. Cette infrastructure permet le co-traitement distribué ultra-sécurisé via cryptographie post-quantique. Les utilisateurs de nœuds réseau bénéficient désormais d\'une stabilité accrue de 25% lors des phases de génération intensive.',
+        type: 'success',
+        created_at: new Date(Date.now() - 3600000 * 36).toISOString(),
+        active: true
+    },
+    {
+        id: 105,
+        title: 'Refroidissement Cryogénique Actif sur Nœuds Oméga',
+        content: 'Afin d\'accompagner les records de calcul de l\'IA générative, ARM Holding déploie des systèmes de refroidissement cryogénique liquide à base de micro-canaux directs. Cette technologie permet aux supercalculateurs de tourner à plein régime sans aucune baisse de performance thermique.',
+        type: 'info',
+        created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
+        active: true
+    },
+    {
+        id: 106,
+        title: 'Partenariat Stratégique ARM & NVIDIA Blackwell',
+        content: 'Une alliance technologique majeure unit désormais ARM Holding aux processeurs graphiques de nouvelle génération Blackwell. L\'objectif est de concevoir la plateforme ultime de co-traitement décentralisé grand public, reliant téléphones mobiles et serveurs clouds d\'IA.',
+        type: 'warning',
+        created_at: new Date(Date.now() - 3600000 * 60).toISOString(),
+        active: true
     }
 ];
 
@@ -131,6 +157,32 @@ const activeAnnouncements = computed(() => {
         })
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 });
+
+// Pagination state & logic
+const currentPage = ref(1);
+const itemsPerPage = 3;
+
+const totalPages = computed(() => {
+    return Math.ceil(activeAnnouncements.value.length / itemsPerPage);
+});
+
+const paginatedAnnouncements = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return activeAnnouncements.value.slice(start, end);
+});
+
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+};
 
 const { containerRef } = useRevealAnimation();
 </script>
@@ -172,7 +224,7 @@ const { containerRef } = useRevealAnimation();
                 </div>
 
                 <div
-                    v-for="ann in activeAnnouncements" :key="ann.id"
+                    v-for="ann in paginatedAnnouncements" :key="ann.id"
                     data-animate="fade-up"
                     @click="selectedAnnouncement = ann"
                     class="bg-gradient-to-b from-[#0a0416]/90 to-[#05020c]/90 border border-purple-500/15 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-sm cursor-pointer group hover:border-purple-400/30 transition-all duration-300 flex flex-col"
@@ -222,6 +274,29 @@ const { containerRef } = useRevealAnimation();
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- PAGINATION CONTROLS -->
+            <div v-if="totalPages > 1" data-animate="fade-up" class="flex items-center justify-between bg-black/40 border border-purple-500/10 px-4 py-3 rounded-2xl mx-4 shadow-lg shrink-0">
+                <button 
+                    @click="prevPage" 
+                    :disabled="currentPage === 1"
+                    class="w-10 h-10 rounded-xl bg-purple-950/20 border border-purple-500/20 flex items-center justify-center text-purple-400 hover:bg-purple-500/20 disabled:opacity-30 disabled:hover:bg-purple-950/20 transition-all cursor-pointer"
+                >
+                    <ChevronLeft class="h-5 w-5" />
+                </button>
+                
+                <span class="text-xs font-black text-slate-300 font-mono">
+                    PAGE {{ currentPage }} SUR {{ totalPages }}
+                </span>
+                
+                <button 
+                    @click="nextPage" 
+                    :disabled="currentPage === totalPages"
+                    class="w-10 h-10 rounded-xl bg-purple-950/20 border border-purple-500/20 flex items-center justify-center text-purple-400 hover:bg-purple-500/20 disabled:opacity-30 disabled:hover:bg-purple-950/20 transition-all cursor-pointer"
+                >
+                    <ChevronRight class="h-5 w-5" />
+                </button>
             </div>
 
         </div>

@@ -302,7 +302,7 @@ onUnmounted(() => {
                             </div>
                             <div class="text-right shrink-0">
                                 <span class="text-[8px] text-slate-500 uppercase block font-bold">Dividende AVIP</span>
-                                <span class="text-[10px] font-mono font-black text-emerald-400">+{{ formatXAF(product.daily_salary) }}/jour</span>
+                                <span class="text-[12.5px] font-mono font-black text-emerald-400">+{{ formatXAF(product.daily_salary) }}/jour</span>
                             </div>
                         </div>
 
@@ -310,7 +310,7 @@ onUnmounted(() => {
                         <div class="flex justify-between items-center">
                             <div>
                                 <span class="text-[8px] text-slate-500 uppercase block">Licence AVIP</span>
-                                <span class="text-sm font-mono font-black text-purple-400">{{ formatXAF(product.amount) }}</span>
+                                <span class="text-[15.5px] font-mono font-black text-purple-400 tracking-tight">{{ formatXAF(product.amount) }}</span>
                             </div>
 
                             <button

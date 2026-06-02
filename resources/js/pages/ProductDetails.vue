@@ -167,7 +167,7 @@ onUnmounted(() => {
                         {{ product.isVault ? t('Vault d\'Épargne ARM', 'ARM Savings Vault') : t('Location Carte Unique ' + product.name, 'Rental Single Card ' + product.name) }}
                     </span>
                     <!-- Duration Badge -->
-                    <span class="text-[10px] font-black bg-purple-500 text-black px-3.5 py-1.5 rounded-lg uppercase tracking-wider font-mono">
+                    <span class="text-[12px] font-black bg-purple-500 text-black px-4 py-2 rounded-xl uppercase tracking-wider font-mono shadow-md">
                         {{ product.duration }} {{ t('Jours', 'Days') }}
                     </span>
                 </div>
@@ -275,7 +275,7 @@ onUnmounted(() => {
                 <div class="h-px bg-white/5"></div>
                 <div class="flex justify-between items-center text-xs">
                     <span class="text-slate-200 font-bold uppercase">{{ product.isVault ? t('Dépôt Requis', 'Deposit Required') : t('Frais de Réservation', 'Rental Fee') }}</span>
-                    <span class="font-black text-yellow-400 font-mono text-lg">{{ formatXAF(product.amount) }}</span>
+                    <span class="font-black text-yellow-400 font-mono text-xl tracking-tight shadow-sm">{{ formatXAF(product.amount) }}</span>
                 </div>
 
                 <!-- Action Button -->

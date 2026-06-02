@@ -171,5 +171,29 @@ class DatabaseSeeder extends Seeder
             'link' => '/vip',
             'active' => true,
         ]);
+
+        \App\Models\Announcement::create([
+            'title' => 'Inauguration du Quantum Grid ARM à Singapour',
+            'content' => 'Le consortium ARM Secure Net vient de déployer un cluster de calcul hybride silicium-quantique à Singapour. Cette infrastructure permet le co-traitement distribué ultra-sécurisé via cryptographie post-quantique.',
+            'image_url' => '/images/omega_quantum.jpg',
+            'link' => '/nodes',
+            'active' => true,
+        ]);
+
+        \App\Models\Announcement::create([
+            'title' => 'Refroidissement Cryogénique Actif sur Nœuds Oméga',
+            'content' => 'Afin d\'accompagner les records de calcul de l\'IA générative, ARM Holding déploie des systèmes de refroidissement cryogénique liquide à base de micro-canaux directs.',
+            'image_url' => '/images/partnership.jpg',
+            'link' => '/nodes',
+            'active' => true,
+        ]);
+
+        \App\Models\Announcement::create([
+            'title' => 'Partenariat Stratégique ARM & NVIDIA Blackwell',
+            'content' => 'Une alliance technologique majeure unit désormais ARM Holding aux processeurs graphiques de nouvelle génération Blackwell pour concevoir la plateforme ultime de co-traitement.',
+            'image_url' => '/images/vip_upgrade.jpg',
+            'link' => '/vip',
+            'active' => true,
+        ]);
     }
 }
