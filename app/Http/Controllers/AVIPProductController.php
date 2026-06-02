@@ -137,11 +137,38 @@ class AVIPProductController extends Controller
         ];
 
         $salaryAmount = $dailySalaries[$userVipLevel] ?? 0.00;
+        // 1. Enforce first salary claim only 24 hours after the first purchased product (node or avip)
+        $earliestProduct = DB::table('user_nodes')
+            ->where('user_id', $user->id)
+            ->where('active', true)
+            ->orderBy('activated_at', 'asc')
+            ->first();
 
-        // Check if user has already claimed salary today
+        $earliestAvipProduct = DB::table('user_avip_products')
+            ->where('user_id', $user->id)
+            ->where('active', true)
+            ->orderBy('purchased_at', 'asc')
+            ->first();
+
+        $activationTime = null;
+        if ($earliestProduct && $earliestAvipProduct) {
+            $activationTime = Carbon::min(Carbon::parse($earliestProduct->activated_at), Carbon::parse($earliestAvipProduct->purchased_at));
+        } elseif ($earliestProduct) {
+            $activationTime = Carbon::parse($earliestProduct->activated_at);
+        } elseif ($earliestAvipProduct) {
+            $activationTime = Carbon::parse($earliestAvipProduct->purchased_at);
+        }
+
+        if ($activationTime && Carbon::parse($activationTime)->addHours(24)->isFuture()) {
+            $availableTime = Carbon::parse($activationTime)->addHours(24);
+            return back()->withErrors(['error' => "Vous pourrez réclamer votre premier salaire journalier 24 heures après l'achat de votre premier produit. Disponible le : " . $availableTime->format('d/m/Y H:i:s')]);
+        }
+
+        // 2. Enforce subsequent claims only 24 hours after the last salary claim
         $lastClaimDate = $user->last_salary_claim_date;
-        if ($lastClaimDate && Carbon::parse($lastClaimDate)->isToday()) {
-            return back()->withErrors(['error' => 'Vous avez déjà réclamé votre salaire journalier aujourd\'hui.']);
+        if ($lastClaimDate && Carbon::parse($lastClaimDate)->addHours(24)->isFuture()) {
+            $nextAvailable = Carbon::parse($lastClaimDate)->addHours(24);
+            return back()->withErrors(['error' => "Vous ne pouvez réclamer votre salaire qu'une seule fois toutes les 24 heures. Prochaine réclamation disponible à partir de : " . $nextAvailable->format('d/m/Y H:i:s')]);
         }
 
         try {

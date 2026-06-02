@@ -38,6 +38,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
             'referral_code' => \Illuminate\Support\Str::random(10),
             'referrer_id' => $referrer_id,
+            'draw_spins' => 0,
         ]);
     }
 }

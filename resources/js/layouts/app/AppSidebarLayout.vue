@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { isNative } from '@/plugins/capacitor';
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import BottomNav from '@/components/BottomNav.vue';
@@ -113,9 +114,9 @@ onMounted(() => {
     });
 
     // Affiche la bannière de téléchargement 2 secondes après chargement
-    // seulement si l'utilisateur ne l'a pas déjà fermée
+    // seulement si l'utilisateur ne l'a pas déjà fermée et n'est pas dans l'app native
     const alreadyDismissed = localStorage.getItem('arm_app_banner_dismissed');
-    if (!alreadyDismissed) {
+    if (!alreadyDismissed && !isNative()) {
         setTimeout(() => {
             showDownloadBanner.value = true;
         }, 2000);

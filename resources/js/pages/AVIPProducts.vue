@@ -78,12 +78,11 @@ const userDailyRate = computed(() => {
     const rate = dailySalaries[props.userVipLevel as keyof typeof dailySalaries];
     return rate !== undefined ? rate : 0.00;
 });
-
 const isSalaryClaimedToday = computed(() => {
     if (!user.value?.last_salary_claim_date) return false;
-    const lastClaim = new Date(user.value.last_salary_claim_date);
-    const today = new Date();
-    return lastClaim.toDateString() === today.toDateString();
+    const lastClaim = new Date(user.value.last_salary_claim_date).getTime();
+    const now = Date.now();
+    return (now - lastClaim) < 24 * 60 * 60 * 1000;
 });
 
 const handleClaimSalary = async () => {

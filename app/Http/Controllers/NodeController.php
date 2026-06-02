@@ -205,9 +205,6 @@ class NodeController extends Controller
         }
     }
 
-    /**
-     * Start the 2-minute real-time generation session.
-     */
     public function startGeneration(Request $request)
     {
         $user = Auth::user();
@@ -227,7 +224,23 @@ class NodeController extends Controller
             return response()->json(['error' => 'Vous devez disposer d\'un nœud actif pour démarrer la génération.'], 422);
         }
 
-        // 2. Check if a session is already running
+        // Enforce first generation only 24 hours after node purchase/activation
+        if ($activeUserNode->activated_at && Carbon::parse($activeUserNode->activated_at)->addHours(24)->isFuture()) {
+            $availableTime = Carbon::parse($activeUserNode->activated_at)->addHours(24);
+            return response()->json(['error' => "Vous pourrez démarrer votre première session de co-traitement et générer des revenus 24 heures après l'achat de votre nœud. Disponible le : " . $availableTime->format('d/m/Y H:i:s')], 422);
+        }
+
+        // Enforce subsequent generations only 24 hours after the last started generation session
+        $lastSession = GenerationSession::where('user_id', $user->id)
+            ->orderBy('start_time', 'desc')
+            ->first();
+
+        if ($lastSession && Carbon::parse($lastSession->start_time)->addHours(24)->isFuture()) {
+            $availableTime = Carbon::parse($lastSession->start_time)->addHours(24);
+            return response()->json(['error' => "Vous ne pouvez générer des revenus qu'une seule fois toutes les 24 heures. Prochaine session disponible à partir de : " . $availableTime->format('d/m/Y H:i:s')], 422);
+        }
+
+        // 2. Check if a session is already running (safety check)
         $runningSession = GenerationSession::where('user_id', $user->id)
             ->where('status', 'active')
             ->where('end_time', '>', Carbon::now())

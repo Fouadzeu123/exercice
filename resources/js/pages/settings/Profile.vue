@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue';
 import { Head, Link, usePage, useForm, router } from '@inertiajs/vue3';
+import { isNative } from '@/plugins/capacitor';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -106,20 +107,26 @@ const totalRevenue = computed(() => {
 });
 
 // Menu grid elements as requested
-const menuGrid = [
-    { title: 'Commandes', icon: FileText, href: '/commandes', color: 'text-purple-400' },
-    { title: 'Gains', icon: TrendingUp, href: '/gains', color: 'text-purple-400' },
-    { title: 'Numéros mobiles', icon: CreditCard, href: '/settings/mobile-numbers', color: 'text-purple-400' },
-    { title: 'Équipe', icon: Users, href: '/team', color: 'text-purple-400' },
-    { title: 'Inviter', icon: Share2, href: '/share', color: 'text-purple-400' },
-    { title: 'Coffre au Trésor', icon: Box, href: '/coffre-tresor', color: 'text-purple-400' },
-    { title: 'Code PIN', icon: Shield, href: '/settings/withdrawal-password', color: 'text-purple-400' },
-    { title: 'Chaîne', icon: Send, href: 'https://t.me/arm_holding', color: 'text-purple-400', isExternal: true },
-    { title: 'Alertes', icon: Bell, href: '/announcements', color: 'text-purple-400' },
-    { title: 'Tirage', icon: Target, action: 'tirage', color: 'text-purple-400' },
-    { title: 'Télécharger', icon: Download, action: 'download', color: 'text-purple-400' },
-    { title: 'Mot de passe', icon: Lock, href: '/settings/security', color: 'text-purple-400' }
-];
+const menuGrid = computed(() => {
+    const list = [
+        { title: 'Commandes', icon: FileText, href: '/commandes', color: 'text-purple-400' },
+        { title: 'Gains', icon: TrendingUp, href: '/gains', color: 'text-purple-400' },
+        { title: 'Numéros mobiles', icon: CreditCard, href: '/settings/mobile-numbers', color: 'text-purple-400' },
+        { title: 'Équipe', icon: Users, href: '/team', color: 'text-purple-400' },
+        { title: 'Inviter', icon: Share2, href: '/share', color: 'text-purple-400' },
+        { title: 'Coffre au Trésor', icon: Box, href: '/coffre-tresor', color: 'text-purple-400' },
+        { title: 'Code PIN', icon: Shield, href: '/settings/withdrawal-password', color: 'text-purple-400' },
+        { title: 'Chaîne', icon: Send, href: 'https://t.me/arm_holding', color: 'text-purple-400', isExternal: true },
+        { title: 'Alertes', icon: Bell, href: '/announcements', color: 'text-purple-400' },
+        { title: 'Tirage', icon: Target, action: 'tirage', color: 'text-purple-400' },
+        { title: 'Télécharger', icon: Download, action: 'download', color: 'text-purple-400' },
+        { title: 'Mot de passe', icon: Lock, href: '/settings/security', color: 'text-purple-400' }
+    ];
+    if (isNative()) {
+        return list.filter(item => item.action !== 'download');
+    }
+    return list;
+});
 
 const handleItemClick = (item: any) => {
     if (item.action === 'tirage') {
