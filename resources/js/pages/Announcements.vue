@@ -4,11 +4,11 @@ import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
-    Megaphone, 
-    Clock, 
-    AlertTriangle, 
-    CheckCircle2, 
+import {
+    Megaphone,
+    Clock,
+    AlertTriangle,
+    CheckCircle2,
     Zap,
     Bell,
     X,
@@ -115,7 +115,7 @@ const activeAnnouncements = computed(() => {
     const list = props.announcements && props.announcements.length > 0
         ? props.announcements
         : fallbackAnnouncements;
-        
+
     return list
         .filter(a => a.active)
         .map(a => {
@@ -138,9 +138,9 @@ const { containerRef } = useRevealAnimation();
 <template>
     <Head title="Actualités Tech" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        
+
         <!-- SKELETON LOADING VIEW -->
-        <div v-if="isLoading" class="relative w-full max-w-xl mx-auto flex flex-col gap-5 pt-3 pb-24 px-4 animate-pulse">
+        <div v-if="isLoading" class="relative w-full max-w-xl mx-auto flex flex-col gap-5 pt-3 pb-24 px-2 animate-pulse">
             <!-- Header Shimmer -->
             <div class="h-16 w-full rounded-2xl skeleton-shimmer border border-white/5"></div>
             <!-- News Cards Shimmers -->
@@ -164,14 +164,14 @@ const { containerRef } = useRevealAnimation();
             </div>
 
             <!-- ANNOUNCEMENTS LIST -->
-            <div data-stagger="true" class="space-y-4 px-4">
+            <div data-stagger="true" class="space-y-4 px-2">
                 <div v-if="activeAnnouncements.length === 0" class="bg-gradient-to-b from-[#0a0416]/90 to-[#05020c]/90 border border-purple-500/15 rounded-3xl p-10 text-center shadow-2xl backdrop-blur-sm">
                     <Server class="h-10 w-10 text-purple-400/20 mx-auto mb-3.5" />
                     <p class="text-xs font-black text-white uppercase tracking-wider">Aucune actualité disponible</p>
                     <p class="text-[9px] text-slate-400 mt-1.5 font-mono">[ ARM SECURE NET - CONNECTED ]</p>
                 </div>
 
-                <div 
+                <div
                     v-for="ann in activeAnnouncements" :key="ann.id"
                     data-animate="fade-up"
                     @click="selectedAnnouncement = ann"
@@ -180,18 +180,18 @@ const { containerRef } = useRevealAnimation();
                     <!-- Server Tech Card Image -->
                     <div class="w-full h-40 overflow-hidden relative border-b border-purple-500/10">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#05020c] to-transparent z-10"></div>
-                        <img 
-                            :src="getTechImage(ann.id)" 
-                            alt="ARM Computing Cluster" 
+                        <img
+                            :src="getTechImage(ann.id)"
+                            alt="ARM Computing Cluster"
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             loading="lazy"
                         />
                         <div class="absolute top-3 right-3 z-20">
-                            <span 
+                            <span
                                 class="text-[8px] font-black px-2 py-0.5 rounded border uppercase tracking-wider shadow"
-                                :class="ann.type === 'warning' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' 
-                                      : ann.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                                      : ann.type === 'alert' ? 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-400' 
+                                :class="ann.type === 'warning' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400'
+                                      : ann.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                      : ann.type === 'alert' ? 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-400'
                                       : 'bg-purple-500/10 border-purple-500/20 text-purple-400'"
                             >
                                 {{ ann.type }}
@@ -227,26 +227,26 @@ const { containerRef } = useRevealAnimation();
         </div>
 
         <!-- NEW DETAILED ATTRACTIVE VIEW MODAL -->
-        <div 
+        <div
             v-if="selectedAnnouncement"
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fadeIn"
             @click="selectedAnnouncement = null"
         >
-            <div 
+            <div
                 @click.stop
                 class="w-full max-w-sm bg-[#05020c] border border-purple-500/20 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh]"
             >
                 <!-- Hero tech image -->
                 <div class="w-full h-48 relative shrink-0">
-                    <img 
-                        :src="getTechImage(selectedAnnouncement.id)" 
-                        alt="ARM Server Cluster" 
+                    <img
+                        :src="getTechImage(selectedAnnouncement.id)"
+                        alt="ARM Server Cluster"
                         class="w-full h-full object-cover"
                     />
                     <div class="absolute inset-0 bg-gradient-to-t from-[#05020c] via-transparent to-black/40"></div>
-                    
+
                     <!-- Close button -->
-                    <button 
+                    <button
                         @click="selectedAnnouncement = null"
                         class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/80 hover:bg-black hover:text-white transition-all z-20"
                     >
@@ -254,11 +254,11 @@ const { containerRef } = useRevealAnimation();
                     </button>
 
                     <div class="absolute bottom-4 left-4 right-4 z-10">
-                        <span 
+                        <span
                             class="text-[8px] font-black px-2 py-0.5 rounded border uppercase tracking-wider shadow inline-block mb-2"
-                            :class="selectedAnnouncement.type === 'warning' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' 
-                                  : selectedAnnouncement.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                                  : selectedAnnouncement.type === 'alert' ? 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-400' 
+                            :class="selectedAnnouncement.type === 'warning' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400'
+                                  : selectedAnnouncement.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                  : selectedAnnouncement.type === 'alert' ? 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-400'
                                   : 'bg-purple-500/10 border-purple-500/20 text-purple-400'"
                         >
                             {{ selectedAnnouncement.type }}
@@ -274,7 +274,7 @@ const { containerRef } = useRevealAnimation();
                     <p class="whitespace-pre-line">
                         {{ selectedAnnouncement.content }}
                     </p>
-                    
+
                     <div class="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/10 flex items-center gap-2.5">
                         <Cpu class="h-4 w-4 text-purple-400 shrink-0" />
                         <span class="text-[8px] text-slate-400 font-bold uppercase tracking-wider">
@@ -289,7 +289,7 @@ const { containerRef } = useRevealAnimation();
                         <Clock class="h-3 w-3 text-purple-400" />
                         <span>{{ formatDate(selectedAnnouncement.created_at) }}</span>
                     </div>
-                    <button 
+                    <button
                         @click="selectedAnnouncement = null"
                         class="py-2 px-5 rounded-xl bg-purple-600 text-white font-extrabold uppercase tracking-wider text-[9px] hover:bg-purple-500 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                     >

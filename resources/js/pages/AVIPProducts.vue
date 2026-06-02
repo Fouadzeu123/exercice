@@ -4,7 +4,7 @@ import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
+import {
     Cpu,
     Coins,
     Lock,
@@ -118,7 +118,7 @@ const initiatePurchase = (product: any) => {
         showErrorModal.value = true;
         return;
     }
-    
+
     // Check if already owned
     const owned = props.userProducts.some(p => p.avip_product_id === product.id);
     if (owned) {
@@ -126,13 +126,13 @@ const initiatePurchase = (product: any) => {
         showErrorModal.value = true;
         return;
     }
-    
+
     if (user.value.balance < product.amount) {
         errorMessage.value = "Solde insuffisant pour louer cet accélérateur AVIP.";
         showErrorModal.value = true;
         return;
     }
-    
+
     showConfirmModal.value = product;
 };
 
@@ -172,8 +172,8 @@ onUnmounted(() => {
 <template>
     <Head title="Marché AVIP & Salaire" />
     <AppLayout :breadcrumbs="breadcrumbs" class="bg-gradient-to-b from-[#05020c] to-[#0e061b]">
-        
-        <div ref="containerRef" class="relative z-10 w-full max-w-xl mx-auto flex flex-col gap-5 pt-3 pb-24 px-4">
+
+        <div ref="containerRef" class="relative z-10 w-full max-w-xl mx-auto flex flex-col gap-5 pt-3 pb-24 px-2">
 
             <!-- HEADER -->
             <div data-animate="fade-down" class="flex items-center justify-between bg-gradient-to-r from-purple-950/20 via-black/40 to-transparent p-4 rounded-2xl border border-purple-500/10 shadow-lg glow-border">
@@ -195,7 +195,7 @@ onUnmounted(() => {
             <!-- DAILY SALARY HUB -->
             <div data-animate="scale-up" data-delay="100" class="bg-gradient-to-b from-[#0f0724] to-[#070312] border border-purple-500/20 rounded-3xl p-5 shadow-2xl relative overflow-hidden glow-border">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(168,85,247,0.06),transparent_70%)] pointer-events-none"></div>
-                
+
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <span class="text-[8px] text-slate-400 uppercase font-black tracking-widest block">Mon Dividende Journalier</span>
@@ -213,14 +213,14 @@ onUnmounted(() => {
                 </p>
 
                 <!-- Claim Button -->
-                <button 
+                <button
                     @click="handleClaimSalary"
                     :disabled="isSalaryClaimedToday || claimProcessing || props.userVipLevel < 1"
                     class="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2"
                     :class="props.userVipLevel < 1
                         ? 'bg-purple-950/20 text-slate-500 border border-white/5 cursor-not-allowed'
-                        : (isSalaryClaimedToday 
-                            ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/30 cursor-not-allowed' 
+                        : (isSalaryClaimedToday
+                            ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/30 cursor-not-allowed'
                             : 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] active:scale-[0.98]')"
                 >
                     <CheckCircle2 v-if="isSalaryClaimedToday" class="w-4 h-4" />
@@ -268,7 +268,7 @@ onUnmounted(() => {
                 </h3>
 
                 <div v-for="product in props.products" :key="product.id" class="group relative bg-[#0a0416] border rounded-3xl overflow-hidden hover:border-purple-400 transition-all duration-300 shadow-lg flex flex-col justify-between" :class="props.userVipLevel < product.required_vip_level ? 'border-red-500/20 grayscale opacity-80' : 'border-purple-500/20'">
-                    
+
                     <!-- Top header info -->
                     <div class="p-3 bg-[#0e071d] flex items-center justify-between border-b border-white/5">
                         <span class="text-[9px] font-black text-white uppercase tracking-wider truncate max-w-[70%]">
@@ -289,7 +289,7 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Description and details -->
-                    <div class="px-4 pb-4 pt-1">
+                    <div class="px-2 pb-4 pt-1">
                         <p class="text-[10px] text-slate-400 leading-relaxed min-h-[30px] mb-3">
                             {{ product.description }}
                         </p>
@@ -313,13 +313,13 @@ onUnmounted(() => {
                                 <span class="text-sm font-mono font-black text-purple-400">{{ formatXAF(product.amount) }}</span>
                             </div>
 
-                            <button 
+                            <button
                                 @click="initiatePurchase(product)"
                                 :disabled="props.userVipLevel < product.required_vip_level || props.userProducts.some(p => p.avip_product_id === product.id)"
                                 class="px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
                                 :class="props.userProducts.some(p => p.avip_product_id === product.id)
                                     ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/30'
-                                    : (props.userVipLevel < product.required_vip_level 
+                                    : (props.userVipLevel < product.required_vip_level
                                         ? 'bg-red-950/20 text-red-500/50 border border-red-500/10 cursor-not-allowed'
                                         : 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]')"
                             >
@@ -385,7 +385,7 @@ onUnmounted(() => {
                         <div class="h-16 w-16 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-6 mx-auto animate-pulse">
                             <AlertCircle class="h-8 w-8" />
                         </div>
-                        
+
                         <h3 class="text-base font-black text-white uppercase tracking-wider">Alerte protocole</h3>
                         <p class="text-xs text-rose-400 mt-4 font-mono leading-relaxed bg-rose-950/20 border border-rose-500/20 p-3.5 rounded-xl">
                             {{ errorMessage }}
@@ -407,12 +407,12 @@ onUnmounted(() => {
                         <div class="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6 mx-auto animate-bounce shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                             <CheckCircle2 class="h-8 w-8" />
                         </div>
-                        
+
                         <h3 class="text-base font-black text-white uppercase tracking-wider font-mono">Dividende validé</h3>
                         <p class="text-xs text-gray-400 mt-2 leading-relaxed">
                             Le protocole de dividende a injecté les crédits dans votre compte avec succès !
                         </p>
-                        
+
                         <div class="my-6 p-4 rounded-xl bg-black/50 border border-emerald-500/25 shadow-lg">
                             <div class="text-[10px] text-slate-500 uppercase tracking-widest font-bold font-mono">Salaire Capté</div>
                             <div class="text-2xl font-mono font-black text-emerald-400 mt-1">
@@ -436,7 +436,7 @@ onUnmounted(() => {
                         <div class="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6 mx-auto animate-bounce shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                             <CheckCircle2 class="h-8 w-8" />
                         </div>
-                        
+
                         <h3 class="text-base font-black text-white uppercase tracking-wider font-mono font-black">Location Activée</h3>
                         <p class="text-xs text-gray-300 mt-2.5 leading-relaxed bg-black/40 border border-emerald-500/10 p-3.5 rounded-xl">
                             {{ successMessage }}

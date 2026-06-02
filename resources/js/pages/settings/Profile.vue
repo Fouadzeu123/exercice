@@ -362,10 +362,10 @@ onUnmounted(() => {
                             @click="handleItemClick(item)"
                             class="flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
                         >
-                            <div class="w-10 h-10 rounded-2xl border border-purple-500/10 bg-purple-950/5 flex items-center justify-center group-hover:border-purple-400/40 group-hover:bg-purple-500/5 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all duration-300">
-                                <component :is="item.icon" class="h-4.5 w-4.5 text-purple-400" :stroke-width="2.5" />
+                            <div class="w-12 h-12 rounded-2xl border border-purple-500/10 bg-purple-950/5 flex items-center justify-center group-hover:border-purple-400/40 group-hover:bg-purple-500/5 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all duration-300">
+                                <component :is="item.icon" class="h-5.5 w-5.5 text-purple-400" :stroke-width="2.3" />
                             </div>
-                            <span class="text-[9px] font-bold text-slate-300 group-hover:text-white transition-colors tracking-wide leading-tight select-none">
+                            <span class="text-[10px] font-extrabold text-slate-300 group-hover:text-white transition-colors tracking-wide leading-tight select-none">
                                 {{ item.title }}
                             </span>
                         </div>
@@ -375,10 +375,10 @@ onUnmounted(() => {
                             @click="handleLogout"
                             class="flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
                         >
-                            <div class="w-10 h-10 rounded-2xl border border-orange-500/20 bg-orange-950/5 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/5 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.1)] transition-all duration-300">
-                                <LogOut class="h-4.5 w-4.5 text-orange-500" :stroke-width="2.5" />
+                            <div class="w-12 h-12 rounded-2xl border border-orange-500/20 bg-orange-950/5 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/5 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.1)] transition-all duration-300">
+                                <LogOut class="h-5.5 w-5.5 text-orange-500" :stroke-width="2.3" />
                             </div>
-                            <span class="text-[9px] font-bold text-orange-500 transition-colors tracking-wide leading-tight select-none">
+                            <span class="text-[10px] font-extrabold text-orange-500 transition-colors tracking-wide leading-tight select-none">
                                 Quitter
                             </span>
                         </div>

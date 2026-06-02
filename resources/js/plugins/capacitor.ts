@@ -39,10 +39,9 @@ export const hapticError = async (): Promise<void> => {
 // Plugin Vue — s'enregistre automatiquement au démarrage
 export const CapacitorPlugin = {
     install(_app: App) {
-        if (!isNative()) return;
-
-        // Configure la StatusBar immédiatement
+        // Configure la StatusBar dès que possible
         const initStatusBar = async () => {
+            if (!isNative()) return;
             try {
                 const { StatusBar, Style } = await import('@capacitor/status-bar');
                 await StatusBar.setStyle({ style: Style.Dark });
@@ -55,6 +54,7 @@ export const CapacitorPlugin = {
 
         // Cache le splash screen après que l'app est prête
         const hideSplash = async () => {
+            if (!isNative()) return;
             try {
                 const { SplashScreen } = await import('@capacitor/splash-screen');
                 await SplashScreen.hide({ fadeOutDuration: 500 });
@@ -63,9 +63,18 @@ export const CapacitorPlugin = {
             }
         };
 
-        initStatusBar();
+        // Essaye d'initialiser la StatusBar (immédiatement ou après un léger délai)
+        if (isNative()) {
+            initStatusBar();
+        } else {
+            setTimeout(initStatusBar, 500);
+            setTimeout(initStatusBar, 1500);
+        }
 
-        // Donne à Inertia le temps de charger la première page
-        setTimeout(hideSplash, 1500);
+        // Donne à l'application le temps de se charger et cache le Splash Screen
+        // Plus de blocage grâce à de multiples tentatives et l'auto-hide natif
+        setTimeout(hideSplash, 1000);
+        setTimeout(hideSplash, 2000);
+        setTimeout(hideSplash, 3500);
     },
 };

@@ -210,7 +210,7 @@
 
 .bg-grid {
     background-size: 60px 60px;
-    background-image: 
+    background-image:
         linear-gradient(to right, rgba(168, 85, 247, 0.04) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
 }
@@ -465,5 +465,33 @@
 
 .page-transition-leave {
     animation: pageFadeOut 200ms ease-in forwards;
+}
+
+/* ============================================
+   RESPONSIVE MOBILE GRAPHICS & SPACING OPTIMIZATIONS
+   ============================================ */
+@media (max-width: 767px) {
+    /* 1. Global typography scaling for mobile: scales all rem-based sizes by ~6.5% */
+    html {
+        font-size: 20px !important;
+    }
+
+    /* 2. Responsive outer margins/paddings on structural containers to optimize screen space */
+    div.px-4, section.px-4, main.px-4, header.px-4,
+    div.px-2, section.px-2, main.px-2, header.px-2,
+    div.p-4, section.p-4, main.p-4 {
+        padding-left: 0.25rem !important; /* Equivalent to px-1 (4px) */
+        padding-right: 0.25rem !important; /* Equivalent to px-1 (4px) */
+    }
+
+    div.mx-4, section.mx-4, main.mx-4 {
+        margin-left: 0.25rem !important; /* Equivalent to mx-1 (4px) */
+        margin-right: 0.25rem !important; /* Equivalent to mx-1 (4px) */
+    }
+
+    /* Fix to maintain bottom-navigation and specific structural bounds */
+    .pb-24 {
+        padding-bottom: 6rem !important;
+    }
 }
 
