@@ -18,9 +18,13 @@ class LoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
         
-        $redirectUrl = ($user && $user->role === 'admin')
-            ? '/admin'
-            : Fortify::redirects('login', config('fortify.home'));
+        if ($user && $user->role === 'admin') {
+            return $request->wantsJson()
+                ? response()->json(['two_factor' => false])
+                : redirect('/admin');
+        }
+
+        $redirectUrl = Fortify::redirects('login', config('fortify.home'));
 
         return $request->wantsJson()
             ? response()->json(['two_factor' => false])
