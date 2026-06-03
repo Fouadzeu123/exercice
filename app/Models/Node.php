@@ -19,6 +19,7 @@ class Node extends Model
         'generation_profit' => 'float',
         'referral_reward' => 'float',
         'active' => 'boolean',
+        'is_limited' => 'boolean',
         'duration' => 'integer', // en jours
         'technology_level' => 'integer',
     ];

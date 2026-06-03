@@ -209,6 +209,7 @@ class AdminController extends Controller
             'stock_quantity' => 'nullable|integer|min:0',
             'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
+            'is_limited' => 'nullable|boolean',
             'restore' => 'nullable|boolean', // Option to restore if soft deleted
             'image_url' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
@@ -232,6 +233,7 @@ class AdminController extends Controller
             'stock_quantity' => $request->stock_quantity,
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
+            'is_limited' => $request->is_limited ? true : false,
             'image_url' => $imageUrl,
         ]);
 
@@ -267,7 +269,10 @@ class AdminController extends Controller
             'referral_reward' => 'nullable|numeric|min:0',
             'required_vip_level' => 'required|integer|min:0|max:5',
             'avip_level' => 'required|integer|min:0|max:3',
+            'stock_quantity' => 'nullable|integer|min:0',
+            'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
+            'is_limited' => 'nullable|boolean',
             'restore' => 'nullable|boolean',
             'image' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
@@ -289,7 +294,10 @@ class AdminController extends Controller
             'referral_reward' => $request->referral_reward ?? 0.00,
             'required_vip_level' => $request->required_vip_level,
             'avip_level' => $request->avip_level,
+            'stock_quantity' => $request->stock_quantity,
+            'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
+            'is_limited' => $request->is_limited ? true : false,
             'image' => $image,
         ]);
 
@@ -325,6 +333,7 @@ class AdminController extends Controller
             'stock_quantity' => 'nullable|integer|min:0',
             'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
+            'is_limited' => 'nullable|boolean',
             'image_url' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
         ]);
@@ -347,6 +356,7 @@ class AdminController extends Controller
             'stock_quantity' => $request->stock_quantity,
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
+            'is_limited' => $request->is_limited ? true : false,
             'image_url' => $imageUrl,
         ]);
 
@@ -366,7 +376,10 @@ class AdminController extends Controller
             'referral_reward' => 'nullable|numeric|min:0',
             'required_vip_level' => 'required|integer|min:0|max:5',
             'avip_level' => 'required|integer|min:0|max:3',
+            'stock_quantity' => 'nullable|integer|min:0',
+            'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
+            'is_limited' => 'nullable|boolean',
             'image' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
         ]);
@@ -387,7 +400,10 @@ class AdminController extends Controller
             'referral_reward' => $request->referral_reward ?? 0.00,
             'required_vip_level' => $request->required_vip_level,
             'avip_level' => $request->avip_level,
+            'stock_quantity' => $request->stock_quantity,
+            'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
+            'is_limited' => $request->is_limited ? true : false,
             'image' => $image,
         ]);
 

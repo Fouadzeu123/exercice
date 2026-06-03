@@ -52,14 +52,31 @@ class AVIPProductController extends Controller
             return back()->withErrors(['error' => "Vous devez être VIP {$product->required_vip_level} minimum pour acheter ce produit AVIP. Votre niveau actuel : VIP {$userVipLevel}."]);
         }
 
-        // Check if user already owns this AVIP product
-        $existingPurchase = UserAVIPProduct::where('user_id', $user->id)
+        // Enforce limited offer stock limit
+        if ($product->stock_quantity !== null) {
+            $soldCount = UserAVIPProduct::where('avip_product_id', $product->id)
+                ->where('active', true)
+                ->count();
+            if ($soldCount >= $product->stock_quantity) {
+                return back()->withErrors(['error' => 'Cette offre AVIP est épuisée (rupture de stock).']);
+            }
+        }
+
+        // Check if user already owns this AVIP product, unless a limited quota is defined
+        $userPurchaseCount = UserAVIPProduct::where('user_id', $user->id)
             ->where('avip_product_id', $product->id)
             ->where('active', true)
-            ->first();
+            ->count();
 
-        if ($existingPurchase) {
-            return back()->withErrors(['error' => 'Vous possédez déjà ce produit AVIP.']);
+        if ($product->limited_purchase_count !== null) {
+            if ($userPurchaseCount >= $product->limited_purchase_count) {
+                return back()->withErrors(['error' => "Vous avez atteint le quota maximal autorisé pour ce produit AVIP ({$product->limited_purchase_count} par compte)."]);
+            }
+        } else {
+            // Default behavior: max 1 per user
+            if ($userPurchaseCount >= 1) {
+                return back()->withErrors(['error' => 'Vous possédez déjà ce produit AVIP.']);
+            }
         }
 
         // Check if user has sufficient balance
@@ -69,6 +86,11 @@ class AVIPProductController extends Controller
 
         try {
             DB::transaction(function () use ($user, $product) {
+                // Check if the user has already purchased this AVIP product in the past
+                $alreadyPurchased = UserAVIPProduct::where('user_id', $user->id)
+                    ->where('avip_product_id', $product->id)
+                    ->exists();
+
                 // Deduct the cost from user's balance
                 $user->balance -= $product->amount;
                 $user->save();
@@ -94,8 +116,8 @@ class AVIPProductController extends Controller
                 // Recalculate VIP/AVIP status
                 $user->recalculateVipAndAvipStatus();
 
-                // Pay referral commission if the user has a referrer
-                if ($user->referrer_id) {
+                // Pay referral commission if the user has a referrer and hasn't purchased this specific AVIP product before
+                if ($user->referrer_id && !$alreadyPurchased) {
                     $sponsor = \App\Models\User::find($user->referrer_id);
                     if ($sponsor) {
                         $commissionAmount = (float)($product->referral_reward ?? 0.00);

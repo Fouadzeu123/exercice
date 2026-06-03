@@ -145,9 +145,43 @@ class NodeController extends Controller
             return back()->withErrors(['error' => 'Ce nœud n\'est pas disponible.']);
         }
 
+        // Enforce limited offer stock limit
+        if ($node->stock_quantity !== null) {
+            $rentedCount = UserNode::where('node_id', $node->id)
+                ->where('active', true)
+                ->where(function($query) {
+                    $query->whereNull('expires_at')
+                          ->orWhere('expires_at', '>', Carbon::now());
+                })
+                ->count();
+            if ($rentedCount >= $node->stock_quantity) {
+                return back()->withErrors(['error' => 'Cette offre est épuisée (rupture de stock).']);
+            }
+        }
+
+        // Enforce limited offer quota per account
+        if ($node->limited_purchase_count !== null) {
+            $userRentedCount = UserNode::where('user_id', $user->id)
+                ->where('node_id', $node->id)
+                ->where('active', true)
+                ->where(function($query) {
+                    $query->whereNull('expires_at')
+                          ->orWhere('expires_at', '>', Carbon::now());
+                })
+                ->count();
+            if ($userRentedCount >= $node->limited_purchase_count) {
+                return back()->withErrors(['error' => "Vous avez atteint le quota maximal autorisé pour ce produit ({$node->limited_purchase_count} par compte)."]);
+            }
+        }
+
         // Database transaction to guarantee consistency
         try {
             DB::transaction(function () use ($user, $node) {
+                // Check if the user has already rented this node in the past
+                $alreadyRented = UserNode::where('user_id', $user->id)
+                    ->where('node_id', $node->id)
+                    ->exists();
+
                 // Check if user has sufficient balance for the new rental
                 if ($user->balance < $node->amount) {
                     throw new \Exception('Solde insuffisant pour louer ce nœud d\'infrastructure.');
@@ -175,8 +209,8 @@ class NodeController extends Controller
                     'reference' => 'PUR-' . strtoupper(bin2hex(random_bytes(4))),
                 ]);
 
-                // Pay referral commission if the user has a referrer
-                if ($user->referrer_id) {
+                // Pay referral commission if the user has a referrer and hasn't rented this specific node before
+                if ($user->referrer_id && !$alreadyRented) {
                     $sponsor = \App\Models\User::find($user->referrer_id);
                     if ($sponsor) {
                         $commissionAmount = (float)($node->referral_reward ?? 0.00);

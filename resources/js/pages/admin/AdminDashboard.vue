@@ -125,6 +125,15 @@ const formatXAF = (value: number | string) => {
     return new Intl.NumberFormat('fr-FR').format(num) + ' XAF';
 };
 
+const getObjectUrl = (file: File | null | undefined) => {
+    if (!file) return '';
+    try {
+        return URL.createObjectURL(file);
+    } catch (e) {
+        return '';
+    }
+};
+
 // Tabs: 'transactions' | 'users' | 'giftcodes' | 'products' | 'announcements' | 'settings'
 const activeTab = ref('transactions');
 const searchQuery = ref('');
@@ -281,6 +290,7 @@ const nodeForm = useForm({
     stock_quantity: null as number | null,
     limited_purchase_count: null as number | null,
     active: true,
+    is_limited: false,
     restore: false,
     image_url: '',
     image_file: null as File | null,
@@ -297,6 +307,7 @@ const openNodeModal = (node: any) => {
     nodeForm.stock_quantity = node.stock_quantity;
     nodeForm.limited_purchase_count = node.limited_purchase_count;
     nodeForm.active = !!node.active;
+    nodeForm.is_limited = !!node.is_limited;
     nodeForm.restore = false;
     nodeForm.image_url = node.image_url || '';
     nodeForm.image_file = null;
@@ -334,7 +345,10 @@ const avipForm = useForm({
     referral_reward: 0,
     required_vip_level: 0,
     avip_level: 1,
+    stock_quantity: null as number | null,
+    limited_purchase_count: null as number | null,
     active: true,
+    is_limited: false,
     restore: false,
     image: '',
     image_file: null as File | null,
@@ -349,7 +363,10 @@ const openAvipModal = (product: any) => {
     avipForm.referral_reward = parseFloat(product.referral_reward || 0);
     avipForm.required_vip_level = product.required_vip_level;
     avipForm.avip_level = product.avip_level;
+    avipForm.stock_quantity = product.stock_quantity !== null ? parseInt(product.stock_quantity) : null;
+    avipForm.limited_purchase_count = product.limited_purchase_count !== null ? parseInt(product.limited_purchase_count) : null;
     avipForm.active = !!product.active;
+    avipForm.is_limited = !!product.is_limited;
     avipForm.restore = false;
     avipForm.image = product.image || '';
     avipForm.image_file = null;
@@ -389,6 +406,7 @@ const createNodeForm = useForm({
     stock_quantity: null as number | null,
     limited_purchase_count: null as number | null,
     active: true,
+    is_limited: false,
     image_url: '',
     image_file: null as File | null,
 });
@@ -414,7 +432,10 @@ const createAvipForm = useForm({
     referral_reward: 0,
     required_vip_level: 1,
     avip_level: 1,
+    stock_quantity: null as number | null,
+    limited_purchase_count: null as number | null,
     active: true,
+    is_limited: false,
     image: '',
     image_file: null as File | null,
 });
@@ -1259,7 +1280,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 1: USER PROPERTIES EDITION & RIGGING -->
-        <div v-if="selectedUser" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="selectedUser" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1378,7 +1399,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 2: CONFIGURATION STANDARD NODE -->
-        <div v-if="selectedNode" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="selectedNode" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1403,7 +1424,7 @@ onUnmounted(() => {
                             <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                                        <img v-if="nodeForm.image_file" :src="URL.createObjectURL(nodeForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-if="nodeForm.image_file" :src="getObjectUrl(nodeForm.image_file)" class="h-full w-full object-cover" />
                                         <img v-else-if="nodeForm.image_url" :src="nodeForm.image_url" class="h-full w-full object-cover" />
                                         <Cpu v-else class="h-5 w-5 text-slate-600" />
                                     </div>
@@ -1472,6 +1493,12 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <!-- Limited Offer Toggle -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="nodeForm.is_limited" type="checkbox" id="edit_node_limited" class="accent-rose-500 rounded cursor-pointer" />
+                            <label for="edit_node_limited" class="text-[10px] text-rose-400 font-black cursor-pointer uppercase">Marquer comme Offre Limitée</label>
+                        </div>
+
                         <!-- Restore and active controls -->
                         <div class="flex items-center justify-between py-1 bg-black/35 px-3 rounded-xl border border-white/5">
                             <label class="flex items-center space-x-2 text-[10px] text-slate-300 font-black cursor-pointer">
@@ -1507,7 +1534,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 3: CONFIGURATION ACCÉLÉRATEUR AVIP -->
-        <div v-if="selectedAvip" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="selectedAvip" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1538,7 +1565,7 @@ onUnmounted(() => {
                             <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                                        <img v-if="avipForm.image_file" :src="URL.createObjectURL(avipForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-if="avipForm.image_file" :src="getObjectUrl(avipForm.image_file)" class="h-full w-full object-cover" />
                                         <img v-else-if="avipForm.image" :src="avipForm.image" class="h-full w-full object-cover" />
                                         <Zap v-else class="h-5 w-5 text-slate-600" />
                                     </div>
@@ -1596,6 +1623,25 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Stock limit -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Stock Limité (Unités)</label>
+                                <input v-model="avipForm.stock_quantity" type="number" placeholder="Illimité si vide" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Purchase limit per user -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Quota Max / Compte</label>
+                                <input v-model="avipForm.limited_purchase_count" type="number" placeholder="Illimité si vide" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                        </div>
+
+                        <!-- Limited Offer Toggle -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="avipForm.is_limited" type="checkbox" id="edit_avip_limited" class="accent-rose-500 rounded cursor-pointer" />
+                            <label for="edit_avip_limited" class="text-[10px] text-rose-400 font-black cursor-pointer uppercase">Marquer comme Offre Limitée</label>
+                        </div>
+
                         <!-- Restore & active status -->
                         <div class="flex items-center justify-between py-1 bg-black/35 px-3 rounded-xl border border-white/5">
                             <label class="flex items-center space-x-2 text-[10px] text-slate-300 font-black cursor-pointer">
@@ -1631,7 +1677,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 4: CREATE STANDARD NODE -->
-        <div v-if="showCreateNodeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="showCreateNodeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1656,7 +1702,7 @@ onUnmounted(() => {
                             <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                                        <img v-if="createNodeForm.image_file" :src="URL.createObjectURL(createNodeForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-if="createNodeForm.image_file" :src="getObjectUrl(createNodeForm.image_file)" class="h-full w-full object-cover" />
                                         <Cpu v-else class="h-5 w-5 text-slate-600" />
                                     </div>
                                     <div class="min-w-0">
@@ -1725,6 +1771,12 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <!-- Limited Offer Toggle -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="createNodeForm.is_limited" type="checkbox" id="create_node_limited" class="accent-rose-500 rounded cursor-pointer" />
+                            <label for="create_node_limited" class="text-[10px] text-rose-400 font-black cursor-pointer uppercase">Marquer comme Offre Limitée</label>
+                        </div>
+
                         <!-- Active Switch -->
                         <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
                             <input v-model="createNodeForm.active" type="checkbox" id="create_node_active" class="accent-purple-500 rounded cursor-pointer" />
@@ -1745,7 +1797,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 5: CREATE AVIP PRODUCT -->
-        <div v-if="showCreateAvipModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="showCreateAvipModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1776,7 +1828,7 @@ onUnmounted(() => {
                             <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                                        <img v-if="createAvipForm.image_file" :src="URL.createObjectURL(createAvipForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-if="createAvipForm.image_file" :src="getObjectUrl(createAvipForm.image_file)" class="h-full w-full object-cover" />
                                         <Zap v-else class="h-5 w-5 text-slate-600" />
                                     </div>
                                     <div class="min-w-0">
@@ -1834,6 +1886,25 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Stock limit -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Stock Initial</label>
+                                <input v-model="createAvipForm.stock_quantity" type="number" placeholder="Illimité si vide" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Purchase limit per user -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Quota Max / Compte</label>
+                                <input v-model="createAvipForm.limited_purchase_count" type="number" placeholder="Illimité si vide" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                        </div>
+
+                        <!-- Limited Offer Toggle -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="createAvipForm.is_limited" type="checkbox" id="create_avip_limited" class="accent-rose-500 rounded cursor-pointer" />
+                            <label for="create_avip_limited" class="text-[10px] text-rose-400 font-black cursor-pointer uppercase">Marquer comme Offre Limitée</label>
+                        </div>
+
                         <!-- Active Switch -->
                         <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
                             <input v-model="createAvipForm.active" type="checkbox" id="create_avip_active" class="accent-purple-500 rounded cursor-pointer" />
@@ -1854,7 +1925,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 6: CREATE ANNOUNCEMENT -->
-        <div v-if="showCreateAnnouncementModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="showCreateAnnouncementModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1884,7 +1955,7 @@ onUnmounted(() => {
                             <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                                        <img v-if="announcementForm.image_file" :src="URL.createObjectURL(announcementForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-if="announcementForm.image_file" :src="getObjectUrl(announcementForm.image_file)" class="h-full w-full object-cover" />
                                         <MegaphoneIcon v-else class="h-5 w-5 text-slate-600" />
                                     </div>
                                     <div class="min-w-0">
@@ -1931,7 +2002,7 @@ onUnmounted(() => {
         </div>
 
         <!-- MODAL OVERLAY 7: EDIT ANNOUNCEMENT -->
-        <div v-if="selectedAnnouncement" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-hidden">
+        <div v-if="selectedAnnouncement" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
             <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
@@ -1961,7 +2032,7 @@ onUnmounted(() => {
                             <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                                        <img v-if="announcementForm.image_file" :src="URL.createObjectURL(announcementForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-if="announcementForm.image_file" :src="getObjectUrl(announcementForm.image_file)" class="h-full w-full object-cover" />
                                         <img v-else-if="announcementForm.image_url" :src="announcementForm.image_url" class="h-full w-full object-cover" />
                                         <MegaphoneIcon v-else class="h-5 w-5 text-slate-600" />
                                     </div>

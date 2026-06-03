@@ -25,7 +25,8 @@ import {
   TrendingUp,
   Volume2,
   Radio,
-  FileText
+  FileText,
+  AlertTriangle
 } from 'lucide-vue-next';
 
 import { t } from '@/utils/trans';
@@ -158,7 +159,7 @@ const combinedProducts = computed(() => {
         ...n,
         isVault: false,
         isAvip: false,
-        category: n.technology_level >= 4 ? 'avip' : (n.stock_quantity !== null && n.stock_quantity < 50 ? 'limited' : 'node')
+        category: n.technology_level >= 4 ? 'avip' : (n.is_limited ? 'limited' : 'node')
     }));
     const mappedVaults = (props.vaultPlans || []).map(v => ({
         id: v.id,
@@ -181,10 +182,12 @@ const combinedProducts = computed(() => {
         generation_profit: a.daily_salary,
         technology_level: 0,
         duration: 7,
-        stock_quantity: null,
+        stock_quantity: a.stock_quantity !== null ? Number(a.stock_quantity) : null,
+        limited_purchase_count: a.limited_purchase_count !== null ? Number(a.limited_purchase_count) : null,
         isVault: false,
         isAvip: true,
-        category: 'avip',
+        is_limited: !!a.is_limited,
+        category: a.is_limited ? 'limited' : 'avip',
         image_url: a.image,
         description: a.description,
         required_vip_level: a.required_vip_level,
@@ -201,7 +204,10 @@ const combinedProducts = computed(() => {
         return mappedAvips;
     }
     if (activeCategory.value === 'limited') {
-        return mappedNodes.filter(n => n.stock_quantity !== null && n.stock_quantity < 50);
+        return [
+            ...mappedNodes.filter(n => n.is_limited),
+            ...mappedAvips.filter(a => a.is_limited)
+        ];
     }
     if (activeCategory.value === 'vault') {
         return mappedVaults;
@@ -612,6 +618,11 @@ watch(
 
                                 <!-- GPU Image Area -->
                                 <div class="w-full h-44 overflow-hidden relative bg-black/20">
+                                    <!-- Floating Limited Offer Badge -->
+                                    <div v-if="node.is_limited" class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-rose-600/90 backdrop-blur-sm border border-rose-400/30 text-white text-[8px] font-mono font-black uppercase tracking-widest rounded-lg flex items-center gap-1 shadow-lg animate-pulse">
+                                        <AlertTriangle class="w-3.5 h-3.5 text-yellow-300" />
+                                        <span>Offre Limitée</span>
+                                    </div>
                                     <!-- Show server image or custom vault graphics image -->
                                     <img :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : (node.isAvip ? node.image_url : getProductImage(node))" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" :alt="node.name">
                                 </div>
@@ -635,13 +646,13 @@ watch(
                                 <div class="grid grid-cols-2 bg-[#0e071d]/50">
                                     <!-- Stock / Req VIP -->
                                     <div class="p-3 border-r border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
-                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isAvip ? t('Requis:', 'Required:') : (node.isVault ? t('Garantie:', 'Guaranteed:') : t('Qté en stock:', 'Stock Qty:')) }}</span>
-                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isAvip ? 'VIP ' + node.required_vip_level : (node.isVault ? '100% SEC' : (node.stock_quantity ?? '12018')) }}</span>
+                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isAvip ? (node.stock_quantity !== null ? t('Qté en stock:', 'Stock Qty:') : t('Requis:', 'Required:')) : (node.isVault ? t('Garantie:', 'Guaranteed:') : t('Qté en stock:', 'Stock Qty:')) }}</span>
+                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isAvip ? (node.stock_quantity !== null ? node.stock_quantity : 'VIP ' + node.required_vip_level) : (node.isVault ? '100% SEC' : (node.stock_quantity ?? 'Illimité')) }}</span>
                                     </div>
                                     <!-- Purchase Limit / AVIP Rank -->
                                     <div class="p-3 border-b border-white/5 flex items-center justify-between gap-1 text-[11.5px] uppercase tracking-wider">
-                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isAvip ? t('Rang AVIP:', 'AVIP Rank:') : (node.isVault ? t('Contrat:', 'Contract:') : t("Lim. d'achat:", 'Limit:')) }}</span>
-                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isAvip ? 'AVIP ' + node.avip_level : (node.isVault ? 'LOCK TERM' : (node.max_purchase_limit ?? 0)) }}</span>
+                                        <span class="text-slate-400 font-bold text-[11px]">{{ node.isAvip ? (node.stock_quantity !== null ? t("Lim. d'achat:", 'Limit:') : t('Rang AVIP:', 'AVIP Rank:')) : (node.isVault ? t('Contrat:', 'Contract:') : t("Lim. d'achat:", 'Limit:')) }}</span>
+                                        <span class="text-cyan-400 font-black font-mono text-[11px]">{{ node.isAvip ? (node.stock_quantity !== null ? (node.limited_purchase_count ?? 'Illimité') : 'AVIP ' + node.avip_level) : (node.isVault ? 'LOCK TERM' : (node.limited_purchase_count ?? 'Illimité')) }}</span>
                                     </div>
                                     <!-- Total Revenue / Daily Yield -->
                                     <div class="p-3 border-r border-white/5 flex flex-col gap-1">

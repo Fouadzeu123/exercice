@@ -19,6 +19,9 @@ class AVIPProduct extends Model
         'required_vip_level' => 'integer',
         'avip_level' => 'integer',
         'active' => 'boolean',
+        'is_limited' => 'boolean',
+        'stock_quantity' => 'integer',
+        'limited_purchase_count' => 'integer',
     ];
 
     /**

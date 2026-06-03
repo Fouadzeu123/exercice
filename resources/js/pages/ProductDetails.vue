@@ -16,7 +16,8 @@ import {
     Coins,
     Lock,
     X,
-    AlertCircle
+    AlertCircle,
+    AlertTriangle
 } from 'lucide-vue-next';
 import { t } from '@/utils/trans';
 
@@ -35,6 +36,7 @@ const props = defineProps<{
         duration: number;
         stock_quantity: number | null;
         limited_purchase_count?: number | null;
+        is_limited?: boolean;
         max_purchase_limit?: number | null;
         image?: string | null;
         image_url?: string | null;
@@ -180,6 +182,11 @@ onUnmounted(() => {
 
                 <!-- Product Image Banner with scan lines -->
                 <div class="w-full h-56 overflow-hidden relative bg-black/30">
+                    <!-- Floating Limited Offer Badge -->
+                    <div v-if="product.is_limited" class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-rose-600/90 backdrop-blur-sm border border-rose-400/30 text-white text-[9px] font-mono font-black uppercase tracking-widest rounded-lg flex items-center gap-1 shadow-lg animate-pulse">
+                        <AlertTriangle class="w-3.5 h-3.5 text-yellow-300" />
+                        <span>Offre Limitée</span>
+                    </div>
                     <img :src="getProductImage()" :alt="product.name" class="w-full h-full object-cover opacity-90" />
                     <!-- Absolute glow overlay -->
                     <div class="absolute inset-0 bg-gradient-to-t from-[#090b15] via-transparent to-transparent"></div>
@@ -248,7 +255,14 @@ onUnmounted(() => {
                     <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ product.isVault ? t('Sécurité', 'Security') : t('Disponibilité Stock', 'Stock Qty') }}</span>
                         <span class="font-bold text-white text-[10px] font-mono">
-                            {{ type === 'avip' ? t('GARANTI AVIP SYSTEM', 'GUARANTEED AVIP SYSTEM') : (product.isVault ? '100% GARANTI' : (product.stock_quantity ?? '12018')) }}
+                            {{ product.isVault ? '100% GARANTI' : (product.stock_quantity !== null ? product.stock_quantity : t('ILLIMITÉ', 'UNLIMITED')) }}
+                        </span>
+                    </div>
+
+                    <div v-if="!product.isVault && product.limited_purchase_count !== null && product.limited_purchase_count !== undefined" class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
+                        <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Limite d\'Achat', 'Purchase Limit') }}</span>
+                        <span class="font-black text-rose-400 text-[10px] font-mono">
+                            {{ product.limited_purchase_count }} {{ t('unités max / compte', 'max units / account') }}
                         </span>
                     </div>
                 </div>
