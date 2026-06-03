@@ -44,32 +44,92 @@ class NodeController extends Controller
     {
         $user = Auth::user();
 
-        // Retrieve current active user node
-        $activeUserNode = UserNode::where('user_id', $user->id)
+        // Retrieve all active user nodes
+        $activeUserNodes = UserNode::where('user_id', $user->id)
             ->where('user_nodes.active', true)
             ->where(function($query) {
                 $query->whereNull('expires_at')
                       ->orWhere('expires_at', '>', Carbon::now());
             })
             ->join('nodes', 'user_nodes.node_id', '=', 'nodes.id')
-            ->select('user_nodes.*', 'nodes.name as node_name', 'nodes.generation_profit', 'nodes.technology_level', 'nodes.amount as node_amount')
-            ->first();
+            ->select('user_nodes.*', 'nodes.name as node_name', 'nodes.generation_profit', 'nodes.technology_level', 'nodes.amount as node_amount', 'nodes.duration as node_duration')
+            ->orderBy('user_nodes.created_at', 'desc')
+            ->get();
 
-        // Retrieve active running session
-        $activeSession = GenerationSession::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('end_time', '>', Carbon::now())
-            ->first();
+        $activeNodes = $activeUserNodes->map(function ($userNode) {
+            // Check if there is an active session
+            $session = GenerationSession::where('user_node_id', $userNode->id)
+                ->where('status', 'active')
+                ->first();
+                
+            $sessionData = null;
+            $status = 'ready'; // ready, running, claimable, cooldown
+            $cooldownSeconds = 0;
+            $cooldownExpiresAt = null;
+
+            if ($session) {
+                $endTime = Carbon::parse($session->end_time);
+                if ($endTime->isFuture()) {
+                    $status = 'running';
+                    $sessionData = [
+                        'id' => $session->id,
+                        'start_time' => $session->start_time,
+                        'end_time' => $session->end_time,
+                        'expected_profit' => (float)$session->expected_profit,
+                        'remaining_seconds' => max(0, Carbon::now()->diffInSeconds($endTime, false)),
+                    ];
+                } else {
+                    $status = 'claimable';
+                    $sessionData = [
+                        'id' => $session->id,
+                        'start_time' => $session->start_time,
+                        'end_time' => $session->end_time,
+                        'expected_profit' => (float)$session->expected_profit,
+                        'remaining_seconds' => 0,
+                    ];
+                }
+            } else {
+                // Check 24h purchase delay
+                $activationDelay = Carbon::parse($userNode->activated_at)->addHours(24);
+                if ($activationDelay->isFuture()) {
+                    $status = 'cooldown';
+                    $cooldownExpiresAt = $activationDelay->toIso8601String();
+                    $cooldownSeconds = max(0, Carbon::now()->diffInSeconds($activationDelay, false));
+                } else {
+                    // Check subsequent 24h rate limit
+                    $lastSession = GenerationSession::where('user_node_id', $userNode->id)
+                        ->orderBy('start_time', 'desc')
+                        ->first();
+
+                    if ($lastSession) {
+                        $sessionDelay = Carbon::parse($lastSession->start_time)->addHours(24);
+                        if ($sessionDelay->isFuture()) {
+                            $status = 'cooldown';
+                            $cooldownExpiresAt = $sessionDelay->toIso8601String();
+                            $cooldownSeconds = max(0, Carbon::now()->diffInSeconds($sessionDelay, false));
+                        }
+                    }
+                }
+            }
+
+            return [
+                'id' => $userNode->id,
+                'node_id' => $userNode->node_id,
+                'node_name' => $userNode->node_name,
+                'generation_profit' => (float)$userNode->generation_profit,
+                'node_amount' => (float)$userNode->node_amount,
+                'technology_level' => $userNode->technology_level,
+                'activated_at' => $userNode->activated_at,
+                'expires_at' => $userNode->expires_at,
+                'status' => $status,
+                'session' => $sessionData,
+                'cooldown_seconds' => $cooldownSeconds,
+                'cooldown_expires_at' => $cooldownExpiresAt,
+            ];
+        });
 
         return Inertia::render('Generate', [
-            'activeUserNode' => $activeUserNode,
-            'activeSession' => $activeSession ? [
-                'id' => $activeSession->id,
-                'start_time' => $activeSession->start_time,
-                'end_time' => $activeSession->end_time,
-                'expected_profit' => $activeSession->expected_profit,
-                'remaining_seconds' => max(0, Carbon::now()->diffInSeconds(Carbon::parse($activeSession->end_time), false)),
-            ] : null,
+            'activeNodes' => $activeNodes,
         ]);
     }
 
@@ -85,50 +145,9 @@ class NodeController extends Controller
             return back()->withErrors(['error' => 'Ce nœud n\'est pas disponible.']);
         }
 
-        // Retrieve user's current active node (if any)
-        $currentActive = UserNode::where('user_id', $user->id)
-            ->where('user_nodes.active', true)
-            ->where(function($query) {
-                $query->whereNull('expires_at')
-                      ->orWhere('expires_at', '>', Carbon::now());
-            })
-            ->join('nodes', 'user_nodes.node_id', '=', 'nodes.id')
-            ->select('user_nodes.*', 'nodes.technology_level', 'nodes.amount as node_amount', 'nodes.name as node_name')
-            ->first();
-
         // Database transaction to guarantee consistency
         try {
-            DB::transaction(function () use ($user, $node, $currentActive) {
-                $refundAmount = 0;
-
-                if ($currentActive) {
-                    // Upgrade Rule: new node technology_level must be strictly greater than current
-                    if ($node->technology_level <= $currentActive->technology_level) {
-                        throw new \Exception('Vous ne pouvez louer qu\'un nœud de niveau technologique supérieur à votre nœud actuel.');
-                    }
-
-                    // Upgrading automatically refunds the previous node investment!
-                    $refundAmount = $currentActive->node_amount;
-                    
-                    // Mark current active node as inactive
-                    UserNode::where('id', $currentActive->id)->update([
-                        'active' => false,
-                        'expires_at' => Carbon::now()
-                    ]);
-
-                    // Add refund to user balance
-                    $user->balance += $refundAmount;
-
-                    // Log the refund transaction
-                    Transaction::create([
-                        'user_id' => $user->id,
-                        'amount' => $refundAmount,
-                        'type' => 'refund',
-                        'status' => 'completed',
-                        'reference' => 'REF-' . strtoupper(bin2hex(random_bytes(4))),
-                    ]);
-                }
-
+            DB::transaction(function () use ($user, $node) {
                 // Check if user has sufficient balance for the new rental
                 if ($user->balance < $node->amount) {
                     throw new \Exception('Solde insuffisant pour louer ce nœud d\'infrastructure.');
@@ -160,32 +179,22 @@ class NodeController extends Controller
                 if ($user->referrer_id) {
                     $sponsor = \App\Models\User::find($user->referrer_id);
                     if ($sponsor) {
-                        $sponsorVip = $sponsor->vip_level ?? 1;
-                        $commissionRate = 0.05; // VIP 1 default
-                        if ($sponsorVip == 2) {
-                            $commissionRate = 0.07;
-                        } elseif ($sponsorVip == 3) {
-                            $commissionRate = 0.10;
-                        } elseif ($sponsorVip == 4) {
-                            $commissionRate = 0.13;
-                        } elseif ($sponsorVip >= 5) {
-                            $commissionRate = 0.17;
+                        $commissionAmount = (float)($node->referral_reward ?? 0.00);
+
+                        if ($commissionAmount > 0) {
+                            // Credit sponsor balance
+                            $sponsor->balance += $commissionAmount;
+                            $sponsor->save();
+
+                            // Log commission transaction
+                            Transaction::create([
+                                'user_id' => $sponsor->id,
+                                'amount' => $commissionAmount,
+                                'type' => 'earnings',
+                                'status' => 'completed',
+                                'reference' => 'COM-' . strtoupper(bin2hex(random_bytes(4))),
+                            ]);
                         }
-
-                        $commissionAmount = $node->amount * $commissionRate;
-
-                        // Credit sponsor balance
-                        $sponsor->balance += $commissionAmount;
-                        $sponsor->save();
-
-                        // Log commission transaction
-                        Transaction::create([
-                            'user_id' => $sponsor->id,
-                            'amount' => $commissionAmount,
-                            'type' => 'earnings',
-                            'status' => 'completed',
-                            'reference' => 'COM-' . strtoupper(bin2hex(random_bytes(4))),
-                        ]);
                     }
                 }
 
@@ -207,11 +216,17 @@ class NodeController extends Controller
 
     public function startGeneration(Request $request)
     {
-        $user = Auth::user();
+        $request->validate([
+            'user_node_id' => 'required|integer|exists:user_nodes,id'
+        ]);
 
-        // 1. Verify user has an active node
-        $activeUserNode = UserNode::where('user_id', $user->id)
-            ->where('user_nodes.active', true)
+        $user = Auth::user();
+        $userNodeId = $request->user_node_id;
+
+        // 1. Verify user owns this active node
+        $activeUserNode = UserNode::where('id', $userNodeId)
+            ->where('user_id', $user->id)
+            ->where('active', true)
             ->where(function($query) {
                 $query->whereNull('expires_at')
                       ->orWhere('expires_at', '>', Carbon::now());
@@ -230,24 +245,24 @@ class NodeController extends Controller
             return response()->json(['error' => "Vous pourrez démarrer votre première session de co-traitement et générer des revenus 24 heures après l'achat de votre nœud. Disponible le : " . $availableTime->format('d/m/Y H:i:s')], 422);
         }
 
-        // Enforce subsequent generations only 24 hours after the last started generation session
-        $lastSession = GenerationSession::where('user_id', $user->id)
+        // Enforce subsequent generations only 24 hours after the last started generation session for this specific node
+        $lastSession = GenerationSession::where('user_node_id', $userNodeId)
             ->orderBy('start_time', 'desc')
             ->first();
 
         if ($lastSession && Carbon::parse($lastSession->start_time)->addHours(24)->isFuture()) {
             $availableTime = Carbon::parse($lastSession->start_time)->addHours(24);
-            return response()->json(['error' => "Vous ne pouvez générer des revenus qu'une seule fois toutes les 24 heures. Prochaine session disponible à partir de : " . $availableTime->format('d/m/Y H:i:s')], 422);
+            return response()->json(['error' => "Vous ne pouvez générer des revenus qu'une seule fois toutes les 24 heures sur ce nœud. Prochaine session disponible à partir de : " . $availableTime->format('d/m/Y H:i:s')], 422);
         }
 
-        // 2. Check if a session is already running (safety check)
-        $runningSession = GenerationSession::where('user_id', $user->id)
+        // 2. Check if a session is already running for this specific node
+        $runningSession = GenerationSession::where('user_node_id', $userNodeId)
             ->where('status', 'active')
             ->where('end_time', '>', Carbon::now())
             ->first();
 
         if ($runningSession) {
-            return response()->json(['error' => 'Une session de génération est déjà en cours.'], 422);
+            return response()->json(['error' => 'Une session de génération est déjà en cours sur ce nœud.'], 422);
         }
 
         // 3. Start a new 2-minute session
@@ -256,6 +271,7 @@ class NodeController extends Controller
 
         $session = GenerationSession::create([
             'user_id' => $user->id,
+            'user_node_id' => $userNodeId,
             'start_time' => $startTime,
             'end_time' => $endTime,
             'expected_profit' => $activeUserNode->generation_profit,
@@ -264,6 +280,7 @@ class NodeController extends Controller
 
         return response()->json([
             'id' => $session->id,
+            'user_node_id' => $userNodeId,
             'start_time' => $session->start_time,
             'end_time' => $session->end_time,
             'expected_profit' => $session->expected_profit,

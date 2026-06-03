@@ -5,10 +5,11 @@
  * - Fournit des utilitaires de retour haptique
  */
 import type { App } from 'vue';
+import { Capacitor } from '@capacitor/core';
 
 // Détecte si l'app tourne dans Capacitor (natif) ou dans un navigateur
 export const isNative = (): boolean => {
-    return typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNative;
+    return Capacitor.isNativePlatform();
 };
 
 // Utilitaires Haptics — retour tactile sur les actions clés

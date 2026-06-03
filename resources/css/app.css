@@ -495,3 +495,15 @@
     }
 }
 
+/* Suppress global scrollbars for a cleaner mobile app look */
+::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+body, html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+

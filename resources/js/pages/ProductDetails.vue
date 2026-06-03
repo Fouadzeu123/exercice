@@ -78,21 +78,17 @@ const getProductImage = () => {
     return props.product.image || props.product.image_url || 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
 };
 
-// Check node statuses if it's a node
+// Check node statuses if it's a node (always false since users can buy multiple at once)
 const isCurrentNode = computed(() => {
-    return props.activeUserNode && props.activeUserNode.node_id === props.product.id;
+    return false;
 });
 
 const isUpgradeNode = computed(() => {
-    if (props.product.isVault) return false;
-    if (!props.activeUserNode) return false;
-    return props.product.technology_level > props.activeUserNode.technology_level;
+    return false;
 });
 
 const isLockedNode = computed(() => {
-    if (props.product.isVault) return false;
-    if (!props.activeUserNode) return false;
-    return props.product.technology_level < props.activeUserNode.technology_level;
+    return false;
 });
 
 const handlePurchase = () => {

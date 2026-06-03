@@ -63,13 +63,20 @@ const handleClaimSalary = async () => {
     claimProcessing.value = true;
     try {
         const res = await axios.post('/avip-products/claim-salary');
+        
+        // Update user properties locally so the UI updates instantly
+        if (user.value) {
+            user.value.balance = res.data.new_balance;
+            user.value.last_salary_claim_date = new Date().toISOString();
+        }
+        
+        claimedAmount.value = res.data.salary_amount;
+        showClaimSuccessModal.value = true;
+        claimProcessing.value = false;
+        
+        // Reload inertia props to sync in the background
         router.reload({
-            only: ['auth', 'stats'],
-            onSuccess: () => {
-                claimedAmount.value = userDailyRate.value;
-                showClaimSuccessModal.value = true;
-                claimProcessing.value = false;
-            }
+            only: ['auth', 'stats']
         });
     } catch (e: any) {
         claimProcessing.value = false;
@@ -120,16 +127,16 @@ const vipLevels = [
         volume: 50000,
         activeRefs: 1,
         salary: 250,
-        description: 'Débloquez plus de gains sur votre premier affilié actif.'
+        description: 'Débloquez plus de gains sur votre premier affilié actif. Donne droit au salaire journalier pendant 30 jours.'
     },
     {
         level: 3,
         title: 'VIP 3 - Quantum Master',
-        personal: 5000, // wait! In original DB, let's keep the original requirements: 50000, 200000, 3 refs
+        personal: 50000,
         volume: 200000,
         activeRefs: 3,
         salary: 500,
-        description: 'Vitesse de retrait augmentée et gains accrus.'
+        description: 'Vitesse de retrait augmentée et gains accrus. Donne droit au salaire journalier pendant 30 jours.'
     },
     {
         level: 4,
@@ -378,53 +385,57 @@ const currentVipTitle = computed(() => {
         </div>
 
         <!-- DIVIDEND SUCCESS CLAIM MODAL -->
-        <div v-if="showClaimSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-hidden" @touchmove.prevent>
-            <div class="w-full max-w-sm bg-[#0a0414] border border-emerald-500/30 rounded-3xl overflow-hidden shadow-2xl animate-scaleIn relative glow-border">
-                <div class="absolute -top-12 -right-12 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                <div class="p-6 text-center">
-                    <div class="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mx-auto mb-4 animate-bounce">
-                        <CheckCircle2 class="h-7 w-7" :stroke-width="2.5" />
+        <Teleport to="body">
+            <div v-if="showClaimSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-hidden" @touchmove.prevent>
+                <div class="w-full max-w-sm bg-[#0a0414] border border-emerald-500/30 rounded-3xl overflow-hidden shadow-2xl animate-scaleIn relative glow-border">
+                    <div class="absolute -top-12 -right-12 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="p-6 text-center">
+                        <div class="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mx-auto mb-4 animate-bounce">
+                            <CheckCircle2 class="h-7 w-7" :stroke-width="2.5" />
+                        </div>
+                        
+                        <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Salaire Réclamé</h3>
+                        <p class="text-[10px] text-slate-400 leading-relaxed mb-6">
+                            Votre dividende quotidien de co-traitement a été versé avec succès sur votre solde.
+                        </p>
+                        
+                        <div class="bg-emerald-950/20 border border-emerald-500/10 rounded-2xl p-4.5 mb-6">
+                            <span class="text-[8px] text-emerald-400 uppercase tracking-widest font-black block mb-1">Montant crédité</span>
+                            <span class="text-xl font-mono font-black text-white block">
+                                +{{ formatXAF(claimedAmount) }}
+                            </span>
+                        </div>
+                        
+                        <button @click="showClaimSuccessModal = false" class="w-full py-3.5 rounded-2xl bg-emerald-500 text-black font-black uppercase tracking-wider text-xs hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+                            CONFIRMER
+                        </button>
                     </div>
-                    
-                    <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Salaire Réclamé</h3>
-                    <p class="text-[10px] text-slate-400 leading-relaxed mb-6">
-                        Votre dividende quotidien de co-traitement a été versé avec succès sur votre solde.
-                    </p>
-                    
-                    <div class="bg-emerald-950/20 border border-emerald-500/10 rounded-2xl p-4.5 mb-6">
-                        <span class="text-[8px] text-emerald-400 uppercase tracking-widest font-black block mb-1">Montant crédité</span>
-                        <span class="text-xl font-mono font-black text-white block">
-                            +{{ formatXAF(claimedAmount) }}
-                        </span>
-                    </div>
-                    
-                    <button @click="showClaimSuccessModal = false" class="w-full py-3.5 rounded-2xl bg-emerald-500 text-black font-black uppercase tracking-wider text-xs hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                        CONFIRMER
-                    </button>
                 </div>
             </div>
-        </div>
+        </Teleport>
 
         <!-- ERROR MODAL -->
-        <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-hidden" @touchmove.prevent>
-            <div class="w-full max-w-sm bg-[#0a0414] border border-rose-500/30 rounded-3xl overflow-hidden shadow-2xl animate-scaleIn relative glow-border">
-                <div class="absolute -top-12 -right-12 w-28 h-28 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                <div class="p-6 text-center">
-                    <div class="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 mx-auto mb-4">
-                        <X class="h-6 w-6" :stroke-width="3" />
+        <Teleport to="body">
+            <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-hidden" @touchmove.prevent>
+                <div class="w-full max-w-sm bg-[#0a0414] border border-rose-500/30 rounded-3xl overflow-hidden shadow-2xl animate-scaleIn relative glow-border">
+                    <div class="absolute -top-12 -right-12 w-28 h-28 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="p-6 text-center">
+                        <div class="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 mx-auto mb-4">
+                            <X class="h-6 w-6" :stroke-width="3" />
+                        </div>
+                        
+                        <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Opération Échouée</h3>
+                        <p class="text-[10.5px] text-slate-400 leading-relaxed mb-6">
+                            {{ errorMessage }}
+                        </p>
+                        
+                        <button @click="showErrorModal = false" class="w-full py-3.5 rounded-2xl bg-rose-500 text-black font-black uppercase tracking-wider text-xs hover:bg-rose-400 transition-all shadow-[0_0_15px_rgba(244,63,94,0.4)]">
+                            RETOUR
+                        </button>
                     </div>
-                    
-                    <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Opération Échouée</h3>
-                    <p class="text-[10.5px] text-slate-400 leading-relaxed mb-6">
-                        {{ errorMessage }}
-                    </p>
-                    
-                    <button @click="showErrorModal = false" class="w-full py-3.5 rounded-2xl bg-rose-500 text-black font-black uppercase tracking-wider text-xs hover:bg-rose-400 transition-all shadow-[0_0_15px_rgba(244,63,94,0.4)]">
-                        RETOUR
-                    </button>
                 </div>
             </div>
-        </div>
+        </Teleport>
 
     </AppLayout>
 </template>

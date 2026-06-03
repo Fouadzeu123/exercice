@@ -17,6 +17,7 @@ class Node extends Model
     protected $casts = [
         'amount' => 'float',
         'generation_profit' => 'float',
+        'referral_reward' => 'float',
         'active' => 'boolean',
         'duration' => 'integer', // en jours
         'technology_level' => 'integer',

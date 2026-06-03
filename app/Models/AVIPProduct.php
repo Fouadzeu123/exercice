@@ -15,6 +15,7 @@ class AVIPProduct extends Model
     protected $casts = [
         'amount' => 'float',
         'daily_salary' => 'float',
+        'referral_reward' => 'float',
         'required_vip_level' => 'integer',
         'avip_level' => 'integer',
         'active' => 'boolean',

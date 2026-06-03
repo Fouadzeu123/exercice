@@ -33,20 +33,7 @@ import axios from 'axios';
 
 // --- TYPES & PROPS ---
 const props = defineProps<{
-    activeUserNode?: {
-        id: number;
-        node_name: string;
-        generation_profit: string;
-        node_amount: string;
-        technology_level: number;
-    } | null;
-    activeSession?: {
-        id: number;
-        start_time: string;
-        end_time: string;
-        expected_profit: string;
-        remaining_seconds: number;
-    } | null;
+    activeUserNodesCount?: number;
     nodes: Array<{
         id: number;
         name: string;
@@ -222,64 +209,7 @@ const combinedProducts = computed(() => {
     return [];
 });
 
-// --- LOGIQUE GENERATION ---
-const sessionRunning = ref(false);
-const sessionClaimable = ref(false);
-const timeRemaining = ref(0);
-const progressPercent = ref(0);
-let timerInterval: number | null = null;
-let animationFrameId: number | null = null;
-
-const initializeLocalSession = (startTimeStr: string, endTimeStr: string, profitStr: string) => {
-    const startMs = new Date(startTimeStr).getTime();
-    const endMs = new Date(endTimeStr).getTime();
-    const tick = () => {
-        const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((endMs - now) / 1000));
-        timeRemaining.value = remaining;
-        if (remaining <= 0) {
-            sessionRunning.value = false;
-            sessionClaimable.value = true;
-            progressPercent.value = 100;
-            if (timerInterval) clearInterval(timerInterval);
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        } else {
-            const elapsed = now - startMs;
-            const total = endMs - startMs;
-            progressPercent.value = (elapsed / total) * 100;
-            animationFrameId = requestAnimationFrame(tick);
-        }
-    };
-    tick();
-    timerInterval = window.setInterval(() => {
-        if (timeRemaining.value > 0) timeRemaining.value--;
-        else { clearInterval(timerInterval); sessionClaimable.value = true; sessionRunning.value = false; }
-    }, 1000);
-    if (timeRemaining.value > 0) sessionRunning.value = true;
-};
-
-const startGeneration = async () => {
-    try {
-        const res = await axios.post('/generation/start');
-        initializeLocalSession(res.data.start_time, res.data.end_time, res.data.expected_profit);
-    } catch (e: any) {
-        dashboardErrorMessage.value = e.response?.data?.error || "Erreur de lancement de la génération.";
-        showDashboardErrorModal.value = true;
-    }
-};
-
-const claimProfit = async () => {
-    try {
-        await axios.post(`/generation/${props.activeSession?.id}/claim`);
-        sessionRunning.value = false;
-        sessionClaimable.value = false;
-        router.reload({ only: ['activeUserNode', 'activeSession', 'stats'] });
-    } catch (e: any) {
-        dashboardErrorMessage.value = e.response?.data?.error || "Erreur lors de la réclamation des gains.";
-        showDashboardErrorModal.value = true;
-    }
-};
-
+// --- LOGIQUE GENERATION (REMOVED - HANDLED IN DEDICATED CONSOLE VIEW)
 // --- LOCATION ---
 const rentForm = useForm({});
 const confirmRentNode = (node: any) => {
@@ -398,9 +328,6 @@ const handleCheckinTrigger = () => {
 const { containerRef } = useRevealAnimation();
 
 onMounted(() => {
-    if (props.activeSession) {
-        initializeLocalSession(props.activeSession.start_time, props.activeSession.end_time, props.activeSession.expected_profit);
-    }
     liveInterval = window.setInterval(addLiveWithdrawal, 3500);
     initCosmicParticles();
     setTimeout(() => {
@@ -569,31 +496,33 @@ watch(
                     </div>
 
                     <!-- section génération -->
-                    <div data-animate="fade-up" data-delay="400" class="w-full bg-[#0f071d]/80 border border-white/10 rounded-2xl p-5 relative overflow-hidden backdrop-blur-sm transition-all duration-300 hover:shadow-cyan-500/10 hover:shadow-lg glow-border">
-                        <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                            <CpuIcon class="w-32 h-32 text-cyan-500" />
+                    <div data-animate="fade-up" data-delay="400" class="w-full bg-gradient-to-br from-[#0f071d]/90 via-[#150a2b]/80 to-[#0c0517]/90 border border-cyan-500/20 rounded-2xl p-5 relative overflow-hidden backdrop-blur-sm transition-all duration-300 hover:shadow-cyan-500/10 hover:shadow-xl hover:border-cyan-500/30 group glow-border">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
+                            <BrainCircuit class="w-32 h-32 text-cyan-500 animate-pulse" />
                         </div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="text-xs font-bold text-gray-500 mb-1">nœud actif</h3>
-                                    <div class="text-base font-bold text-gray-100">{{ activeUserNode ? activeUserNode.node_name : 'aucun nœud actif' }}</div>
-                                    <div class="text-xs text-gray-400 mt-1">gain journalier : <span class="text-cyan-400 font-black">{{ formatXAF(activeUserNode?.generation_profit || 0) }}</span></div>
+                        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                    <h3 class="text-xs font-black text-cyan-400 uppercase tracking-widest font-mono">Console de Co-traitement AI</h3>
                                 </div>
-                                <div v-if="activeUserNode" class="text-right">
-                                    <div class="text-xs text-gray-500 mb-1">montant de la location</div>
-                                    <div class="text-sm font-bold text-cyan-400">{{ formatXAF(activeUserNode.node_amount) }}</div>
+                                <div class="text-sm font-extrabold text-white tracking-wide">
+                                    {{ activeUserNodesCount && activeUserNodesCount > 0 ? `${activeUserNodesCount} serveur(s) de calcul connecté(s)` : 'Aucun serveur actif détecté' }}
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    Rendement cumulé : 
+                                    <span class="text-emerald-400 font-bold font-mono">
+                                        +{{ formatXAF(stats?.daily_profit_rate || 0) }} / jour
+                                    </span>
                                 </div>
                             </div>
-                            <div v-if="activeUserNode">
-                                <div class="h-1.5 w-full bg-black/50 rounded-full overflow-hidden mb-2">
-                                    <div class="h-full bg-cyan-500 transition-all duration-1000 shadow-[0_0_10px_rgba(6,182,212,0.5)]" :style="{ width: progressPercent + '%' }"></div>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[10px] font-mono text-gray-400 animate-pulse">{{ Math.floor(timeRemaining / 60) }}:{{ String(timeRemaining % 60).padStart(2, '0') }}</span>
-                                    <button v-if="!sessionRunning && !sessionClaimable" @click="startGeneration" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-black text-[10px] font-extrabold uppercase rounded transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">démarrer</button>
-                                    <button v-if="sessionClaimable" @click="claimProfit" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-black text-[10px] font-extrabold uppercase rounded transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">réclamer</button>
-                                </div>
+                            <div class="shrink-0 flex items-center w-full sm:w-auto">
+                                <Link 
+                                    href="/generate" 
+                                    class="w-full text-center px-5 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)]"
+                                >
+                                    Gérer mes Serveurs & Gains →
+                                </Link>
                             </div>
                         </div>
                     </div>

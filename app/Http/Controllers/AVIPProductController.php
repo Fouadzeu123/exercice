@@ -93,6 +93,32 @@ class AVIPProductController extends Controller
 
                 // Recalculate VIP/AVIP status
                 $user->recalculateVipAndAvipStatus();
+
+                // Pay referral commission if the user has a referrer
+                if ($user->referrer_id) {
+                    $sponsor = \App\Models\User::find($user->referrer_id);
+                    if ($sponsor) {
+                        $commissionAmount = (float)($product->referral_reward ?? 0.00);
+
+                        if ($commissionAmount > 0) {
+                            // Credit sponsor balance
+                            $sponsor->balance += $commissionAmount;
+                            $sponsor->save();
+
+                            // Log commission transaction
+                            Transaction::create([
+                                'user_id' => $sponsor->id,
+                                'amount' => $commissionAmount,
+                                'type' => 'earnings',
+                                'status' => 'completed',
+                                'reference' => 'COM-' . strtoupper(bin2hex(random_bytes(4))),
+                            ]);
+
+                            // Recalculate status for sponsor
+                            $sponsor->recalculateVipAndAvipStatus();
+                        }
+                    }
+                }
             });
 
             return redirect()->back()->with('success', 'Produit AVIP acheté avec succès.');
@@ -114,16 +140,24 @@ class AVIPProductController extends Controller
             return response()->json(['error' => 'Les membres de niveau VIP 0 n\'ont pas de salaire journalier. Veuillez activer au moins un nœud de calcul (VIP 1) pour commencer à percevoir des dividendes journaliers.'], 422);
         }
 
+        $salaryClaimsCount = Transaction::where('user_id', $user->id)
+            ->where('type', 'salary')
+            ->where('status', 'completed')
+            ->count();
+
         // VIP 1 limit to 7 claims
-        if ($userVipLevel === 1) {
-            $salaryClaimsCount = Transaction::where('user_id', $user->id)
-                ->where('type', 'salary')
-                ->where('status', 'completed')
-                ->count();
-            
-            if ($salaryClaimsCount >= 7) {
-                return response()->json(['error' => 'Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.'], 422);
-            }
+        if ($userVipLevel === 1 && $salaryClaimsCount >= 7) {
+            return response()->json(['error' => 'Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.'], 422);
+        }
+
+        // VIP 2 limit to 30 claims
+        if ($userVipLevel === 2 && $salaryClaimsCount >= 30) {
+            return response()->json(['error' => 'Vous avez déjà réclamé vos 30 jours de salaire pour le niveau VIP 2.'], 422);
+        }
+
+        // VIP 3 limit to 30 claims
+        if ($userVipLevel === 3 && $salaryClaimsCount >= 30) {
+            return response()->json(['error' => 'Vous avez déjà réclamé vos 30 jours de salaire pour le niveau VIP 3.'], 422);
         }
 
         // Define daily salary amounts per VIP level dynamically from settings

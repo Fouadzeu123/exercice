@@ -69,6 +69,7 @@ const props = defineProps<{
         name: string;
         amount: string;
         generation_profit: string;
+        referral_reward: string;
         technology_level: number;
         duration: number;
         stock_quantity: number | null;
@@ -82,6 +83,7 @@ const props = defineProps<{
         description: string;
         amount: string;
         daily_salary: string;
+        referral_reward: string;
         required_vip_level: number;
         avip_level: number;
         active: boolean;
@@ -273,6 +275,7 @@ const nodeForm = useForm({
     name: '',
     amount: 0,
     generation_profit: 0,
+    referral_reward: 0,
     technology_level: 0,
     duration: 30,
     stock_quantity: null as number | null,
@@ -288,6 +291,7 @@ const openNodeModal = (node: any) => {
     nodeForm.name = node.name;
     nodeForm.amount = parseFloat(node.amount);
     nodeForm.generation_profit = parseFloat(node.generation_profit);
+    nodeForm.referral_reward = parseFloat(node.referral_reward || 0);
     nodeForm.technology_level = node.technology_level;
     nodeForm.duration = node.duration;
     nodeForm.stock_quantity = node.stock_quantity;
@@ -327,6 +331,7 @@ const avipForm = useForm({
     description: '',
     amount: 0,
     daily_salary: 0,
+    referral_reward: 0,
     required_vip_level: 0,
     avip_level: 1,
     active: true,
@@ -341,6 +346,7 @@ const openAvipModal = (product: any) => {
     avipForm.description = product.description;
     avipForm.amount = parseFloat(product.amount);
     avipForm.daily_salary = parseFloat(product.daily_salary);
+    avipForm.referral_reward = parseFloat(product.referral_reward || 0);
     avipForm.required_vip_level = product.required_vip_level;
     avipForm.avip_level = product.avip_level;
     avipForm.active = !!product.active;
@@ -377,6 +383,7 @@ const createNodeForm = useForm({
     name: '',
     amount: 10000,
     generation_profit: 500,
+    referral_reward: 0,
     technology_level: 0,
     duration: 30,
     stock_quantity: null as number | null,
@@ -404,6 +411,7 @@ const createAvipForm = useForm({
     description: '',
     amount: 50000,
     daily_salary: 2000,
+    referral_reward: 0,
     required_vip_level: 1,
     avip_level: 1,
     active: true,
@@ -965,6 +973,10 @@ onUnmounted(() => {
                                         <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">VIP Minimum :</span>
                                         <span class="text-purple-400 font-black">VIP {{ node.technology_level }}</span>
                                     </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Parrainage :</span>
+                                        <span class="text-purple-400 font-bold">{{ formatXAF(node.referral_reward || 0) }}</span>
+                                    </div>
                                     <div class="flex justify-between border-t border-white/5 pt-1.5 mt-1.5 text-[9px]">
                                         <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Stock restant :</span>
                                         <span class="text-white font-bold">{{ node.stock_quantity !== null ? node.stock_quantity + ' unites' : 'Illimite' }}</span>
@@ -1041,6 +1053,10 @@ onUnmounted(() => {
                                     <div class="flex justify-between">
                                         <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Palier AVIP :</span>
                                         <span class="text-white font-bold">AVIP {{ p.avip_level }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Parrainage :</span>
+                                        <span class="text-purple-400 font-bold">{{ formatXAF(p.referral_reward || 0) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1410,7 +1426,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <!-- Rent Price -->
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Prix Location (XAF)</label>
@@ -1420,6 +1436,11 @@ onUnmounted(() => {
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Profit/Jour (XAF)</label>
                                 <input v-model="nodeForm.generation_profit" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Referral Reward -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Parrainage (XAF)</label>
+                                <input v-model="nodeForm.referral_reward" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
                         </div>
 
@@ -1540,7 +1561,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <!-- Cost -->
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Montant Achat (XAF)</label>
@@ -1550,6 +1571,11 @@ onUnmounted(() => {
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Dividende/Jour (XAF)</label>
                                 <input v-model="avipForm.daily_salary" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Referral Reward -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Parrainage (XAF)</label>
+                                <input v-model="avipForm.referral_reward" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
                         </div>
 
@@ -1653,7 +1679,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <!-- Rent Price -->
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Prix Location (XAF)</label>
@@ -1663,6 +1689,11 @@ onUnmounted(() => {
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Profit/Jour (XAF)</label>
                                 <input v-model="createNodeForm.generation_profit" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Referral Reward -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Parrainage (XAF)</label>
+                                <input v-model="createNodeForm.referral_reward" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
                         </div>
 
@@ -1768,7 +1799,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <!-- Cost -->
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Montant Achat (XAF)</label>
@@ -1778,6 +1809,11 @@ onUnmounted(() => {
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Salaire Quotidien (XAF)</label>
                                 <input v-model="createAvipForm.daily_salary" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Referral Reward -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Parrainage (XAF)</label>
+                                <input v-model="createAvipForm.referral_reward" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
                         </div>
 

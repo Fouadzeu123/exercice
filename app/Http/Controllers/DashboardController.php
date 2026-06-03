@@ -15,22 +15,18 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Retrieve the current active user node
-        $activeUserNode = UserNode::where('user_id', $user->id)
+        // Retrieve the active user nodes to calculate aggregate values
+        $activeUserNodes = UserNode::where('user_id', $user->id)
             ->where('user_nodes.active', true)
             ->where(function($query) {
                 $query->whereNull('expires_at')
                       ->orWhere('expires_at', '>', Carbon::now());
             })
             ->join('nodes', 'user_nodes.node_id', '=', 'nodes.id')
-            ->select('user_nodes.*', 'nodes.name as node_name', 'nodes.generation_profit', 'nodes.technology_level', 'nodes.amount as node_amount')
-            ->first();
+            ->select('nodes.generation_profit')
+            ->get();
 
-        // Retrieve any active running generation session (lasts 2 minutes)
-        $activeSession = GenerationSession::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('end_time', '>', Carbon::now())
-            ->first();
+        $activeUserNodesCount = $activeUserNodes->count();
 
         // Retrieve recent transactions
         $recentTransactions = Transaction::where('user_id', $user->id)
@@ -43,7 +39,7 @@ class DashboardController extends Controller
             ->where('status', 'claimed')
             ->sum('expected_profit');
 
-        $dailyProfitRate = $activeUserNode ? $activeUserNode->generation_profit : 0.00;
+        $dailyProfitRate = (float) $activeUserNodes->sum('generation_profit');
 
         // Retrieve active announcements
         $announcements = \App\Models\Announcement::where('active', true)->orderBy('created_at', 'desc')->get();
@@ -58,14 +54,7 @@ class DashboardController extends Controller
         $avipProducts = \App\Models\AVIPProduct::where('active', true)->orderBy('avip_level', 'asc')->get();
 
         return Inertia::render('Dashboard', [
-            'activeUserNode' => $activeUserNode,
-            'activeSession' => $activeSession ? [
-                'id' => $activeSession->id,
-                'start_time' => $activeSession->start_time,
-                'end_time' => $activeSession->end_time,
-                'expected_profit' => $activeSession->expected_profit,
-                'remaining_seconds' => max(0, Carbon::now()->diffInSeconds(Carbon::parse($activeSession->end_time), false)),
-            ] : null,
+            'activeUserNodesCount' => $activeUserNodesCount,
             'recentTransactions' => $recentTransactions,
             'announcements' => $announcements,
             'nodes' => $nodes,
