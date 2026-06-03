@@ -234,7 +234,7 @@ class AdminController extends Controller
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
             'is_limited' => $request->is_limited ? true : false,
-            'image_url' => $imageUrl,
+            'image' => $imageUrl,
         ]);
 
         if ($request->restore && $node->trashed()) {
@@ -357,7 +357,7 @@ class AdminController extends Controller
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
             'is_limited' => $request->is_limited ? true : false,
-            'image_url' => $imageUrl,
+            'image' => $imageUrl,
         ]);
 
         return back()->with('success', 'Nouveau nœud de serveur standard créé avec succès.');

@@ -239,7 +239,7 @@ const confirmRentVault = (vault: any) => {
 
 // --- UTILS ---
 const formatXAF = (val: number | string) => new Intl.NumberFormat('fr-FR').format(Number(val)) + ' xaf';
-const getProductImage = (node: any) => node.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
+const getProductImage = (node: any) => node.image || node.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
 
 // --- PARTICULES LUMINEUSES GLOBALES ---
 let canvas: HTMLCanvasElement | null = null;

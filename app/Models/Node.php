@@ -11,6 +11,8 @@ class Node extends Model
 
     protected $guarded = [];
 
+    protected $appends = ['image_url'];
+
     /**
      * Transformer les montants en nombres flottants automatiquement
      */
@@ -23,6 +25,14 @@ class Node extends Model
         'duration' => 'integer', // en jours
         'technology_level' => 'integer',
     ];
+
+    /**
+     * Accessor for virtual image_url property to ensure backward compatibility.
+     */
+    public function getImageUrlAttribute()
+    {
+        return $this->image;
+    }
 
     /**
      * Relation: Un nœud peut posséder plusieurs investissements utilisateurs (UserNode)
