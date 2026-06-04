@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserAVIPProduct extends Model
 {
+    protected $table = 'user_avip_products';
     protected $guarded = [];
 
     protected $casts = [
