@@ -145,6 +145,19 @@ class NodeController extends Controller
             return back()->withErrors(['error' => 'Ce nœud n\'est pas disponible.']);
         }
 
+        // Enforce required active referrals constraint
+        if ($node->required_active_referrals > 0) {
+            $activeReferralsCount = \App\Models\User::where('referrer_id', $user->id)
+                ->where(function($query) {
+                    $query->whereHas('userNodes')
+                          ->orWhereHas('userAVIPProducts');
+                })
+                ->count();
+            if ($activeReferralsCount < $node->required_active_referrals) {
+                return back()->withErrors(['error' => "Ce produit requiert au moins {$node->required_active_referrals} filleul(s) actif(s) ayant loué/acheté un produit pour être déverrouillé. Vous en avez actuellement : {$activeReferralsCount}."]);
+            }
+        }
+
         // Enforce limited offer stock limit
         if ($node->stock_quantity !== null) {
             $rentedCount = UserNode::where('node_id', $node->id)

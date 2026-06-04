@@ -22,6 +22,7 @@ class AVIPProduct extends Model
         'is_limited' => 'boolean',
         'stock_quantity' => 'integer',
         'limited_purchase_count' => 'integer',
+        'required_active_referrals' => 'integer',
     ];
 
     /**

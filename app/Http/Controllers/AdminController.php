@@ -210,6 +210,7 @@ class AdminController extends Controller
             'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
             'is_limited' => 'nullable|boolean',
+            'required_active_referrals' => 'nullable|integer|min:0',
             'restore' => 'nullable|boolean', // Option to restore if soft deleted
             'image_url' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
@@ -234,6 +235,7 @@ class AdminController extends Controller
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
             'is_limited' => $request->is_limited ? true : false,
+            'required_active_referrals' => $request->required_active_referrals ?? 0,
             'image' => $imageUrl,
         ]);
 
@@ -267,12 +269,13 @@ class AdminController extends Controller
             'amount' => 'required|numeric|min:0',
             'daily_salary' => 'required|numeric|min:0',
             'referral_reward' => 'nullable|numeric|min:0',
-            'required_vip_level' => 'required|integer|min:0|max:5',
-            'avip_level' => 'required|integer|min:0|max:3',
+            'required_vip_level' => 'required|integer|min:1|max:5',
+            'avip_level' => 'required|integer|min:1|max:5',
             'stock_quantity' => 'nullable|integer|min:0',
             'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
             'is_limited' => 'nullable|boolean',
+            'required_active_referrals' => 'nullable|integer|min:0',
             'restore' => 'nullable|boolean',
             'image' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
@@ -298,6 +301,7 @@ class AdminController extends Controller
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
             'is_limited' => $request->is_limited ? true : false,
+            'required_active_referrals' => $request->required_active_referrals ?? 0,
             'image' => $image,
         ]);
 
@@ -334,6 +338,7 @@ class AdminController extends Controller
             'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
             'is_limited' => 'nullable|boolean',
+            'required_active_referrals' => 'nullable|integer|min:0',
             'image_url' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
         ]);
@@ -357,6 +362,7 @@ class AdminController extends Controller
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
             'is_limited' => $request->is_limited ? true : false,
+            'required_active_referrals' => $request->required_active_referrals ?? 0,
             'image' => $imageUrl,
         ]);
 
@@ -374,12 +380,13 @@ class AdminController extends Controller
             'amount' => 'required|numeric|min:0',
             'daily_salary' => 'required|numeric|min:0',
             'referral_reward' => 'nullable|numeric|min:0',
-            'required_vip_level' => 'required|integer|min:0|max:5',
-            'avip_level' => 'required|integer|min:0|max:3',
+            'required_vip_level' => 'required|integer|min:1|max:5',
+            'avip_level' => 'required|integer|min:1|max:5',
             'stock_quantity' => 'nullable|integer|min:0',
             'limited_purchase_count' => 'nullable|integer|min:0',
             'active' => 'required|boolean',
             'is_limited' => 'nullable|boolean',
+            'required_active_referrals' => 'nullable|integer|min:0',
             'image' => 'nullable|string',
             'image_file' => 'nullable|file|image|max:5120',
         ]);
@@ -404,6 +411,7 @@ class AdminController extends Controller
             'limited_purchase_count' => $request->limited_purchase_count,
             'active' => $request->active,
             'is_limited' => $request->is_limited ? true : false,
+            'required_active_referrals' => $request->required_active_referrals ?? 0,
             'image' => $image,
         ]);
 

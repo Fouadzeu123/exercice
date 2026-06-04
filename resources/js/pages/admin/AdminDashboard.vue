@@ -291,6 +291,7 @@ const nodeForm = useForm({
     limited_purchase_count: null as number | null,
     active: true,
     is_limited: false,
+    required_active_referrals: 0,
     restore: false,
     image_url: '',
     image_file: null as File | null,
@@ -308,6 +309,7 @@ const openNodeModal = (node: any) => {
     nodeForm.limited_purchase_count = node.limited_purchase_count;
     nodeForm.active = !!node.active;
     nodeForm.is_limited = !!node.is_limited;
+    nodeForm.required_active_referrals = node.required_active_referrals || 0;
     nodeForm.restore = false;
     nodeForm.image_url = node.image_url || '';
     nodeForm.image_file = null;
@@ -343,12 +345,13 @@ const avipForm = useForm({
     amount: 0,
     daily_salary: 0,
     referral_reward: 0,
-    required_vip_level: 0,
+    required_vip_level: 1,
     avip_level: 1,
     stock_quantity: null as number | null,
     limited_purchase_count: null as number | null,
     active: true,
     is_limited: false,
+    required_active_referrals: 0,
     restore: false,
     image: '',
     image_file: null as File | null,
@@ -367,6 +370,7 @@ const openAvipModal = (product: any) => {
     avipForm.limited_purchase_count = product.limited_purchase_count !== null ? parseInt(product.limited_purchase_count) : null;
     avipForm.active = !!product.active;
     avipForm.is_limited = !!product.is_limited;
+    avipForm.required_active_referrals = product.required_active_referrals || 0;
     avipForm.restore = false;
     avipForm.image = product.image || '';
     avipForm.image_file = null;
@@ -407,6 +411,7 @@ const createNodeForm = useForm({
     limited_purchase_count: null as number | null,
     active: true,
     is_limited: false,
+    required_active_referrals: 0,
     image_url: '',
     image_file: null as File | null,
 });
@@ -436,6 +441,7 @@ const createAvipForm = useForm({
     limited_purchase_count: null as number | null,
     active: true,
     is_limited: false,
+    required_active_referrals: 0,
     image: '',
     image_file: null as File | null,
 });
@@ -1493,6 +1499,12 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <!-- Referral Constraint -->
+                        <div class="space-y-1 bg-black/35 p-3 rounded-xl border border-white/5">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Filleuls Actifs Requis (Achat)</label>
+                            <input v-model="nodeForm.required_active_referrals" type="number" placeholder="Aucun requis si 0" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
                         <!-- Limited Offer Toggle -->
                         <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
                             <input v-model="nodeForm.is_limited" type="checkbox" id="edit_node_limited" class="accent-rose-500 rounded cursor-pointer" />
@@ -1611,14 +1623,14 @@ onUnmounted(() => {
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">VIP Minimum Requis</label>
                                 <select v-model="avipForm.required_vip_level" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
-                                    <option v-for="i in [0, 1, 2, 3, 4, 5]" :key="i" :value="i">VIP {{ i }}</option>
+                                    <option v-for="i in [1, 2, 3, 4, 5]" :key="i" :value="i">VIP {{ i }}</option>
                                 </select>
                             </div>
                             <!-- AVIP level -->
                             <div class="space-y-1">
-                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Niveau AVIP (1 à 3)</label>
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Niveau AVIP (1 à 5)</label>
                                 <select v-model="avipForm.avip_level" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
-                                    <option v-for="i in [1, 2, 3]" :key="i" :value="i">AVIP {{ i }}</option>
+                                    <option v-for="i in [1, 2, 3, 4, 5]" :key="i" :value="i">AVIP {{ i }}</option>
                                 </select>
                             </div>
                         </div>
@@ -1634,6 +1646,12 @@ onUnmounted(() => {
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Quota Max / Compte</label>
                                 <input v-model="avipForm.limited_purchase_count" type="number" placeholder="Illimité si vide" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
+                        </div>
+
+                        <!-- Referral Constraint -->
+                        <div class="space-y-1 bg-black/35 p-3 rounded-xl border border-white/5">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Filleuls Actifs Requis (Achat)</label>
+                            <input v-model="avipForm.required_active_referrals" type="number" placeholder="Aucun requis si 0" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                         </div>
 
                         <!-- Limited Offer Toggle -->
@@ -1771,6 +1789,12 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <!-- Referral Constraint -->
+                        <div class="space-y-1 bg-black/35 p-3 rounded-xl border border-white/5">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Filleuls Actifs Requis (Achat)</label>
+                            <input v-model="createNodeForm.required_active_referrals" type="number" placeholder="Aucun requis si 0" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
                         <!-- Limited Offer Toggle -->
                         <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
                             <input v-model="createNodeForm.is_limited" type="checkbox" id="create_node_limited" class="accent-rose-500 rounded cursor-pointer" />
@@ -1874,14 +1898,14 @@ onUnmounted(() => {
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">VIP Minimum Requis</label>
                                 <select v-model="createAvipForm.required_vip_level" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
-                                    <option v-for="i in [0, 1, 2, 3, 4, 5]" :key="i" :value="i">VIP {{ i }}</option>
+                                    <option v-for="i in [1, 2, 3, 4, 5]" :key="i" :value="i">VIP {{ i }}</option>
                                 </select>
                             </div>
                             <!-- AVIP level -->
                             <div class="space-y-1">
-                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Palier AVIP (1 à 3)</label>
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Palier AVIP (1 à 5)</label>
                                 <select v-model="createAvipForm.avip_level" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
-                                    <option v-for="i in [1, 2, 3]" :key="i" :value="i">AVIP {{ i }}</option>
+                                    <option v-for="i in [1, 2, 3, 4, 5]" :key="i" :value="i">AVIP {{ i }}</option>
                                 </select>
                             </div>
                         </div>
@@ -1897,6 +1921,12 @@ onUnmounted(() => {
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Quota Max / Compte</label>
                                 <input v-model="createAvipForm.limited_purchase_count" type="number" placeholder="Illimité si vide" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
+                        </div>
+
+                        <!-- Referral Constraint -->
+                        <div class="space-y-1 bg-black/35 p-3 rounded-xl border border-white/5">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Filleuls Actifs Requis (Achat)</label>
+                            <input v-model="createAvipForm.required_active_referrals" type="number" placeholder="Aucun requis si 0" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                         </div>
 
                         <!-- Limited Offer Toggle -->

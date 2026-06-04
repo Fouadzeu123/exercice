@@ -277,10 +277,18 @@ class DashboardController extends Controller
             abort(404, 'Type de produit inconnu');
         }
 
+        $activeReferralsCount = \App\Models\User::where('referrer_id', $user->id)
+            ->where(function($query) {
+                $query->whereHas('userNodes')
+                      ->orWhereHas('userAVIPProducts');
+            })
+            ->count();
+
         return Inertia::render('ProductDetails', [
             'product' => $product,
             'type' => $type,
             'activeUserNode' => $activeUserNode,
+            'activeReferralsCount' => $activeReferralsCount,
         ]);
     }
 
@@ -343,15 +351,7 @@ class DashboardController extends Controller
                     // Reset rigging immediately
                     $user->next_spin_prize_index = null;
                 } else {
-                    $rand = rand(1, 1000);
-                    $sum = 0;
-                    foreach ($weights as $index => $weight) {
-                        $sum += $weight;
-                        if ($rand <= $sum) {
-                            $winnerIndex = $index;
-                            break;
-                        }
-                    }
+                    $winnerIndex = 0; // Default always to 777
                 }
 
                 $wonAmount = (float) $prizes[$winnerIndex];

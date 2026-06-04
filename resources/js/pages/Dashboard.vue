@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
+import { isNative } from '@/plugins/capacitor';
 import { Head, Link, usePage, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -159,6 +160,7 @@ const combinedProducts = computed(() => {
         ...n,
         isVault: false,
         isAvip: false,
+        required_active_referrals: n.required_active_referrals ?? 0,
         category: n.technology_level >= 4 ? 'avip' : (n.is_limited ? 'limited' : 'node')
     }));
     const mappedVaults = (props.vaultPlans || []).map(v => ({
@@ -173,6 +175,7 @@ const combinedProducts = computed(() => {
         isAvip: false,
         fixed_return: v.fixed_return,
         profit_amount: v.profit_amount,
+        required_active_referrals: 0,
         category: 'vault'
     }));
     const mappedAvips = (props.avipProducts || []).map(a => ({
@@ -187,6 +190,7 @@ const combinedProducts = computed(() => {
         isVault: false,
         isAvip: true,
         is_limited: !!a.is_limited,
+        required_active_referrals: a.required_active_referrals ?? 0,
         category: a.is_limited ? 'limited' : 'avip',
         image_url: a.image,
         description: a.description,
@@ -195,13 +199,16 @@ const combinedProducts = computed(() => {
     }));
 
     if (activeCategory.value === 'all') {
-        return [...mappedNodes.filter(n => n.technology_level < 4), ...mappedAvips, ...mappedVaults];
+        return [...mappedNodes, ...mappedAvips, ...mappedVaults];
     }
     if (activeCategory.value === 'node') {
-        return mappedNodes.filter(n => n.technology_level >= 1 && n.technology_level <= 3);
+        return mappedNodes.filter(n => n.technology_level >= 0 && n.technology_level <= 3);
     }
     if (activeCategory.value === 'avip') {
-        return mappedAvips;
+        return [
+            ...mappedAvips,
+            ...mappedNodes.filter(n => n.technology_level >= 4)
+        ];
     }
     if (activeCategory.value === 'limited') {
         return [
@@ -333,9 +340,14 @@ const handleCheckinTrigger = () => {
 // Reveal animation
 const { containerRef } = useRevealAnimation();
 
+const isMobileApp = ref(false);
+
 onMounted(() => {
+    isMobileApp.value = isNative();
     liveInterval = window.setInterval(addLiveWithdrawal, 3500);
-    initCosmicParticles();
+    if (!isMobileApp.value) {
+        initCosmicParticles();
+    }
     setTimeout(() => {
         isLoading.value = false;
     }, 750);
@@ -369,7 +381,7 @@ watch(
             <img src="https://images.unsplash.com/photo-1558494949-ef526b0042a0?q=80&w=2070&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover opacity-20" alt="background">
             <div class="absolute inset-0 bg-gradient-to-b from-[#05020c]/80 via-[#05020c]/60 to-[#0e061b]/90"></div>
             <!-- Global cosmic particles -->
-            <canvas id="cosmicDashboardParticles" class="absolute inset-0 w-full h-full opacity-45"></canvas>
+            <canvas v-if="!isMobileApp" id="cosmicDashboardParticles" class="absolute inset-0 w-full h-full opacity-45"></canvas>
             <!-- cercles lumineux statiques -->
             <div class="absolute top-20 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"></div>
             <div class="absolute bottom-20 right-1/4 w-96 h-96 bg-fuchsia-500/5 rounded-full blur-3xl"></div>
@@ -622,6 +634,11 @@ watch(
                                     <div v-if="node.is_limited" class="absolute top-3 left-3 z-10 px-2.5 py-1 bg-rose-600/90 backdrop-blur-sm border border-rose-400/30 text-white text-[8px] font-mono font-black uppercase tracking-widest rounded-lg flex items-center gap-1 shadow-lg animate-pulse">
                                         <AlertTriangle class="w-3.5 h-3.5 text-yellow-300" />
                                         <span>Offre Limitée</span>
+                                    </div>
+                                    <!-- Floating Active Referrals Constraint Badge -->
+                                    <div v-if="node.required_active_referrals > 0" class="absolute top-3 right-3 z-10 px-2.5 py-1 bg-yellow-500/95 backdrop-blur-sm border border-yellow-400/30 text-black text-[8px] font-mono font-black uppercase tracking-wider rounded-lg flex items-center gap-1 shadow-lg">
+                                        <Users class="w-3.5 h-3.5 text-black" />
+                                        <span>Filleuls: {{ node.required_active_referrals }}</span>
                                     </div>
                                     <!-- Show server image or custom vault graphics image -->
                                     <img :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : (node.isAvip ? node.image_url : getProductImage(node))" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" :alt="node.name">

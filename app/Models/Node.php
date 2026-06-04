@@ -13,9 +13,6 @@ class Node extends Model
 
     protected $appends = ['image_url'];
 
-    /**
-     * Transformer les montants en nombres flottants automatiquement
-     */
     protected $casts = [
         'amount' => 'float',
         'generation_profit' => 'float',
@@ -24,6 +21,7 @@ class Node extends Model
         'is_limited' => 'boolean',
         'duration' => 'integer', // en jours
         'technology_level' => 'integer',
+        'required_active_referrals' => 'integer',
     ];
 
     /**

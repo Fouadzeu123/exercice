@@ -46,6 +46,19 @@ class AVIPProductController extends Controller
             return back()->withErrors(['error' => 'Ce produit AVIP n\'est pas disponible.']);
         }
 
+        // Enforce required active referrals constraint
+        if ($product->required_active_referrals > 0) {
+            $activeReferralsCount = \App\Models\User::where('referrer_id', $user->id)
+                ->where(function($query) {
+                    $query->whereHas('userNodes')
+                          ->orWhereHas('userAVIPProducts');
+                })
+                ->count();
+            if ($activeReferralsCount < $product->required_active_referrals) {
+                return back()->withErrors(['error' => "Ce produit requiert au moins {$product->required_active_referrals} filleul(s) actif(s) ayant loué/acheté un produit pour être déverrouillé. Vous en avez actuellement : {$activeReferralsCount}."]);
+            }
+        }
+
         // Validation: User must have the required VIP level
         $userVipLevel = $user->vip_level ?? 0;
         if ($userVipLevel < $product->required_vip_level) {

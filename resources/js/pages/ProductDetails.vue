@@ -37,6 +37,7 @@ const props = defineProps<{
         stock_quantity: number | null;
         limited_purchase_count?: number | null;
         is_limited?: boolean;
+        required_active_referrals?: number | null;
         max_purchase_limit?: number | null;
         image?: string | null;
         image_url?: string | null;
@@ -57,6 +58,7 @@ const props = defineProps<{
         node_amount: string;
         technology_level: number;
     } | null;
+    activeReferralsCount?: number;
 }>();
 const breadcrumbs: BreadcrumbItem[] = [
     { title: t('console principale', 'main console'), href: '/dashboard' },
@@ -94,6 +96,17 @@ const isLockedNode = computed(() => {
 });
 
 const handlePurchase = () => {
+    const reqActiveRefs = props.product.required_active_referrals ?? 0;
+    const userActiveRefs = props.activeReferralsCount ?? 0;
+    if (reqActiveRefs > 0 && userActiveRefs < reqActiveRefs) {
+        errorMessage.value = t(
+            `Ce produit requiert au moins ${reqActiveRefs} filleul(s) actif(s) ayant loué/acheté un produit pour être déverrouillé. Vous en avez actuellement : ${userActiveRefs}.`,
+            `This product requires at least ${reqActiveRefs} active referrals to be unlocked. You currently have: ${userActiveRefs}.`
+        );
+        showErrorCard.value = true;
+        return;
+    }
+
     if (user.value?.balance < props.product.amount) {
         errorMessage.value = t('Solde insuffisant pour cette opération.', 'Insufficient balance for this operation.');
         showErrorCard.value = true;
@@ -265,6 +278,13 @@ onUnmounted(() => {
                             {{ product.limited_purchase_count }} {{ t('unités max / compte', 'max units / account') }}
                         </span>
                     </div>
+
+                    <div v-if="product.required_active_referrals > 0" class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
+                        <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Filleuls Actifs Requis', 'Required Active Referrals') }}</span>
+                        <span class="font-black text-yellow-400 text-[10px] font-mono">
+                            {{ product.required_active_referrals }} {{ t('actifs requis', 'active required') }} ({{ t('actuel:', 'current:') }} {{ activeReferralsCount ?? 0 }})
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -290,6 +310,17 @@ onUnmounted(() => {
                 </div>
             </div>
 
+            <!-- Active Referrals Constraint Warning alert -->
+            <div v-if="product.required_active_referrals > 0 && (activeReferralsCount ?? 0) < product.required_active_referrals" class="p-4 rounded-2xl bg-yellow-950/20 border border-yellow-500/20 flex items-start gap-3 text-xs leading-relaxed">
+                <AlertTriangle class="h-5 w-5 text-yellow-400 shrink-0 mt-0.5 animate-pulse" :stroke-width="2.5" />
+                <div>
+                    <span class="font-bold text-yellow-400 block uppercase tracking-wide text-[10px]">{{ t('Accès Verrouillé', 'Access Locked') }}</span>
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        {{ t('Ce produit nécessite au moins ' + product.required_active_referrals + ' filleul(s) actif(s) ayant loué/acheté un produit pour être déverrouillé. Vous en avez actuellement : ' + (activeReferralsCount ?? 0) + '.', 'This product requires at least ' + product.required_active_referrals + ' active referrals. You currently have: ' + (activeReferralsCount ?? 0) + '.') }}
+                    </p>
+                </div>
+            </div>
+
             <!-- Confirm block at bottom -->
             <div class="bg-[#0c0f1d]/90 border border-white/10 rounded-2xl p-5 shadow-xl backdrop-blur-sm space-y-4">
                 <div class="flex justify-between items-center text-xs">
@@ -309,6 +340,15 @@ onUnmounted(() => {
                     class="w-full py-4 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-xs uppercase tracking-wider"
                 >
                     {{ t('Déjà Actif', 'Already Active') }}
+                </button>
+
+                <button 
+                    v-else-if="product.required_active_referrals > 0 && (activeReferralsCount ?? 0) < product.required_active_referrals"
+                    disabled
+                    class="w-full py-4 rounded-xl bg-slate-800 text-slate-500 border border-white/5 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                >
+                    <Lock class="h-4 w-4" :stroke-width="2.5" />
+                    {{ t('Verrouillé - Filleuls requis', 'Locked - Referrals Required') }}
                 </button>
 
                 <button 
