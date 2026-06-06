@@ -89,6 +89,18 @@ const props = defineProps<{
         active: boolean;
         deleted_at: string | null;
     }>;
+    vaultPlans: Array<{
+        id: number;
+        name: string;
+        fixed_investment_amount: string;
+        fixed_return: string;
+        profit_amount: string;
+        duration: number;
+        payout_type: string;
+        active: boolean;
+        image: string | null;
+        created_at: string;
+    }>;
     announcements: Array<{
         id: number;
         title: string;
@@ -457,6 +469,77 @@ const handleCreateAvip = () => {
     });
 };
 
+// VAULT PLAN CONFIGURATION MODALS & CRUD
+const selectedVault = ref<any | null>(null);
+const showCreateVaultModal = ref(false);
+
+const vaultForm = useForm({
+    name: '',
+    fixed_investment_amount: 0,
+    fixed_return: 0,
+    duration: 30,
+    payout_type: 'on_expiration',
+    active: true,
+    image_url: '',
+    image_file: null as File | null,
+});
+
+const openVaultModal = (vault: any) => {
+    selectedVault.value = vault;
+    vaultForm.name = vault.name;
+    vaultForm.fixed_investment_amount = parseFloat(vault.fixed_investment_amount);
+    vaultForm.fixed_return = parseFloat(vault.fixed_return);
+    vaultForm.duration = vault.duration;
+    vaultForm.payout_type = vault.payout_type;
+    vaultForm.active = !!vault.active;
+    vaultForm.image_url = vault.image || '';
+    vaultForm.image_file = null;
+};
+
+const handleUpdateVault = () => {
+    if (!selectedVault.value) return;
+    vaultForm.post(`/admin/vault-plan/${selectedVault.value.id}/update`, {
+        onSuccess: () => {
+            selectedVault.value = null;
+            showToast("Produit de coffre-fort (Vault Plan) mis à jour avec succès.");
+        },
+        onError: (err: any) => showToast("Une erreur est survenue lors de la mise à jour.", true)
+    });
+};
+
+const handleDeleteVault = (id: number) => {
+    if (!confirm("Voulez-vous vraiment supprimer définitivement ce produit de coffre-fort ? Ses offres seront masquées mais les investissements actifs persisteront.")) return;
+    router.delete(`/admin/vault-plan/${id}/delete`, {
+        onSuccess: () => {
+            selectedVault.value = null;
+            showToast("Produit de coffre-fort (Vault Plan) supprimé.");
+        },
+        onError: (err: any) => showToast("Échec de suppression", true)
+    });
+};
+
+const createVaultForm = useForm({
+    name: '',
+    fixed_investment_amount: 10000,
+    fixed_return: 15000,
+    duration: 30,
+    payout_type: 'on_expiration',
+    active: true,
+    image_url: '',
+    image_file: null as File | null,
+});
+
+const handleCreateVault = () => {
+    createVaultForm.post('/admin/vault-plan', {
+        onSuccess: () => {
+            showCreateVaultModal.value = false;
+            createVaultForm.reset();
+            showToast("Nouveau produit de coffre-fort (Vault Plan) créé avec succès.");
+        },
+        onError: (err: any) => showToast("Erreur lors de la création du coffre-fort.", true)
+    });
+};
+
 // ANNOUNCEMENT FORM & MODALS
 const selectedAnnouncement = ref<any | null>(null);
 const showCreateAnnouncementModal = ref(false);
@@ -529,7 +612,7 @@ const handleUpdateSettings = () => {
 };
 
 // Scroll Lock Watcher
-watch([selectedUser, selectedNode, selectedAvip, showCreateNodeModal, showCreateAvipModal, selectedAnnouncement, showCreateAnnouncementModal], (states) => {
+watch([selectedUser, selectedNode, selectedAvip, selectedVault, showCreateNodeModal, showCreateAvipModal, showCreateVaultModal, selectedAnnouncement, showCreateAnnouncementModal], (states) => {
     if (states.some(Boolean)) {
         document.body.style.overflow = 'hidden';
     } else {
@@ -1090,6 +1173,74 @@ onUnmounted(() => {
 
                             <button 
                                 @click="openAvipModal(p)"
+                                class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                            >
+                                <Settings class="w-3 h-3" /> Configurer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 3: Vault Plans -->
+                <div class="glass rounded-3xl p-5 border border-white/5 bg-black/10">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                            <Coins class="h-4.5 w-4.5 text-purple-400 animate-pulse" />
+                            Produits de Coffre-fort & Épargne (Vault Plans)
+                        </h3>
+                        <button 
+                            @click="showCreateVaultModal = true"
+                            class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-wider text-[8px] rounded-lg transition-all shadow-[0_0_8px_rgba(168,85,247,0.2)] flex items-center gap-1"
+                        >
+                            <Plus class="w-3.5 h-3.5" /> Ajouter un Vault
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div v-for="v in vaultPlans" :key="v.id" class="p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between border-purple-500/10 hover:border-purple-500/30 bg-black/25">
+                            <div>
+                                <div class="flex justify-between items-start gap-2 mb-3">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                                            {{ v.name }}
+                                        </h4>
+                                        <span class="text-[8px] text-slate-500 uppercase tracking-widest font-mono">ID: {{ v.id }}</span>
+                                    </div>
+                                    <span class="text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider font-mono"
+                                        :class="v.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'"
+                                    >
+                                        {{ v.active ? 'ACTIF' : 'INACTIF' }}
+                                    </span>
+                                </div>
+
+                                <div class="bg-black/50 border border-white/5 rounded-xl p-3 space-y-2 mb-4 text-[10px] font-mono">
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Montant Requis :</span>
+                                        <span class="text-white font-bold">{{ formatXAF(v.fixed_investment_amount) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Retour Total :</span>
+                                        <span class="text-emerald-400 font-bold">+{{ formatXAF(v.fixed_return) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Intérêt Net :</span>
+                                        <span class="text-emerald-400 font-bold">+{{ formatXAF(v.profit_amount) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Durée :</span>
+                                        <span class="text-white font-bold">{{ v.duration }} Jours</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Type Versement :</span>
+                                        <span class="font-black" :class="v.payout_type === 'daily' ? 'text-cyan-400' : 'text-purple-400'">
+                                            {{ v.payout_type === 'daily' ? 'Journalier' : 'À l\'expiration' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button 
+                                @click="openVaultModal(v)"
                                 class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
                             >
                                 <Settings class="w-3 h-3" /> Configurer
@@ -2104,6 +2255,204 @@ onUnmounted(() => {
                         >
                             {{ announcementForm.processing ? 'Enregistrement...' : 'Enregistrer' }}
                         </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL OVERLAY: CREATE VAULT PLAN -->
+        <div v-if="showCreateVaultModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+            <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                            <Plus class="w-4 h-4 text-purple-400" />
+                            Créer un Vault Plan
+                        </h3>
+                        <button @click="showCreateVaultModal = false" class="hover:rotate-90 transition-transform"><X class="w-5 h-5 text-slate-400" /></button>
+                    </div>
+
+                    <form @submit.prevent="handleCreateVault" class="space-y-3.5 text-xs">
+                        <!-- Name -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Nom du Vault Plan</label>
+                            <input v-model="createVaultForm.name" type="text" required placeholder="Ex: Coffre Premium" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
+                        <!-- Fichier Image Upload -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Fichier de l'image (Upload)</label>
+                            <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                        <img v-if="createVaultForm.image_file" :src="getObjectUrl(createVaultForm.image_file)" class="h-full w-full object-cover" />
+                                        <Coins v-else class="h-5 w-5 text-slate-600" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-bold text-white truncate max-w-[150px]">
+                                            {{ createVaultForm.image_file ? createVaultForm.image_file.name : 'Aucun fichier choisi' }}
+                                        </p>
+                                        <p class="text-[8px] text-slate-500">Cliquez pour modifier</p>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    @change="(e: any) => createVaultForm.image_file = e.target.files[0]"
+                                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                />
+                                <div class="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[9px] font-black uppercase tracking-wider group-hover:bg-cyan-500/20 transition-all font-mono">
+                                    Parcourir
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Investment Amount -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Montant Requis (XAF)</label>
+                                <input v-model="createVaultForm.fixed_investment_amount" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Return Amount -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Retour Total (XAF)</label>
+                                <input v-model="createVaultForm.fixed_return" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Duration -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Durée (jours)</label>
+                                <input v-model="createVaultForm.duration" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Payout Type -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Versement</label>
+                                <select v-model="createVaultForm.payout_type" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
+                                    <option value="on_expiration">À l'expiration</option>
+                                    <option value="daily">Journalier</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Active Switch -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="createVaultForm.active" type="checkbox" id="create_vault_active" class="accent-purple-500 rounded cursor-pointer" />
+                            <label for="create_vault_active" class="text-[10px] text-slate-300 font-black cursor-pointer uppercase">Activer immédiatement</label>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            :disabled="createVaultForm.processing"
+                            class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                        >
+                            {{ createVaultForm.processing ? 'Création...' : 'Créer le Vault Plan' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL OVERLAY: EDIT VAULT PLAN -->
+        <div v-if="selectedVault" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+            <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                            <Settings class="w-4 h-4 text-purple-400" />
+                            Modifier le Vault Plan
+                        </h3>
+                        <button @click="selectedVault = null" class="hover:rotate-90 transition-transform"><X class="w-5 h-5 text-slate-400" /></button>
+                    </div>
+
+                    <form @submit.prevent="handleUpdateVault" class="space-y-3.5 text-xs">
+                        <!-- Name -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Nom du Vault Plan</label>
+                            <input v-model="vaultForm.name" type="text" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                        </div>
+
+                        <!-- Fichier Image Upload -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Fichier de l'image (Upload)</label>
+                            <div class="relative flex items-center justify-between bg-black/50 border border-purple-500/20 rounded-xl p-2 h-16 hover:border-cyan-500/40 transition-all overflow-hidden group">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-12 w-12 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                        <img v-if="vaultForm.image_file" :src="getObjectUrl(vaultForm.image_file)" class="h-full w-full object-cover" />
+                                        <img v-else-if="vaultForm.image_url" :src="vaultForm.image_url" class="h-full w-full object-cover" />
+                                        <Coins v-else class="h-5 w-5 text-slate-600" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-bold text-white truncate max-w-[150px]">
+                                            {{ vaultForm.image_file ? vaultForm.image_file.name : 'Aucun fichier choisi' }}
+                                        </p>
+                                        <p class="text-[8px] text-slate-500">Cliquez pour modifier</p>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    @change="(e: any) => vaultForm.image_file = e.target.files[0]"
+                                    class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                />
+                                <div class="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[9px] font-black uppercase tracking-wider group-hover:bg-cyan-500/20 transition-all font-mono">
+                                    Parcourir
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Investment Amount -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Montant Requis (XAF)</label>
+                                <input v-model="vaultForm.fixed_investment_amount" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Return Amount -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Retour Total (XAF)</label>
+                                <input v-model="vaultForm.fixed_return" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Duration -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Durée (jours)</label>
+                                <input v-model="vaultForm.duration" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
+                            </div>
+                            <!-- Payout Type -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Versement</label>
+                                <select v-model="vaultForm.payout_type" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
+                                    <option value="on_expiration">À l'expiration</option>
+                                    <option value="daily">Journalier</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Active Switch -->
+                        <div class="flex items-center space-x-2 py-2 bg-black/35 px-3 rounded-xl border border-white/5">
+                            <input v-model="vaultForm.active" type="checkbox" id="edit_vault_active" class="accent-purple-500 rounded cursor-pointer" />
+                            <label for="edit_vault_active" class="text-[10px] text-slate-300 font-black cursor-pointer uppercase">Afficher l'offre (Actif)</label>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button 
+                                type="submit" 
+                                :disabled="vaultForm.processing"
+                                class="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                            >
+                                {{ vaultForm.processing ? 'Enregistrement...' : 'Enregistrer' }}
+                            </button>
+                            <button 
+                                type="button" 
+                                @click="handleDeleteVault(selectedVault.id)"
+                                class="py-3 px-4 bg-rose-950/20 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-black rounded-xl transition-all uppercase font-bold text-[9px]"
+                            >
+                                Supprimer
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

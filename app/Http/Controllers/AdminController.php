@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Node;
 use App\Models\AVIPProduct;
 use App\Models\GiftCode;
+use App\Models\VaultPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -27,6 +28,7 @@ class AdminController extends Controller
         // Fetch all nodes and AVIP products, including soft-deleted ones so admins can configure or restore them
         $nodes = Node::withTrashed()->orderBy('created_at', 'desc')->get();
         $avipProducts = AVIPProduct::withTrashed()->orderBy('created_at', 'desc')->get();
+        $vaultPlans = VaultPlan::orderBy('created_at', 'desc')->get();
 
         // Calculate metrics
         $totalDeposits = Transaction::where('type', 'deposit')->where('status', 'completed')->sum('amount');
@@ -42,6 +44,7 @@ class AdminController extends Controller
             'giftCodes' => $giftCodes,
             'nodes' => $nodes,
             'avipProducts' => $avipProducts,
+            'vaultPlans' => $vaultPlans,
             'announcements' => $announcements,
             'settings' => $settings,
             'metrics' => [
@@ -529,6 +532,98 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Configuration globale du système enregistrée.');
+    }
+
+    /**
+     * Create a new vault plan.
+     */
+    public function createVaultPlan(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'fixed_investment_amount' => 'required|numeric|min:0',
+            'fixed_return' => 'required|numeric|min:0',
+            'duration' => 'required|integer|min:1',
+            'payout_type' => 'required|string|in:daily,on_expiration',
+            'active' => 'required|boolean',
+            'image_url' => 'nullable|string',
+            'image_file' => 'nullable|file|image|max:5120',
+        ]);
+
+        $imageUrl = $request->image_url;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $file->move(public_path('images'), $fileName);
+            $imageUrl = '/images/' . $fileName;
+        }
+
+        $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
+
+        VaultPlan::create([
+            'name' => $request->name,
+            'fixed_investment_amount' => $request->fixed_investment_amount,
+            'fixed_return' => $request->fixed_return,
+            'profit_amount' => $profitAmount,
+            'duration' => $request->duration,
+            'payout_type' => $request->payout_type,
+            'active' => $request->active,
+            'image' => $imageUrl,
+        ]);
+
+        return back()->with('success', 'Nouveau produit de coffre-fort (Vault Plan) créé avec succès.');
+    }
+
+    /**
+     * Update an existing vault plan.
+     */
+    public function updateVaultPlan(Request $request, $id)
+    {
+        $vaultPlan = VaultPlan::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string',
+            'fixed_investment_amount' => 'required|numeric|min:0',
+            'fixed_return' => 'required|numeric|min:0',
+            'duration' => 'required|integer|min:1',
+            'payout_type' => 'required|string|in:daily,on_expiration',
+            'active' => 'required|boolean',
+            'image_url' => 'nullable|string',
+            'image_file' => 'nullable|file|image|max:5120',
+        ]);
+
+        $imageUrl = $request->image_url;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $file->move(public_path('images'), $fileName);
+            $imageUrl = '/images/' . $fileName;
+        }
+
+        $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
+
+        $vaultPlan->update([
+            'name' => $request->name,
+            'fixed_investment_amount' => $request->fixed_investment_amount,
+            'fixed_return' => $request->fixed_return,
+            'profit_amount' => $profitAmount,
+            'duration' => $request->duration,
+            'payout_type' => $request->payout_type,
+            'active' => $request->active,
+            'image' => $imageUrl ?? $vaultPlan->image,
+        ]);
+
+        return back()->with('success', 'Produit de coffre-fort (Vault Plan) mis à jour.');
+    }
+
+    /**
+     * Delete a vault plan.
+     */
+    public function deleteVaultPlan($id)
+    {
+        $vaultPlan = VaultPlan::findOrFail($id);
+        $vaultPlan->delete();
+        return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimé avec succès.');
     }
 }
 ?>

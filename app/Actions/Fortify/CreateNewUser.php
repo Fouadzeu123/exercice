@@ -33,10 +33,20 @@ class CreateNewUser implements CreatesNewUsers
             }
         }
 
+        $referralCode = null;
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        do {
+            $code = '';
+            for ($i = 0; $i < 6; $i++) {
+                $code .= $chars[random_int(0, 35)];
+            }
+            $referralCode = $code;
+        } while (User::where('referral_code', $referralCode)->exists());
+
         return User::create([
             'phone' => $input['phone'],
             'password' => $input['password'],
-            'referral_code' => \Illuminate\Support\Str::random(10),
+            'referral_code' => $referralCode,
             'referrer_id' => $referrer_id,
             'draw_spins' => 0,
         ]);

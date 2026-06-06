@@ -153,4 +153,32 @@ class User extends Authenticatable
             ]);
         }
     }
+
+    /**
+     * Distribute daily referral commissions (L1 = 5%, L2 = 2%, L3 = 1%)
+     */
+    public function payDailyCommissions($amount)
+    {
+        $rates = [1 => 0.05, 2 => 0.02, 3 => 0.01];
+        $currentSponsor = $this->referrer_id ? User::find($this->referrer_id) : null;
+        $level = 1;
+
+        while ($currentSponsor && $level <= 3) {
+            $commission = $amount * $rates[$level];
+            if ($commission > 0) {
+                $currentSponsor->balance += $commission;
+                $currentSponsor->save();
+
+                Transaction::create([
+                    'user_id' => $currentSponsor->id,
+                    'amount' => $commission,
+                    'type' => 'commission',
+                    'status' => 'completed',
+                    'reference' => 'COM-L' . $level . '-' . strtoupper(bin2hex(random_bytes(3))),
+                ]);
+            }
+            $currentSponsor = $currentSponsor->referrer_id ? User::find($currentSponsor->referrer_id) : null;
+            $level++;
+        }
+    }
 }

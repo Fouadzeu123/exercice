@@ -54,4 +54,97 @@ class VaultInvestment extends Model
     {
         return $this->expires_at->isPast();
     }
+
+    /**
+     * Process pending daily or expiration payouts for a user.
+     */
+    public static function processUserPayouts($user)
+    {
+        if (!$user) {
+            return;
+        }
+
+        $activeInvestments = self::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->with('vaultPlan')
+            ->get();
+
+        foreach ($activeInvestments as $investment) {
+            $plan = $investment->vaultPlan;
+            if (!$plan) {
+                continue;
+            }
+
+            if ($plan->payout_type === 'daily') {
+                // Calculate elapsed days since creation
+                $createdAt = Carbon::parse($investment->created_at);
+                $now = Carbon::now();
+                
+                // Determine how many 24-hour periods have elapsed
+                $elapsedDays = (int) floor($createdAt->diffInHours($now) / 24);
+                
+                // Cap elapsed days to the duration of the plan
+                $elapsedDays = min($plan->duration, $elapsedDays);
+                
+                // Days due for payout
+                $dueDays = $elapsedDays - $investment->payouts_claimed;
+                
+                if ($dueDays > 0) {
+                    $dailyPayout = $investment->return_amount / $plan->duration;
+                    $payoutAmount = $dailyPayout * $dueDays;
+
+                    \DB::transaction(function () use ($user, $investment, $dueDays, $payoutAmount, $plan) {
+                        // Credit user balance
+                        $user->balance += $payoutAmount;
+                        $user->save();
+
+                        // Update investment payouts count
+                        $investment->payouts_claimed += $dueDays;
+                        $investment->last_payout_at = Carbon::now();
+                        
+                        if ($investment->payouts_claimed >= $plan->duration) {
+                            $investment->status = 'completed';
+                        }
+                        $investment->save();
+
+                        // Log transaction
+                        Transaction::create([
+                            'user_id' => $user->id,
+                            'amount' => $payoutAmount,
+                            'type' => 'earnings',
+                            'status' => 'completed',
+                            'reference' => 'VLT-D-' . $investment->id . '-' . strtoupper(bin2hex(random_bytes(3))),
+                        ]);
+
+                        // Distribute daily referral commissions (L1 = 5%, L2 = 2%, L3 = 1%)
+                        $user->payDailyCommissions($payoutAmount);
+                    });
+                }
+            } else {
+                // payout_type === 'on_expiration'
+                $now = Carbon::now();
+                if ($now->isAfter($investment->expires_at)) {
+                    \DB::transaction(function () use ($user, $investment) {
+                        // Credit user balance
+                        $user->balance += $investment->return_amount;
+                        $user->save();
+
+                        // Update investment state
+                        $investment->status = 'completed';
+                        $investment->last_payout_at = Carbon::now();
+                        $investment->save();
+
+                        // Log transaction
+                        Transaction::create([
+                            'user_id' => $user->id,
+                            'amount' => $investment->return_amount,
+                            'type' => 'earnings',
+                            'status' => 'completed',
+                            'reference' => 'VLT-E-' . $investment->id . '-' . strtoupper(bin2hex(random_bytes(3))),
+                        ]);
+                    });
+                }
+            }
+        }
+    }
 }

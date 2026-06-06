@@ -369,6 +369,9 @@ class NodeController extends Controller
                     'status' => 'completed',
                     'reference' => 'GEN-' . strtoupper(bin2hex(random_bytes(4))),
                 ]);
+
+                // Distribute daily referral commissions
+                $user->payDailyCommissions($session->expected_profit);
             });
 
             return response()->json([

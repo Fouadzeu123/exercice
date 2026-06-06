@@ -59,8 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Commandes (Order History)
     Route::get('commandes', [DashboardController::class, 'commandes'])->name('commandes');
 
-    // Coffre au Trésor (Treasure Chest / Daily Invitation Rewards)
-    Route::get('coffre-tresor', [DashboardController::class, 'coffreTresor'])->name('coffre-tresor');
+
 
     // Gains (Detailed Earnings)
     Route::get('gains', [DashboardController::class, 'gains'])->name('gains');
@@ -93,6 +92,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('admin/node/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteNode'])->name('admin.node.delete');
         Route::post('admin/avip-product/{id}/update', [\App\Http\Controllers\AdminController::class, 'updateAvipProduct'])->name('admin.avipproduct.update');
         Route::delete('admin/avip-product/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteAvipProduct'])->name('admin.avipproduct.delete');
+        
+        // Admin Vault Plan CRUD Routes
+        Route::post('admin/vault-plan', [\App\Http\Controllers\AdminController::class, 'createVaultPlan'])->name('admin.vaultplan.create');
+        Route::post('admin/vault-plan/{id}/update', [\App\Http\Controllers\AdminController::class, 'updateVaultPlan'])->name('admin.vaultplan.update');
+        Route::delete('admin/vault-plan/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteVaultPlan'])->name('admin.vaultplan.delete');
 
         // Admin Announcements CRUD Routes
         Route::post('admin/announcement', [\App\Http\Controllers\AdminController::class, 'createAnnouncement'])->name('admin.announcement.create');

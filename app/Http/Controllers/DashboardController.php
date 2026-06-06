@@ -15,6 +15,11 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // Automatically process vault payouts for the authenticated user
+        if ($user) {
+            \App\Models\VaultInvestment::processUserPayouts($user);
+        }
+
         // Retrieve the active user nodes to calculate aggregate values
         $activeUserNodes = UserNode::where('user_id', $user->id)
             ->where('user_nodes.active', true)
@@ -150,33 +155,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Page Coffre au Trésor — Récompenses pour invitations directes du jour
-     */
-    public function coffreTresor()
-    {
-        $user = Auth::user();
-        $today = Carbon::today();
 
-        // Compter les invitations directes du jour
-        $todayInvitations = \App\Models\User::where('referrer_id', $user->id)
-            ->whereDate('created_at', $today)
-            ->count();
-
-        // Paliers de récompenses
-        $tiers = [
-            ['invitations' => 3, 'reward' => 1500, 'label' => 'Bronze'],
-            ['invitations' => 5, 'reward' => 3000, 'label' => 'Argent'],
-            ['invitations' => 10, 'reward' => 8000, 'label' => 'Or'],
-            ['invitations' => 15, 'reward' => 15000, 'label' => 'Platine'],
-            ['invitations' => 20, 'reward' => 30000, 'label' => 'Diamant'],
-        ];
-
-        return Inertia::render('CoffreTresor', [
-            'todayInvitations' => $todayInvitations,
-            'tiers' => $tiers,
-        ]);
-    }
 
     /**
      * Page Gains — Informations détaillées sur tous les gains

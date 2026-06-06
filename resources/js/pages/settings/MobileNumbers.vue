@@ -162,7 +162,7 @@ const { containerRef } = useRevealAnimation();
                                 type="text"
                                 v-model="mobileForm.full_name"
                                 required
-                                :placeholder="t('Ex: Jean Dupont', 'E.g., John Doe')"
+                                :placeholder="t('Nom complet', 'All Name')"
                                 class="w-full bg-black/50 border border-purple-500/20 rounded-xl py-3.5 pl-11 pr-4 text-white font-sans text-xs focus:border-purple-400 outline-none transition-all placeholder:text-white/25"
                             />
                         </div>

@@ -114,7 +114,6 @@ const menuGrid = computed(() => {
         { title: 'Numéros mobiles', icon: CreditCard, href: '/settings/mobile-numbers', color: 'text-purple-400' },
         { title: 'Équipe', icon: Users, href: '/team', color: 'text-purple-400' },
         { title: 'Inviter', icon: Share2, href: '/share', color: 'text-purple-400' },
-        { title: 'Coffre au Trésor', icon: Box, href: '/coffre-tresor', color: 'text-purple-400' },
         { title: 'Code PIN', icon: Shield, href: '/settings/withdrawal-password', color: 'text-purple-400' },
         { title: 'Chaîne', icon: Send, href: 'https://t.me/arm_holding', color: 'text-purple-400', isExternal: true },
         { title: 'Alertes', icon: Bell, href: '/announcements', color: 'text-purple-400' },

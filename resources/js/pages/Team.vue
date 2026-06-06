@@ -4,11 +4,11 @@ import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
-    Users, 
-    CreditCard, 
-    TrendingUp, 
-    Coins, 
+import {
+    Users,
+    CreditCard,
+    TrendingUp,
+    Coins,
     Award,
     UsersRound,
     UserCheck,
@@ -95,7 +95,7 @@ const { containerRef } = useRevealAnimation();
     <Head title="Équipe" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div ref="containerRef" class="relative w-full max-w-xl mx-auto flex flex-col gap-5 pt-3 pb-24">
-            
+
             <!-- HEADER: Team Stats Banner -->
             <div data-animate="fade-down" class="flex items-center justify-between bg-gradient-to-r from-purple-950/20 via-black/40 to-transparent p-4 rounded-2xl border border-purple-500/10 shadow-lg mx-4">
                 <div class="flex items-center gap-3">
@@ -127,12 +127,12 @@ const { containerRef } = useRevealAnimation();
 
             <!-- TABS: Niveau 1 / 2 / 3 -->
             <div data-animate="fade-up" data-delay="150" class="flex gap-2 mx-4">
-                <button 
+                <button
                     v-for="lvl in [1, 2, 3]" :key="lvl"
                     @click="activeTab = lvl as 1 | 2 | 3"
                     class="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border"
-                    :class="activeTab === lvl 
-                        ? 'bg-purple-500/15 border-purple-400 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]' 
+                    :class="activeTab === lvl
+                        ? 'bg-purple-500/15 border-purple-400 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
                         : 'bg-black/30 border-purple-500/10 text-slate-400 hover:text-white hover:border-purple-500/30'"
                 >
                     Niveau {{ lvl }}
@@ -141,7 +141,7 @@ const { containerRef } = useRevealAnimation();
 
             <!-- LEVEL STATS CARD -->
             <div data-animate="scale-up" data-delay="200" class="bg-gradient-to-b from-[#0a0416]/90 to-[#05020c]/90 border border-purple-500/15 rounded-3xl p-5 shadow-2xl backdrop-blur-sm relative mx-4">
-                
+
                 <div class="flex items-center gap-2.5 mb-5 border-b border-purple-500/10 pb-4">
                     <div class="w-8 h-8 rounded-xl bg-purple-950/40 border border-purple-500/20 flex items-center justify-center text-purple-400">
                         <Users class="h-4.5 w-4.5" :stroke-width="2.5" />
@@ -156,7 +156,7 @@ const { containerRef } = useRevealAnimation();
                         </div>
                         <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ tabStats.label }}</span>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 mt-1">
                         <div class="flex flex-col gap-1.5">
                             <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5">
@@ -178,7 +178,7 @@ const { containerRef } = useRevealAnimation();
 
             <!-- FILLEULS LIST -->
             <div class="bg-gradient-to-b from-[#0a0416]/90 to-[#05020c]/90 border border-purple-500/15 rounded-3xl p-5 shadow-2xl backdrop-blur-sm relative mx-4">
-                <button 
+                <button
                     @click="showFilleuls = !showFilleuls"
                     class="flex items-center justify-between w-full mb-4 border-b border-purple-500/10 pb-4"
                 >
@@ -189,7 +189,7 @@ const { containerRef } = useRevealAnimation();
                         <h3 class="text-sm font-black text-white uppercase tracking-wider">Filleuls Niveau {{ activeTab }}</h3>
                         <span class="bg-purple-500/15 text-purple-400 text-[9px] font-black px-2 py-0.5 rounded-full">{{ currentReferrals.length }}</span>
                     </div>
-                    <ChevronDown 
+                    <ChevronDown
                         class="h-4 w-4 text-purple-400 transition-transform duration-300"
                         :class="showFilleuls ? 'rotate-180' : ''"
                     />
@@ -201,15 +201,15 @@ const { containerRef } = useRevealAnimation();
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Aucun filleul à ce niveau</p>
                     </div>
 
-                    <div 
+                    <div
                         v-for="(ref, idx) in currentReferrals" :key="ref.id"
                         class="bg-black/30 border border-purple-500/10 rounded-2xl p-4 flex items-center gap-3 hover:border-purple-400/30 transition-all duration-300 group"
                         :style="{ animationDelay: (idx * 0.05) + 's' }"
                     >
                         <!-- Avatar placeholder -->
                         <div class="w-10 h-10 rounded-full border border-purple-500/20 bg-purple-950/20 flex items-center justify-center shrink-0">
-                            <component 
-                                :is="ref.is_active ? UserCheck : UserX" 
+                            <component
+                                :is="ref.is_active ? UserCheck : UserX"
                                 class="h-4.5 w-4.5"
                                 :class="ref.is_active ? 'text-emerald-400' : 'text-slate-500'"
                                 :stroke-width="2.5"
@@ -224,7 +224,7 @@ const { containerRef } = useRevealAnimation();
                                     <Calendar class="h-3 w-3" :stroke-width="2.5" />
                                     {{ ref.joined_at }}
                                 </span>
-                                <span 
+                                <span
                                     class="text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider"
                                     :class="ref.is_active ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-500 border border-slate-500/15'"
                                 >
@@ -249,9 +249,12 @@ const { containerRef } = useRevealAnimation();
                     <Award class="h-5 w-5 text-purple-400" :stroke-width="2.5" />
                     <span class="text-xs font-black text-white uppercase tracking-wider">Programme de Parrainage</span>
                 </div>
-                
+
                 <div class="rounded-2xl overflow-hidden border border-purple-500/20 shadow-lg bg-black/40">
                     <img src="/images/parrainage.jpg" alt="Parrainage" class="w-full h-auto object-cover" />
+                </div>
+                <div class="rounded-2xl overflow-hidden border border-purple-500/20 shadow-lg bg-black/40">
+                    <img src="/images/commission.jpg" alt="Parrainage" class="w-full h-auto object-cover" />
                 </div>
             </div>
 
