@@ -57,9 +57,9 @@ class ReferralCommissionTest extends TestCase
         $this->assertEquals(50.00, $userC->balance);
         $this->assertTrue(Transaction::where('user_id', $userC->id)->where('type', 'commission')->where('amount', 50.00)->exists());
 
-        // Level 2 referrer (userB) should get 2% = 20.00 XAF
-        $this->assertEquals(20.00, $userB->balance);
-        $this->assertTrue(Transaction::where('user_id', $userB->id)->where('type', 'commission')->where('amount', 20.00)->exists());
+        // Level 2 referrer (userB) should get 3% = 30.00 XAF
+        $this->assertEquals(30.00, $userB->balance);
+        $this->assertTrue(Transaction::where('user_id', $userB->id)->where('type', 'commission')->where('amount', 30.00)->exists());
 
         // Level 3 referrer (userA) should get 1% = 10.00 XAF
         $this->assertEquals(10.00, $userA->balance);
@@ -100,12 +100,90 @@ class ReferralCommissionTest extends TestCase
 
         $this->actingAs($userB);
 
-        $response = $this->postJson("/nodes/claim-profit/{$session->id}");
+        $response = $this->postJson("/generation/{$session->id}/claim");
         $response->assertOk();
 
         // userA (Level 1 sponsor of userB) should receive 5% commission of 100 = 5 XAF
         $userA->refresh();
         $this->assertEquals(5.00, $userA->balance);
         $this->assertTrue(Transaction::where('user_id', $userA->id)->where('type', 'commission')->where('amount', 5.00)->exists());
+    }
+
+    public function test_vault_daily_payout_and_commissions()
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create(['referrer_id' => $userA->id]);
+
+        $vaultPlan = \App\Models\VaultPlan::create([
+            'name' => 'Daily Vault',
+            'fixed_investment_amount' => 10000,
+            'fixed_return' => 12000,
+            'profit_amount' => 2000,
+            'duration' => 10,
+            'payout_type' => 'daily',
+            'active' => true,
+        ]);
+
+        // Create vault investment created 2 days ago (so 2 daily payouts are due)
+        $investment = \App\Models\VaultInvestment::create([
+            'user_id' => $userB->id,
+            'vault_plan_id' => $vaultPlan->id,
+            'amount' => 10000,
+            'return_amount' => 12000,
+            'expires_at' => Carbon::now()->addDays(8),
+            'status' => 'active',
+            'created_at' => Carbon::now()->subHours(49), // slightly more than 2 days
+        ]);
+
+        // Process payouts
+        \App\Models\VaultInvestment::processUserPayouts($userB);
+
+        $userB->refresh();
+        $userA->refresh();
+        $investment->refresh();
+
+        // 2 days of daily payouts = (12000 / 10) * 2 = 2400 XAF
+        $this->assertEquals(2400.00, $userB->balance);
+        $this->assertEquals(2, $investment->payouts_claimed);
+
+        // Sponsor userA should receive 5% daily commission on 2400 XAF = 120 XAF
+        $this->assertEquals(120.00, $userA->balance);
+        $this->assertTrue(Transaction::where('user_id', $userA->id)->where('type', 'commission')->where('amount', 120.00)->exists());
+    }
+
+    public function test_vault_expiration_payout()
+    {
+        $user = User::factory()->create();
+
+        $vaultPlan = \App\Models\VaultPlan::create([
+            'name' => 'Expiry Vault',
+            'fixed_investment_amount' => 10000,
+            'fixed_return' => 15000,
+            'profit_amount' => 5000,
+            'duration' => 10,
+            'payout_type' => 'on_expiration',
+            'active' => true,
+        ]);
+
+        // Create active vault investment that has expired
+        $investment = \App\Models\VaultInvestment::create([
+            'user_id' => $user->id,
+            'vault_plan_id' => $vaultPlan->id,
+            'amount' => 10000,
+            'return_amount' => 15000,
+            'expires_at' => Carbon::now()->subHours(2), // expired 2 hours ago
+            'status' => 'active',
+            'created_at' => Carbon::now()->subDays(10),
+        ]);
+
+        // Process payouts
+        \App\Models\VaultInvestment::processUserPayouts($user);
+
+        $user->refresh();
+        $investment->refresh();
+
+        // Should receive full return of 15000 XAF at once
+        $this->assertEquals(15000.00, $user->balance);
+        $this->assertEquals('completed', $investment->status);
     }
 }

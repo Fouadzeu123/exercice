@@ -155,11 +155,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Distribute daily referral commissions (L1 = 5%, L2 = 2%, L3 = 1%)
+     * Distribute daily referral commissions (L1 = 5%, L2 = 3%, L3 = 1%)
      */
     public function payDailyCommissions($amount)
     {
-        $rates = [1 => 0.05, 2 => 0.02, 3 => 0.01];
+        $rates = [1 => 0.05, 2 => 0.03, 3 => 0.01];
         $currentSponsor = $this->referrer_id ? User::find($this->referrer_id) : null;
         $level = 1;
 
