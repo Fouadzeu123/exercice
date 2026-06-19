@@ -31,6 +31,27 @@
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <!-- SEO Meta Tags -->
+        <meta name="description" content="ARM Holding - Plateforme d'investissement leader. Maximisez vos rendements financiers grâce à des solutions d'investissement sécurisées, transparentes et performantes. Rejoignez notre communauté d'investisseurs dès aujourd'hui.">
+        <meta name="keywords" content="ARM, ARM Holding, investissement, placement financier, rendement, rentabilité, capital, crypto, finance, Cameroun, investir">
+        <meta name="author" content="ARM Holding">
+        <meta name="robots" content="index, follow">
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://armicm.com">
+        <meta property="og:title" content="ARM Holding | Plateforme d'Investissement Sécurisée">
+        <meta property="og:description" content="Maximisez vos rendements financiers grâce à des solutions d'investissement sécurisées, transparentes et performantes. Rejoignez ARM Holding dès aujourd'hui.">
+        <meta property="og:image" content="https://armicm.com/images/logo.jpg">
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://armicm.com">
+        <meta property="twitter:title" content="ARM Holding | Plateforme d'Investissement Sécurisée">
+        <meta property="twitter:description" content="Maximisez vos rendements financiers grâce à des solutions d'investissement sécurisées, transparentes et performantes. Rejoignez ARM Holding dès aujourd'hui.">
+        <meta property="twitter:image" content="https://armicm.com/images/logo.jpg">
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
