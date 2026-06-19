@@ -22,3 +22,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Les images uploadées en production vivent dans storage/app/public/uploads/
+# Elles sont ignorées par storage/app/public/uploads/.gitignore
+# NE PAS ajouter ce dossier ici — seul le .gitkeep est tracké

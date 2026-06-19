@@ -1,0 +1,13 @@
+# Ne pas ignorer les images statiques de l'application
+!*.jpg
+!*.jpeg
+!*.png
+!*.gif
+!*.webp
+!*.svg
+!*.ico
+!.gitignore
+
+# Ignorer uniquement les images uploadées dynamiquement (préfixées par timestamp_)
+# Ces images sont regénérées lors des uploads admin
+# Elles doivent être préservées sur le serveur — NE PAS faire git clean sur ce dossier

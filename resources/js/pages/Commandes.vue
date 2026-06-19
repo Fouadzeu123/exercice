@@ -48,11 +48,22 @@ const formatDate = (date: string) => {
     });
 };
 
-const getDaysRemaining = (expiresAt: string | null) => {
+const getDaysRemaining = (expiresAt: string | null): string => {
     if (!expiresAt) return 'Illimité';
-    const diffTime = new Date(expiresAt).getTime() - new Date().getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? `${diffDays} jours` : 'Expiré';
+    const now = new Date();
+    const end = new Date(expiresAt);
+    if (end <= now) return 'Expiré';
+    let count = 0;
+    const cur = new Date(now);
+    cur.setHours(0, 0, 0, 0);
+    const endDay = new Date(end);
+    endDay.setHours(0, 0, 0, 0);
+    while (cur < endDay) {
+        const dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) count++;
+        cur.setDate(cur.getDate() + 1);
+    }
+    return count > 0 ? `${count} jours restants` : 'Expiré';
 };
 
 const { containerRef } = useRevealAnimation();

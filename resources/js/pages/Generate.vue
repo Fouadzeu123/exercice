@@ -60,6 +60,11 @@ const nodesList = ref<any[]>([]);
 const showErrorModal = ref(false);
 const errorMessage = ref('');
 
+// Claim countdown state
+const claimingSessionId = ref<number | null>(null);
+const claimSecondsLeft = ref(8);
+let claimTimer: ReturnType<typeof setInterval> | null = null;
+
 // Global frame animation id for 60fps tickers
 let animationFrameId: number | null = null;
 
@@ -134,26 +139,61 @@ const startGeneration = async (userNodeId: number) => {
     }
 };
 
-// Claim profit from a completed session
-const claimProfit = async (sessionId: number, userNodeId: number) => {
-    try {
-        const response = await axios.post(`/generation/${sessionId}/claim`);
-        if (response.data.success) {
-            const targetNode = nodesList.value.find(n => n.id === userNodeId);
-            if (targetNode) {
-                targetNode.status = 'cooldown';
-                targetNode.session = null;
-                // Pre-set a 24 hours cooldown timer locally for instant response
-                const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                targetNode.cooldown_expires_at = future.toISOString();
-                targetNode.cooldown_seconds = 24 * 60 * 60;
-            }
-            router.reload({ only: ['activeNodes', 'auth'] });
+// Claim profit from a completed session (with 8-second animated countdown)
+const claimProfit = (sessionId: number, userNodeId: number) => {
+    if (claimingSessionId.value !== null) return; // prevent double-trigger
+
+    claimingSessionId.value = sessionId;
+    claimSecondsLeft.value = 8;
+
+    claimTimer = setInterval(() => {
+        claimSecondsLeft.value--;
+        if (claimSecondsLeft.value <= 0) {
+            clearInterval(claimTimer!);
+            claimTimer = null;
+            // Actually post the claim after countdown
+            axios.post(`/generation/${sessionId}/claim`)
+                .then(response => {
+                    if (response.data.success) {
+                        const targetNode = nodesList.value.find(n => n.id === userNodeId);
+                        if (targetNode) {
+                            targetNode.status = 'cooldown';
+                            targetNode.session = null;
+                            const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                            targetNode.cooldown_expires_at = future.toISOString();
+                            targetNode.cooldown_seconds = 24 * 60 * 60;
+                        }
+                        router.reload({ only: ['activeNodes', 'auth'] });
+                    }
+                })
+                .catch((error: any) => {
+                    errorMessage.value = error.response?.data?.error || 'Erreur lors de la réclamation des gains.';
+                    showErrorModal.value = true;
+                })
+                .finally(() => {
+                    claimingSessionId.value = null;
+                    claimSecondsLeft.value = 8;
+                });
         }
-    } catch (error: any) {
-        errorMessage.value = error.response?.data?.error || 'Erreur lors de la réclamation des gains.';
-        showErrorModal.value = true;
+    }, 1000);
+};
+
+// Returns the number of remaining weekdays (Mon-Fri) until expiresAt
+const getWeekdaysRemaining = (expiresAt: string): string => {
+    const now = new Date();
+    const end = new Date(expiresAt);
+    if (end <= now) return 'Expiré';
+    let count = 0;
+    const cur = new Date(now);
+    cur.setHours(0, 0, 0, 0);
+    const endDay = new Date(end);
+    endDay.setHours(0, 0, 0, 0);
+    while (cur < endDay) {
+        const dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) count++;
+        cur.setDate(cur.getDate() + 1);
     }
+    return count > 0 ? `${count} jours restants` : 'Expiré';
 };
 
 // UI Formatter
@@ -176,6 +216,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    if (claimTimer) clearInterval(claimTimer);
     document.body.style.overflow = '';
 });
 
@@ -288,10 +329,10 @@ watch(showErrorModal, (newError) => {
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-muted-foreground font-semibold flex items-center gap-1">
-                                        <Shield class="h-3.5 w-3.5" /> Expiration
+                                        <Shield class="h-3.5 w-3.5" /> Jours Restants
                                     </span>
                                     <span class="font-medium text-rose-400 font-mono text-[10px] uppercase">
-                                        {{ new Date(node.expires_at).toLocaleDateString('fr-FR') }}
+                                        {{ getWeekdaysRemaining(node.expires_at) }}
                                     </span>
                                 </div>
                             </div>
@@ -377,15 +418,32 @@ watch(showErrorModal, (newError) => {
                                 Calcul en Cours
                             </button>
 
-                            <!-- Action: Claim Profit -->
+                            <!-- Action: Claim Profit (idle) -->
                             <button 
-                                v-if="node.status === 'claimable' && node.session"
+                                v-if="node.status === 'claimable' && node.session && claimingSessionId !== node.session.id"
                                 @click="claimProfit(node.session.id, node.id)"
                                 class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse transition-all flex items-center justify-center gap-2"
                             >
                                 <Zap class="h-4 w-4 fill-black" :stroke-width="2.5" />
                                 Réclamer {{ formatXAF(node.generation_profit) }}
                             </button>
+
+                            <!-- Action: Claiming countdown (8 seconds) -->
+                            <div
+                                v-if="node.status === 'claimable' && node.session && claimingSessionId === node.session.id"
+                                class="w-full rounded-xl overflow-hidden border border-amber-500/30 bg-amber-950/20"
+                            >
+                                <div class="flex items-center justify-between px-4 py-2 text-xs">
+                                    <span class="text-amber-400 font-black font-mono tracking-wider animate-pulse">Collecte en cours...</span>
+                                    <span class="text-white font-black font-mono text-sm">{{ claimSecondsLeft }}s</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-amber-950/40">
+                                    <div
+                                        class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 shadow-[0_0_8px_rgba(245,158,11,0.6)] transition-all duration-1000 ease-linear"
+                                        :style="{ width: ((8 - claimSecondsLeft) / 8 * 100) + '%' }"
+                                    ></div>
+                                </div>
+                            </div>
 
                             <!-- Action: Cooldown Locked -->
                             <button 

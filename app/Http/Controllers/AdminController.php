@@ -9,6 +9,7 @@ use App\Models\GiftCode;
 use App\Models\VaultPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use DB;
 use App\Services\NotchPayService;
@@ -22,7 +23,11 @@ class AdminController extends Controller
      */
     public function index()
     {
-        $pendingTransactions = Transaction::with('user')->where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        $pendingTransactions = Transaction::with('user')
+            ->where('status', 'pending')
+            ->where('type', 'withdrawal')
+            ->orderBy('created_at', 'desc')
+            ->get();
         $users = User::orderBy('created_at', 'desc')->get();
         $giftCodes = GiftCode::orderBy('created_at', 'desc')->get();
         
@@ -65,6 +70,10 @@ class AdminController extends Controller
         $transaction = Transaction::findOrFail($id);
         if ($transaction->status !== 'pending') {
             return back()->withErrors(['error' => 'La transaction n\'est plus en attente.']);
+        }
+
+        if ($transaction->type === 'deposit') {
+            return back()->withErrors(['error' => 'Les dépôts sont approuvés automatiquement par la passerelle de paiement.']);
         }
 
         if ($transaction->type === 'withdrawal') {
@@ -265,8 +274,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $imageUrl = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $imageUrl = '/storage/uploads/' . $fileName;
         }
 
         $node->update([
@@ -330,8 +339,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $image = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $image = '/storage/uploads/' . $fileName;
         }
 
         $product->update([
@@ -392,8 +401,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $imageUrl = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $imageUrl = '/storage/uploads/' . $fileName;
         }
 
         Node::create([
@@ -440,8 +449,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $image = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $image = '/storage/uploads/' . $fileName;
         }
 
         AVIPProduct::create([
@@ -481,8 +490,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $imageUrl = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $imageUrl = '/storage/uploads/' . $fileName;
         }
 
         \App\Models\Announcement::create([
@@ -516,8 +525,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $imageUrl = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $imageUrl = '/storage/uploads/' . $fileName;
         }
 
         $announcement->update([
@@ -596,8 +605,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $imageUrl = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $imageUrl = '/storage/uploads/' . $fileName;
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
@@ -638,8 +647,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            $file->move(public_path('images'), $fileName);
-            $imageUrl = '/images/' . $fileName;
+            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
+            $imageUrl = '/storage/uploads/' . $fileName;
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
