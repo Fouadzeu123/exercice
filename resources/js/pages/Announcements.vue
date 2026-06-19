@@ -145,17 +145,6 @@ const activeAnnouncements = computed(() => {
 
     return list
         .filter(a => a.active)
-        .map(a => {
-            // Dynamic filtering & adaptation to ARM holding IA chips & servers
-            if (!a.title.toLowerCase().includes('arm') && !a.title.toLowerCase().includes('ia') && !a.title.toLowerCase().includes('puce')) {
-                return {
-                    ...a,
-                    title: "Serveur ARM Holding - Optimisation IA v" + a.id,
-                    content: "Mise à niveau critique de l'infrastructure de traitement ARM Holding. Le co-processeur de neurones artificiels a été calibré avec succès pour accroître la vitesse de génération des récompenses de location de 15%. " + a.content
-                };
-            }
-            return a;
-        })
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 });
 
