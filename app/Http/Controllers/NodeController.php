@@ -210,7 +210,7 @@ class NodeController extends Controller
                     'node_id' => $node->id,
                     'active' => true,
                     'activated_at' => Carbon::now(),
-                    'expires_at' => Carbon::now()->addDays($node->duration),
+                    'expires_at' => Carbon::now()->addWeekdays($node->duration),
                 ]);
 
                 // Log the purchase transaction
@@ -263,6 +263,10 @@ class NodeController extends Controller
 
     public function startGeneration(Request $request)
     {
+        if (Carbon::now()->isWeekend()) {
+            return response()->json(['error' => 'La génération de revenus est disponible uniquement du lundi au vendredi.'], 422);
+        }
+
         $request->validate([
             'user_node_id' => 'required|integer|exists:user_nodes,id'
         ]);
@@ -271,12 +275,12 @@ class NodeController extends Controller
         $userNodeId = $request->user_node_id;
 
         // 1. Verify user owns this active node
-        $activeUserNode = UserNode::where('id', $userNodeId)
-            ->where('user_id', $user->id)
-            ->where('active', true)
+        $activeUserNode = UserNode::where('user_nodes.id', $userNodeId)
+            ->where('user_nodes.user_id', $user->id)
+            ->where('user_nodes.active', true)
             ->where(function($query) {
-                $query->whereNull('expires_at')
-                      ->orWhere('expires_at', '>', Carbon::now());
+                $query->whereNull('user_nodes.expires_at')
+                      ->orWhere('user_nodes.expires_at', '>', Carbon::now());
             })
             ->join('nodes', 'user_nodes.node_id', '=', 'nodes.id')
             ->select('user_nodes.*', 'nodes.generation_profit', 'nodes.name as node_name')

@@ -232,7 +232,7 @@ const currentVipTitle = computed(() => {
                     <div class="text-center sm:text-left">
                         <h4 class="text-sm font-black text-white uppercase tracking-wider">Réclamation de Salaire Journalier</h4>
                         <p class="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                            Chaque jour, réclamez votre salaire d'infrastructure calculé directement sur votre niveau VIP.
+                            Réclamez votre salaire d'infrastructure calculé directement sur votre niveau VIP (Disponible du lundi au vendredi).
                         </p>
                     </div>
                     

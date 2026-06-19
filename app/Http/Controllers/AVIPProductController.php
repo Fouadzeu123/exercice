@@ -168,6 +168,10 @@ class AVIPProductController extends Controller
      */
     public function claimSalary(Request $request)
     {
+        if (Carbon::now()->isWeekend()) {
+            return response()->json(['error' => 'Les réclamations de salaire journalier sont disponibles uniquement du lundi au vendredi.'], 422);
+        }
+
         $user = Auth::user();
         $userVipLevel = $user->vip_level ?? 0;
 

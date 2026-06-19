@@ -62,7 +62,7 @@ class SettingsService
     {
         $settings = self::all();
         data_set($settings, $key, $value);
-        
+
         Storage::put('settings.json', json_encode($settings, JSON_PRETTY_PRINT));
         return $settings;
     }
@@ -73,7 +73,7 @@ class SettingsService
     public static function setMultiple(array $newSettings)
     {
         $settings = self::all();
-        
+
         // Handle conversion of vip_salaries array if it has string keys from requests
         if (isset($newSettings['vip_salaries']) && is_array($newSettings['vip_salaries'])) {
             $vipSalaries = [];
@@ -84,7 +84,7 @@ class SettingsService
         }
 
         $settings = array_merge($settings, $newSettings);
-        
+
         Storage::put('settings.json', json_encode($settings, JSON_PRETTY_PRINT));
         return $settings;
     }

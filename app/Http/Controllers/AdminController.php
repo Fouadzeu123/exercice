@@ -65,6 +65,43 @@ class AdminController extends Controller
         if ($transaction->status !== 'pending') {
             return back()->withErrors(['error' => 'La transaction n\'est plus en attente.']);
         }
+
+        if ($transaction->type === 'withdrawal') {
+            $apiUser = config('services.fapshi.payout_api_user');
+            $apiKey = config('services.fapshi.api_key');
+
+            if ($apiUser && $apiKey) {
+                $paymentMethod = $transaction->payment_method === 'orange' ? 'orange money' : 'mobile money';
+                if ($transaction->payment_method !== 'usdt') {
+                    $apiUrl = (config('services.fapshi.api_url') ?: 'https://sandbox.fapshi.com') . '/payout';
+                    
+                    try {
+                        $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                            ->withHeaders([
+                                'Accept' => 'application/json',
+                                'Content-Type' => 'application/json',
+                                'apiuser' => $apiUser,
+                                'apikey' => $apiKey,
+                            ])
+                            ->post($apiUrl, [
+                                'amount' => (int)abs($transaction->amount),
+                                'phone' => $transaction->payment_phone,
+                                'medium' => $paymentMethod,
+                                'externalId' => $transaction->reference,
+                                'userId' => (string)$transaction->user_id,
+                                'message' => 'Retrait ARM HOLDING',
+                            ]);
+
+                        if (!$response->successful()) {
+                            $err = $response->json('message') ?? $response->json('error') ?? 'Unknown error';
+                            return back()->withErrors(['error' => 'Échec du transfert Fapshi : ' . $err]);
+                        }
+                    } catch (\Exception $e) {
+                        return back()->withErrors(['error' => 'Erreur de connexion Fapshi : ' . $e->getMessage()]);
+                    }
+                }
+            }
+        }
         
         DB::transaction(function () use ($transaction) {
             $transaction->status = 'completed';

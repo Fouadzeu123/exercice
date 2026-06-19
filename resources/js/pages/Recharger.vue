@@ -73,10 +73,9 @@ const paymentChannels = [
     { id: 'mtn_momo_1', label: 'Fast Track 1', sub: 'XAF', operator: 'mtn', icon: Building2 },
     { id: 'orange_money_2', label: 'Fast Track 2', sub: 'XAF', operator: 'orange', icon: Building2 },
     { id: 'mtn_momo_3', label: 'Fast Track 3', sub: 'XAF', operator: 'mtn', icon: Smartphone },
-    { id: 'usdt_5', label: 'Fast Track 5', sub: 'XAF', operator: 'usdt', icon: Coins },
 ];
 
-const selectedChannel = ref(paymentChannels[3]); // Fast Track 5 selected by default from screenshot
+const selectedChannel = ref(paymentChannels[0]); // Fast Track 1 selected by default
 
 const depositForm = useForm({
     amount: '',
@@ -95,14 +94,9 @@ const handleDepositSubmit = () => {
     if (depositForm.method === 'mtn' || depositForm.method === 'orange') {
         if (!depositForm.phone) {
             const phoneVal = prompt(t('Entrez votre numéro Mobile Money de débit :', 'Enter your debit Mobile Money number:'));
+
             if (!phoneVal) return;
             depositForm.phone = phoneVal;
-        }
-    } else if (depositForm.method === 'usdt') {
-        if (!depositForm.usdt_hash) {
-            const hashVal = prompt(t('Entrez le hash de transaction TXID TRC-20 :', 'Enter your TRC-20 TXID transaction hash:'));
-            if (!hashVal) return;
-            depositForm.usdt_hash = hashVal;
         }
     }
 
@@ -251,29 +245,12 @@ onUnmounted(() => {
                         <input
                             type="tel"
                             v-model="depositForm.phone"
-                            placeholder="Ex: 237690000000"
+                            placeholder="Ex: 690000000"
                             class="w-full bg-[#121625]/60 border border-purple-500/15 rounded-xl py-3.5 px-4 text-white font-mono text-xs focus:border-purple-400 outline-none transition-all placeholder:text-white/20"
                         />
                     </div>
 
-                    <!-- Extra field for USDT hash prompt -->
-                    <div v-if="selectedChannel.operator === 'usdt'" class="space-y-3">
-                        <div class="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/10 text-xs">
-                            <span class="font-bold text-purple-400 block mb-1 text-[9px] uppercase tracking-wider">Adresse USDT TRC-20 Officielle</span>
-                            <code class="text-[9px] break-all text-white font-mono select-all">TYrW7fXnB9Xm36Qsd9d43A2HjKdLnMbPqX</code>
-                        </div>
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider">
-                                {{ t('Hash de Transaction (TXID) TRC-20', 'TRC-20 Transaction Hash (TXID)') }}
-                            </label>
-                            <input
-                                type="text"
-                                v-model="depositForm.usdt_hash"
-                                :placeholder="t('Entrez le hash de transaction', 'Enter transaction hash')"
-                                class="w-full bg-[#121625]/60 border border-purple-500/15 rounded-xl py-3.5 px-4 text-white font-mono text-xs focus:border-purple-400 outline-none transition-all placeholder:text-white/20"
-                            />
-                        </div>
-                    </div>
+
 
                     <button
                         type="submit"

@@ -106,6 +106,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Admin Settings Route
         Route::post('admin/settings', [\App\Http\Controllers\AdminController::class, 'updateSettings'])->name('admin.settings.update');
     });
+
+    // Fapshi Custom UI Routes
+    Route::get('fapshi/pay/{reference}', [\App\Http\Controllers\WalletController::class, 'fapshiPayPage'])->name('fapshi.pay');
+    Route::post('fapshi/check-status/{reference}', [\App\Http\Controllers\WalletController::class, 'checkFapshiStatus'])->name('fapshi.check-status');
 });
+
+Route::post('webhook/fapshi', [\App\Http\Controllers\WalletController::class, 'webhook'])->name('webhook.fapshi');
 
 require __DIR__.'/settings.php';

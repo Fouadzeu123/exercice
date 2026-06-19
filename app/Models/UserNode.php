@@ -9,6 +9,11 @@ class UserNode extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'expires_at' => 'datetime',
+        'activated_at' => 'datetime',
+    ];
+
     public function node(): BelongsTo
     {
         return $this->belongsTo(Node::class)->withTrashed();

@@ -39,6 +39,8 @@ const props = defineProps<{
         status: string;
         reference: string;
         created_at: string;
+        payment_method?: string | null;
+        payment_phone?: string | null;
         user: {
             id: number;
             phone: string;
@@ -807,7 +809,10 @@ onUnmounted(() => {
                         <tbody class="divide-y divide-white/5 text-xs font-mono text-slate-300">
                             <tr v-for="tx in pendingTransactions" :key="tx.id" class="hover:bg-white/[0.01] transition-all">
                                 <td class="py-3.5 pl-2 font-bold text-white">
-                                    {{ tx.user ? tx.user.phone : 'Inconnu' }}
+                                    <div>{{ tx.user ? tx.user.phone : 'Inconnu' }}</div>
+                                    <div v-if="tx.payment_method || tx.payment_phone" class="text-[10px] text-slate-500 font-normal">
+                                        {{ tx.payment_method ? tx.payment_method.toUpperCase() : '' }}: {{ tx.payment_phone || '' }}
+                                    </div>
                                 </td>
                                 <td class="py-3.5 text-slate-500">
                                     {{ tx.reference }}

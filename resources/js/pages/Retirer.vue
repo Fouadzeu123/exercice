@@ -135,7 +135,7 @@ const handleWithdrawSubmit = () => {
             showSuccessCard.value = true;
         },
         onError: (err) => {
-            errorMessage.value = err.error || t('Erreur lors de la soumission.', 'Error during submission.');
+            errorMessage.value = Object.values(err)[0] || t('Erreur lors de la soumission.', 'Error during submission.');
             showErrorCard.value = true;
         }
     });

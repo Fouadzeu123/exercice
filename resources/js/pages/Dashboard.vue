@@ -624,7 +624,7 @@ watch(
                                     </span>
                                     <!-- Duration Badge -->
                                     <span class="text-[12px] font-black bg-cyan-500 text-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md">
-                                        {{ node.isAvip ? t('Illimité', 'Unlimited') : node.duration + ' ' + t('Jours', 'Days') }}
+                                        {{ node.isAvip ? t('Illimité', 'Unlimited') : (node.isVault ? node.duration + ' ' + t('Jours', 'Days') : node.duration + ' ' + t('Jours', 'Days')) }}
                                     </span>
                                 </div>
 

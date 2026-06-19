@@ -199,7 +199,7 @@ watch(showErrorModal, (newError) => {
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-5">
                 <div>
                     <h2 class="text-xl md:text-2xl font-semibold text-white">Console AI Synchrone</h2>
-                    <p class="text-xs text-muted-foreground mt-0.5">Pilotez vos serveurs actifs et réclamez vos dividendes de calcul.</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">Pilotez vos serveurs actifs et réclamez vos dividendes de calcul (Disponible du lundi au vendredi).</p>
                 </div>
                 <div class="flex items-center gap-4 bg-white/[0.02] border border-white/5 px-4 py-2 rounded-xl text-xs font-semibold">
                     <span class="text-muted-foreground font-mono">SOLDE DU COMPTE:</span>
