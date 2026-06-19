@@ -48,6 +48,7 @@ const showSuccessModal = ref(false);
 const showLimitErrorModal = ref(false);
 const limitError = ref('');
 const wonPrize = ref(0);
+const avatarError = ref(false);
 
 const activeTab = ref<'winners' | 'myWinnings'>('winners');
 const localMyWinnings = ref([...props.myWinnings]);
@@ -190,8 +191,9 @@ onUnmounted(() => {
                 
                 <div class="w-10 h-10 rounded-full border border-purple-500/40 p-0.5 bg-black/40 shadow-[0_0_12px_rgba(168,85,247,0.3)] shrink-0 overflow-hidden">
                     <img 
-                        v-if="user?.profile_photo_url"
+                        v-if="user?.profile_photo_url && !avatarError"
                         :src="user.profile_photo_url" 
+                        @error="avatarError = true"
                         class="w-full h-full rounded-full object-cover" 
                         alt="Profile Avatar"
                     />

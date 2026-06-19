@@ -200,7 +200,12 @@ onUnmounted(() => {
                         <AlertTriangle class="w-3.5 h-3.5 text-yellow-300" />
                         <span>Offre Limitée</span>
                     </div>
-                    <img :src="getProductImage()" :alt="product.name" class="w-full h-full object-cover opacity-90" />
+                    <img 
+                        :src="getProductImage()" 
+                        @error="(e: Event) => ((e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80')"
+                        :alt="product.name" 
+                        class="w-full h-full object-cover opacity-90" 
+                    />
                     <!-- Absolute glow overlay -->
                     <div class="absolute inset-0 bg-gradient-to-t from-[#090b15] via-transparent to-transparent"></div>
                     <div class="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_10px_rgba(168,85,247,0.8)] animate-scan pointer-events-none"></div>
