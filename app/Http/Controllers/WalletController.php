@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use DB;
+use App\Services\NotchPayService;
 
 class WalletController extends Controller
 {
@@ -96,18 +97,7 @@ class WalletController extends Controller
         $amount = $request->amount;
         $reference = 'DEP-' . strtoupper(bin2hex(random_bytes(4)));
 
-        // Auto-detect operator based on Cameroon phone prefix
         $detectedMethod = $request->input('method');
-        $cleanPhone = ltrim(trim($request->phone), '+');
-        if (str_starts_with($cleanPhone, '237')) {
-            $cleanPhone = substr($cleanPhone, 3);
-        }
-
-        if (preg_match('/^(69|655|656|657|658|659)/', $cleanPhone)) {
-            $detectedMethod = 'orange';
-        } elseif (preg_match('/^(67|68|650|651|652|653|654)/', $cleanPhone)) {
-            $detectedMethod = 'mtn';
-        }
 
         try {
             DB::transaction(function () use ($user, $amount, $reference, $request, $detectedMethod) {
@@ -122,11 +112,11 @@ class WalletController extends Controller
                 ]);
             });
 
-            // For MTN or Orange, integrate Fapshi API
-            $apiUser = config('services.fapshi.api_user');
-            $apiKey = config('services.fapshi.api_key');
+            // For MTN or Orange, integrate Notch Pay API
+            $publicKey = config('services.notchpay.public_key');
+            $secretKey = config('services.notchpay.secret_key');
 
-            if (!$apiUser || !$apiKey) {
+            if (!$publicKey || !$secretKey) {
                 if (app()->environment('local')) {
                     $transId = 'mock-' . uniqid();
                     $transaction = Transaction::where('reference', $reference)->first();
@@ -134,58 +124,61 @@ class WalletController extends Controller
                         $transaction->gateway_ref = $transId;
                         $transaction->save();
                     }
-                    return redirect()->route('fapshi.pay', ['reference' => $reference]);
+                    return redirect()->route('notchpay.pay', ['reference' => $reference]);
                 }
-                return back()->withErrors(['error' => 'Configuration Fapshi manquante ou incorrecte (Clés API User/API Key absentes).']);
+                return back()->withErrors(['error' => 'Configuration Notch Pay manquante ou incorrecte (Clés API absentes).']);
             }
 
-            // Make request to Fapshi API (ignore SSL verification locally to prevent local issuer certificate issues)
-            $apiUrl = (config('services.fapshi.api_url') ?: 'https://sandbox.fapshi.com') . '/initiate-pay';
+            // Clean phone
+            $phone = trim($request->phone);
+            if (!str_starts_with($phone, '+')) {
+                if (str_starts_with($phone, '237')) {
+                    $phone = '+' . $phone;
+                } else {
+                    $phone = '+237' . $phone;
+                }
+            }
 
-            \Illuminate\Support\Facades\Log::info('Fapshi Initiate Pay Request:', [
-                'amount' => $amount,
-                'email' => $user->email,
-                'reference' => $reference
+            // Initialize payment via Notch Pay
+            $notchPayService = app(NotchPayService::class);
+
+            $paymentResponse = $notchPayService->initializePayment([
+                'amount' => (int)$amount,
+                'currency' => 'XAF',
+                'email' => $user->email ?: (str_replace('+', '', $phone) . '@armicm.com'),
+                'phone' => $phone,
+                'reference' => $reference,
+                'description' => 'Dépôt ' . $reference,
             ]);
 
-            $response = Http::withoutVerifying()
-                ->timeout(15)
-                ->withHeaders([
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                    'apiuser' => $apiUser,
-                    'apikey' => $apiKey,
-                ])
-                ->post($apiUrl, [
-                    'amount' => (int)$amount,
-                    'email' => $user->email,
-                    'userId' => (string)$user->id,
-                    'externalId' => $reference,
-                    'redirectUrl' => route('wallet.recharger'),
-                    'message' => 'Dépôt ' . $reference,
-                ]);
-
-            if ($response->successful()) {
-                $transId = $response->json('transId');
-                $link = $response->json('link');
-                if ($transId && $link) {
-                    $transaction = Transaction::where('reference', $reference)->first();
-                    if ($transaction) {
-                        $transaction->gateway_ref = $transId;
-                        $transaction->save();
-                    }
-                    return Inertia::location($link);
+            $gatewayRef = null;
+            if (isset($paymentResponse->transaction)) {
+                if (is_object($paymentResponse->transaction)) {
+                    $gatewayRef = $paymentResponse->transaction->reference ?? null;
+                } else {
+                    $gatewayRef = $paymentResponse->transaction;
                 }
-                return back()->withErrors(['error' => 'L\'identifiant ou le lien de transaction est manquant dans la réponse de Fapshi.']);
             }
 
-            $errorMsg = $response->json('message') ?? $response->json('error') ?? 'Impossible d\'initialiser le paiement (Erreur HTTP ' . $response->status() . ').';
-            return back()->withErrors(['error' => 'Échec Fapshi : ' . $errorMsg]);
+            if (!$gatewayRef) {
+                return back()->withErrors(['error' => 'L\'identifiant ou le lien de transaction est manquant dans la réponse de Notch Pay.']);
+            }
+
+            $transaction = Transaction::where('reference', $reference)->first();
+            if ($transaction) {
+                $transaction->gateway_ref = $gatewayRef;
+                $transaction->save();
+            }
+
+            return redirect()->route('notchpay.pay', ['reference' => $reference]);
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Fapshi Pay error: ' . $e->getMessage());
-
-            return back()->withErrors(['error' => 'Erreur de communication avec Fapshi : ' . $e->getMessage()]);
+            $msg = $e->getMessage();
+            if ($e instanceof \NotchPay\Exceptions\ApiException && !empty($e->errors)) {
+                $msg .= ' : ' . json_encode($e->errors);
+            }
+            \Illuminate\Support\Facades\Log::error('Notch Pay error: ' . $msg);
+            return back()->withErrors(['error' => 'Échec Notch Pay : ' . $msg]);
         }
     }
 
@@ -354,21 +347,27 @@ class WalletController extends Controller
      */
     public function webhook(Request $request)
     {
-        $secret = config('services.fapshi.webhook_secret', 'fapshi-secret-key');
-        $signature = $request->header('x-wh-secret');
+        $secret = config('services.notchpay.webhook_secret');
+        $signature = $request->header('x-notch-signature');
 
-        if (!$signature || $signature !== $secret) {
-            return response()->json(['message' => 'Invalid webhook secret'], 401);
+        $payload = $request->getContent();
+
+        if (!$signature || !$secret || !hash_equals(hash_hmac('sha256', $payload, $secret), $signature)) {
+            return response()->json(['message' => 'Invalid signature'], 401);
         }
 
-        $transId = $request->input('transId');
-        $status = $request->input('status');
-        $amount = $request->input('amount');
-        $externalId = $request->input('externalId');
+        $event = $request->input('event') ?? $request->input('type');
+        $data = $request->input('data') ?? [];
+        $externalId = $data['reference'] ?? null;
+        $status = $data['status'] ?? null;
+
+        if (!$externalId) {
+            return response()->json(['message' => 'Missing reference'], 400);
+        }
 
         $transaction = Transaction::where('reference', $externalId)->first();
         if ($transaction && $transaction->status === 'pending') {
-            if ($status === 'SUCCESSFUL') {
+            if ($event === 'payment.complete' || $status === 'complete') {
                 DB::transaction(function () use ($transaction) {
                     $transaction->status = 'completed';
                     $transaction->save();
@@ -377,7 +376,7 @@ class WalletController extends Controller
                     $user->balance += $transaction->amount;
                     $user->save();
                 });
-            } elseif (in_array($status, ['FAILED', 'EXPIRED'])) {
+            } elseif (in_array($event, ['payment.failed', 'payment.canceled', 'payment.expired']) || in_array($status, ['failed', 'canceled', 'expired'])) {
                 DB::transaction(function () use ($transaction) {
                     $transaction->status = 'rejected';
                     $transaction->save();
@@ -391,7 +390,7 @@ class WalletController extends Controller
     /**
      * Show custom Fapshi pay page.
      */
-    public function fapshiPayPage($reference)
+    public function notchPayPage($reference)
     {
         $transaction = Transaction::where('reference', $reference)
             ->where('user_id', Auth::id())
@@ -404,7 +403,7 @@ class WalletController extends Controller
         $mtnAgent = \App\Services\SettingsService::get('fapshi_mtn_agent', '670000000');
         $mtnMerchant = \App\Services\SettingsService::get('fapshi_mtn_merchant', '123456');
 
-        return Inertia::render('FapshiPayPage', [
+        return Inertia::render('NotchPayPage', [
             'transaction' => $transaction,
             'settings' => [
                 'fapshi_orange_agent' => $orangeAgent,
@@ -416,9 +415,78 @@ class WalletController extends Controller
     }
 
     /**
+     * Complete the payment charge by submitting user-confirmed operator and number.
+     */
+    public function chargeNotchPay(Request $request, $reference)
+    {
+        $request->validate([
+            'method' => 'required|string|in:mtn,orange',
+            'phone' => 'required|string',
+        ]);
+
+        $transaction = Transaction::where('reference', $reference)
+            ->where('user_id', Auth::id())
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $phone = trim($request->phone);
+        if (!str_starts_with($phone, '+')) {
+            if (str_starts_with($phone, '237')) {
+                $phone = '+' . $phone;
+            } else {
+                $phone = '+237' . $phone;
+            }
+        }
+
+        $method = $request->input('method');
+        $channel = $method === 'orange' ? 'cm.orange' : 'cm.mtn';
+
+        // Update the transaction details in the local DB
+        $transaction->payment_method = $method;
+        $transaction->payment_phone = $request->phone;
+        $transaction->save();
+
+        $transId = $transaction->gateway_ref;
+        $secretKey = config('services.notchpay.secret_key');
+
+        // Local testing mock fallback
+        if (!$transId || str_starts_with($transId, 'mock-') || !$secretKey) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Paiement simulé avec succès (Mode Simulation).'
+            ]);
+        }
+
+        try {
+            $notchPayService = app(NotchPayService::class);
+            $notchPayService->chargePayment($transId, [
+                'channel' => $channel,
+                'data' => [
+                    'phone' => $phone,
+                ],
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Notification de paiement envoyée.'
+            ]);
+        } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            if ($e instanceof \NotchPay\Exceptions\ApiException && !empty($e->errors)) {
+                $msg .= ' : ' . json_encode($e->errors);
+            }
+            \Illuminate\Support\Facades\Log::error('Notch Pay charge error: ' . $msg);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Échec Notch Pay : ' . $msg
+            ], 422);
+        }
+    }
+
+    /**
      * Polling method to check status of a Fapshi transaction.
      */
-    public function checkFapshiStatus($reference)
+    public function checkNotchPayStatus($reference)
     {
         $transaction = Transaction::where('reference', $reference)
             ->where('user_id', Auth::id())
@@ -432,11 +500,10 @@ class WalletController extends Controller
         }
 
         $transId = $transaction->gateway_ref;
-        $apiUser = config('services.fapshi.api_user');
-        $apiKey = config('services.fapshi.api_key');
+        $secretKey = config('services.notchpay.secret_key');
 
         // Local testing mock fallback
-        if (!$transId || str_starts_with($transId, 'mock-') || !$apiUser || !$apiKey) {
+        if (!$transId || str_starts_with($transId, 'mock-') || !$secretKey) {
             DB::transaction(function () use ($transaction) {
                 $transaction->status = 'completed';
                 $transaction->save();
@@ -453,61 +520,47 @@ class WalletController extends Controller
         }
 
         try {
-            $apiUrl = (config('services.fapshi.api_url') ?: 'https://sandbox.fapshi.com') . '/payment-status/' . $transId;
-            $response = Http::withoutVerifying()
-                ->timeout(10)
-                ->withHeaders([
-                    'Accept' => 'application/json',
-                    'apiuser' => $apiUser,
-                    'apikey' => $apiKey,
-                ])
-                ->get($apiUrl);
+            $notchPayService = app(NotchPayService::class);
+            $paymentResponse = $notchPayService->verifyPayment($transId);
 
-            if ($response->successful()) {
-                $fapshiStatus = $response->json('status');
+            $notchStatus = $paymentResponse->status ?? 'pending';
 
-                if ($fapshiStatus === 'SUCCESSFUL') {
-                    DB::transaction(function () use ($transaction) {
-                        $transaction->status = 'completed';
-                        $transaction->save();
+            if ($notchStatus === 'complete') {
+                DB::transaction(function () use ($transaction) {
+                    $transaction->status = 'completed';
+                    $transaction->save();
 
-                        $user = $transaction->user;
-                        $user->balance += $transaction->amount;
-                        $user->save();
-                    });
+                    $user = $transaction->user;
+                    $user->balance += $transaction->amount;
+                    $user->save();
+                });
 
-                    return response()->json([
-                        'status' => 'completed',
-                        'message' => 'Dépôt validé avec succès.'
-                    ]);
-                } elseif (in_array($fapshiStatus, ['FAILED', 'EXPIRED'])) {
-                    DB::transaction(function () use ($transaction) {
-                        $transaction->status = 'rejected';
-                        $transaction->save();
-                    });
+                return response()->json([
+                    'status' => 'completed',
+                    'message' => 'Dépôt validé avec succès.'
+                ]);
+            } elseif (in_array($notchStatus, ['failed', 'canceled', 'expired'])) {
+                DB::transaction(function () use ($transaction) {
+                    $transaction->status = 'rejected';
+                    $transaction->save();
+                });
 
-                    return response()->json([
-                        'status' => 'rejected',
-                        'message' => 'Le paiement a échoué ou a expiré.'
-                    ]);
-                } else {
-                    return response()->json([
-                        'status' => 'pending',
-                        'message' => 'Le paiement est toujours en attente.'
-                    ]);
-                }
+                return response()->json([
+                    'status' => 'rejected',
+                    'message' => 'Le paiement a échoué ou a expiré.'
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'pending',
+                    'message' => 'Le paiement est toujours en attente.'
+                ]);
             }
 
-            return response()->json([
-                'status' => 'pending',
-                'message' => 'Impossible de vérifier le statut auprès de Fapshi pour le moment.'
-            ], 500);
-
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Check Fapshi Status error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Check NotchPay Status error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'pending',
-                'message' => 'Erreur de communication avec Fapshi.'
+                'message' => 'Erreur de communication avec Notch Pay.'
             ], 500);
         }
     }

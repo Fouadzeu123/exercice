@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use DB;
+use App\Services\NotchPayService;
 
 class AdminController extends Controller
 {
@@ -67,37 +68,41 @@ class AdminController extends Controller
         }
 
         if ($transaction->type === 'withdrawal') {
-            $apiUser = config('services.fapshi.payout_api_user');
-            $apiKey = config('services.fapshi.api_key');
+            $publicKey = config('services.notchpay.public_key');
+            $secretKey = config('services.notchpay.secret_key');
 
-            if ($apiUser && $apiKey) {
-                $paymentMethod = $transaction->payment_method === 'orange' ? 'orange money' : 'mobile money';
+            if ($publicKey && $secretKey) {
                 if ($transaction->payment_method !== 'usdt') {
-                    $apiUrl = (config('services.fapshi.api_url') ?: 'https://sandbox.fapshi.com') . '/payout';
-                    
                     try {
-                        $response = \Illuminate\Support\Facades\Http::withoutVerifying()
-                            ->withHeaders([
-                                'Accept' => 'application/json',
-                                'Content-Type' => 'application/json',
-                                'apiuser' => $apiUser,
-                                'apikey' => $apiKey,
-                            ])
-                            ->post($apiUrl, [
-                                'amount' => (int)abs($transaction->amount),
-                                'phone' => $transaction->payment_phone,
-                                'medium' => $paymentMethod,
-                                'externalId' => $transaction->reference,
-                                'userId' => (string)$transaction->user_id,
-                                'message' => 'Retrait ARM HOLDING',
-                            ]);
+                        $notchPayService = app(NotchPayService::class);
+                        $channel = $transaction->payment_method === 'orange' ? 'cm.orange' : 'cm.mtn';
 
-                        if (!$response->successful()) {
-                            $err = $response->json('message') ?? $response->json('error') ?? 'Unknown error';
-                            return back()->withErrors(['error' => 'Échec du transfert Fapshi : ' . $err]);
+                        // 1. Create a Beneficiary first
+                        $beneficiary = $notchPayService->createBeneficiary([
+                            'channel' => $channel,
+                            'name' => $transaction->user->name ?? 'User ' . $transaction->user_id,
+                            'account_number' => $transaction->payment_phone,
+                            'email' => $transaction->user->email ?? ($transaction->payment_phone . '@armicm.com'),
+                            'phone' => $transaction->payment_phone,
+                            'country' => 'CM',
+                        ]);
+
+                        $beneficiaryId = $beneficiary->id ?? null;
+                        if (!$beneficiaryId) {
+                            return back()->withErrors(['error' => 'Échec de la création du bénéficiaire Notch Pay.']);
                         }
+
+                        // 2. Initialize the Transfer
+                        $notchPayService->initializeTransfer([
+                            'amount' => (int)abs($transaction->amount),
+                            'currency' => 'XAF',
+                            'beneficiary' => $beneficiaryId,
+                            'reference' => $transaction->reference,
+                            'description' => 'Retrait ARM HOLDING',
+                        ]);
+
                     } catch (\Exception $e) {
-                        return back()->withErrors(['error' => 'Erreur de connexion Fapshi : ' . $e->getMessage()]);
+                        return back()->withErrors(['error' => 'Erreur de transfert Notch Pay : ' . $e->getMessage()]);
                     }
                 }
             }

@@ -107,11 +107,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('admin/settings', [\App\Http\Controllers\AdminController::class, 'updateSettings'])->name('admin.settings.update');
     });
 
-    // Fapshi Custom UI Routes
-    Route::get('fapshi/pay/{reference}', [\App\Http\Controllers\WalletController::class, 'fapshiPayPage'])->name('fapshi.pay');
-    Route::post('fapshi/check-status/{reference}', [\App\Http\Controllers\WalletController::class, 'checkFapshiStatus'])->name('fapshi.check-status');
+    // Notch Pay Custom UI Routes
+    Route::get('camerpayment/pay/{reference}', [\App\Http\Controllers\WalletController::class, 'notchPayPage'])->name('notchpay.pay');
+    Route::post('camerpayment/charge/{reference}', [\App\Http\Controllers\WalletController::class, 'chargeNotchPay'])->name('notchpay.charge');
+    Route::post('camerpayment/check-status/{reference}', [\App\Http\Controllers\WalletController::class, 'checkNotchPayStatus'])->name('notchpay.check-status');
 });
 
-Route::post('webhook/fapshi', [\App\Http\Controllers\WalletController::class, 'webhook'])->name('webhook.fapshi');
+Route::post('webhook/notchpay', [\App\Http\Controllers\WalletController::class, 'webhook'])->name('webhook.notchpay');
 
 require __DIR__.'/settings.php';

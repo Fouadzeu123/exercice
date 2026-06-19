@@ -35,13 +35,10 @@ return [
         ],
     ],
 
-    'fapshi' => [
-        'api_user' => env('FAPSHI_API_USER'),
-        'api_key' => env('FAPSHI_API_KEY'),
-        'payout_api_user' => env('FAPSHI_PAYOUT_API_USER', env('FAPSHI_API_USER')),
-        'payout_api_key' => env('FAPSHI_PAYOUT_API_KEY', env('FAPSHI_API_KEY')),
-        'webhook_secret' => env('FAPSHI_WEBHOOK_SECRET'),
-        'api_url' => env('FAPSHI_API_URL') ?: 'https://sandbox.fapshi.com',
+    'notchpay' => [
+        'public_key' => env('NOTCHPAY_PUBLIC_KEY'),
+        'secret_key' => env('NOTCHPAY_SECRET_KEY'),
+        'webhook_secret' => env('NOTCHPAY_WEBHOOK_SECRET'),
     ],
 
 ];
