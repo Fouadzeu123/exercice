@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
@@ -9,7 +9,6 @@ use App\Models\GiftCode;
 use App\Models\VaultPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use DB;
 use App\Services\NotchPayService;
@@ -73,7 +72,7 @@ class AdminController extends Controller
         }
 
         if ($transaction->type === 'deposit') {
-            return back()->withErrors(['error' => 'Les dépôts sont approuvés automatiquement par la passerelle de paiement.']);
+            return back()->withErrors(['error' => 'Les dÃ©pÃ´ts sont approuvÃ©s automatiquement par la passerelle de paiement.']);
         }
 
         if ($transaction->type === 'withdrawal') {
@@ -98,7 +97,7 @@ class AdminController extends Controller
 
                         $beneficiaryId = $beneficiary->id ?? null;
                         if (!$beneficiaryId) {
-                            return back()->withErrors(['error' => 'Échec de la création du bénéficiaire Notch Pay.']);
+                            return back()->withErrors(['error' => 'Ã‰chec de la crÃ©ation du bÃ©nÃ©ficiaire Notch Pay.']);
                         }
 
                         // 2. Initialize the Transfer
@@ -129,7 +128,7 @@ class AdminController extends Controller
             }
         });
         
-        return back()->with('success', 'Transaction approuvée et validée avec succès.');
+        return back()->with('success', 'Transaction approuvÃ©e et validÃ©e avec succÃ¨s.');
     }
 
     /**
@@ -153,7 +152,7 @@ class AdminController extends Controller
             $transaction->save();
         });
         
-        return back()->with('success', 'Transaction rejetée et capitaux restitués au mineur.');
+        return back()->with('success', 'Transaction rejetÃ©e et capitaux restituÃ©s au mineur.');
     }
 
     /**
@@ -197,7 +196,7 @@ class AdminController extends Controller
             }
         });
 
-        return back()->with('success', 'Profil et variables du mineur mis à jour avec succès.');
+        return back()->with('success', 'Profil et variables du mineur mis Ã  jour avec succÃ¨s.');
     }
 
     /**
@@ -208,11 +207,11 @@ class AdminController extends Controller
         $user = User::findOrFail($id);
         
         if ($user->id === Auth::id()) {
-            return back()->withErrors(['error' => 'Vous ne pouvez pas vous bannir vous-même.']);
+            return back()->withErrors(['error' => 'Vous ne pouvez pas vous bannir vous-mÃªme.']);
         }
 
         $user->delete();
-        return back()->with('success', 'Utilisateur supprimé et révoqué de l\'infrastructure.');
+        return back()->with('success', 'Utilisateur supprimÃ© et rÃ©voquÃ© de l\'infrastructure.');
     }
 
     /**
@@ -233,7 +232,7 @@ class AdminController extends Controller
             'usages' => 0,
         ]);
 
-        return back()->with('success', 'Code cadeau promotionnel généré avec succès.');
+        return back()->with('success', 'Code cadeau promotionnel gÃ©nÃ©rÃ© avec succÃ¨s.');
     }
 
     /**
@@ -243,7 +242,7 @@ class AdminController extends Controller
     {
         $code = GiftCode::findOrFail($id);
         $code->delete();
-        return back()->with('success', 'Code cadeau supprimé et désactivé.');
+        return back()->with('success', 'Code cadeau supprimÃ© et dÃ©sactivÃ©.');
     }
 
     /**
@@ -274,8 +273,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $imageUrl = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $imageUrl = '/uploads/' . $fileName;
         }
 
         $node->update([
@@ -297,7 +296,7 @@ class AdminController extends Controller
             $node->restore();
         }
 
-        return back()->with('success', 'Nœud serveur configuré et mis à jour.');
+        return back()->with('success', 'NÅ“ud serveur configurÃ© et mis Ã  jour.');
     }
 
     /**
@@ -307,7 +306,7 @@ class AdminController extends Controller
     {
         $node = Node::findOrFail($id);
         $node->delete(); // Soft deletes it
-        return back()->with('success', 'Nœud serveur supprimé logiquement (offres masquées, commandes actives préservées).');
+        return back()->with('success', 'NÅ“ud serveur supprimÃ© logiquement (offres masquÃ©es, commandes actives prÃ©servÃ©es).');
     }
 
     /**
@@ -339,8 +338,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $image = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $image = '/uploads/' . $fileName;
         }
 
         $product->update([
@@ -363,7 +362,7 @@ class AdminController extends Controller
             $product->restore();
         }
 
-        return back()->with('success', 'Accélérateur AVIP configuré et mis à jour.');
+        return back()->with('success', 'AccÃ©lÃ©rateur AVIP configurÃ© et mis Ã  jour.');
     }
 
     /**
@@ -373,7 +372,7 @@ class AdminController extends Controller
     {
         $product = AVIPProduct::findOrFail($id);
         $product->delete(); // Soft deletes it
-        return back()->with('success', 'Accélérateur AVIP supprimé logiquement (offres masquées, commandes actives préservées).');
+        return back()->with('success', 'AccÃ©lÃ©rateur AVIP supprimÃ© logiquement (offres masquÃ©es, commandes actives prÃ©servÃ©es).');
     }
 
     /**
@@ -401,8 +400,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $imageUrl = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $imageUrl = '/uploads/' . $fileName;
         }
 
         Node::create([
@@ -420,7 +419,7 @@ class AdminController extends Controller
             'image' => $imageUrl,
         ]);
 
-        return back()->with('success', 'Nouveau nœud de serveur standard créé avec succès.');
+        return back()->with('success', 'Nouveau nÅ“ud de serveur standard crÃ©Ã© avec succÃ¨s.');
     }
 
     /**
@@ -449,8 +448,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $image = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $image = '/uploads/' . $fileName;
         }
 
         AVIPProduct::create([
@@ -469,7 +468,7 @@ class AdminController extends Controller
             'image' => $image,
         ]);
 
-        return back()->with('success', 'Nouvel équipement AVIP créé avec succès.');
+        return back()->with('success', 'Nouvel Ã©quipement AVIP crÃ©Ã© avec succÃ¨s.');
     }
 
     /**
@@ -490,8 +489,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $imageUrl = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $imageUrl = '/uploads/' . $fileName;
         }
 
         \App\Models\Announcement::create([
@@ -502,7 +501,7 @@ class AdminController extends Controller
             'active' => $request->active,
         ]);
 
-        return back()->with('success', 'Nouvelle annonce créée et publiée avec succès.');
+        return back()->with('success', 'Nouvelle annonce crÃ©Ã©e et publiÃ©e avec succÃ¨s.');
     }
 
     /**
@@ -525,8 +524,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $imageUrl = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $imageUrl = '/uploads/' . $fileName;
         }
 
         $announcement->update([
@@ -537,7 +536,7 @@ class AdminController extends Controller
             'active' => $request->active,
         ]);
 
-        return back()->with('success', 'Annonce mise à jour avec succès.');
+        return back()->with('success', 'Annonce mise Ã  jour avec succÃ¨s.');
     }
 
     /**
@@ -548,7 +547,7 @@ class AdminController extends Controller
         $announcement = \App\Models\Announcement::findOrFail($id);
         $announcement->delete();
 
-        return back()->with('success', 'Annonce supprimée avec succès.');
+        return back()->with('success', 'Annonce supprimÃ©e avec succÃ¨s.');
     }
 
     /**
@@ -582,7 +581,7 @@ class AdminController extends Controller
             'vip_salaries' => array_map('floatval', $request->vip_salaries),
         ]);
 
-        return back()->with('success', 'Configuration globale du système enregistrée.');
+        return back()->with('success', 'Configuration globale du systÃ¨me enregistrÃ©e.');
     }
 
     /**
@@ -605,8 +604,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $imageUrl = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $imageUrl = '/uploads/' . $fileName;
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
@@ -622,7 +621,7 @@ class AdminController extends Controller
             'image' => $imageUrl,
         ]);
 
-        return back()->with('success', 'Nouveau produit de coffre-fort (Vault Plan) créé avec succès.');
+        return back()->with('success', 'Nouveau produit de coffre-fort (Vault Plan) crÃ©Ã© avec succÃ¨s.');
     }
 
     /**
@@ -647,8 +646,8 @@ class AdminController extends Controller
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-            Storage::disk('public')->putFileAs('uploads', $file, $fileName);
-            $imageUrl = '/storage/uploads/' . $fileName;
+            $file->move(public_path('uploads'), $fileName);
+            $imageUrl = '/uploads/' . $fileName;
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
@@ -664,7 +663,7 @@ class AdminController extends Controller
             'image' => $imageUrl ?? $vaultPlan->image,
         ]);
 
-        return back()->with('success', 'Produit de coffre-fort (Vault Plan) mis à jour.');
+        return back()->with('success', 'Produit de coffre-fort (Vault Plan) mis Ã  jour.');
     }
 
     /**
@@ -674,7 +673,8 @@ class AdminController extends Controller
     {
         $vaultPlan = VaultPlan::findOrFail($id);
         $vaultPlan->delete();
-        return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimé avec succès.');
+        return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimÃ© avec succÃ¨s.');
     }
 }
 ?>
+

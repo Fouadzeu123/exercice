@@ -1,0 +1,4 @@
+# Ignorer les images uploadées - persistent sur le serveur
+*
+!.gitignore
+!.gitkeep
