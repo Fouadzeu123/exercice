@@ -246,7 +246,12 @@ const confirmRentVault = (vault: any) => {
 
 // --- UTILS ---
 const formatXAF = (val: number | string) => new Intl.NumberFormat('fr-FR').format(Number(val)) + ' xaf';
-const getProductImage = (node: any) => node.image || node.image_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
+const getProductImage = (node: any) => node.image || node.image_url || FALLBACK_IMG;
+const onImgError = (e: Event, fallback: string) => {
+    const img = e.target as HTMLImageElement;
+    if (img.src !== fallback) img.src = fallback;
+};
 
 // --- PARTICULES LUMINEUSES GLOBALES ---
 let canvas: HTMLCanvasElement | null = null;
@@ -641,7 +646,12 @@ watch(
                                         <span>Filleuls: {{ node.required_active_referrals }}</span>
                                     </div>
                                     <!-- Show server image or custom vault graphics image -->
-                                    <img :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : (node.isAvip ? node.image_url : getProductImage(node))" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" :alt="node.name">
+                                    <img 
+                                        :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : (node.isAvip ? node.image_url : getProductImage(node))" 
+                                        @error="(e: Event) => onImgError(e, FALLBACK_IMG)"
+                                        class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" 
+                                        :alt="node.name"
+                                    >
                                 </div>
 
                                 <!-- Brand Purple/Cyan Banner (Premium ARM design) -->

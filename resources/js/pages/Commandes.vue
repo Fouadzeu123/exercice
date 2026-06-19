@@ -113,6 +113,7 @@ const { containerRef } = useRevealAnimation();
                     <div class="absolute right-0 top-0 w-32 h-32 opacity-10 pointer-events-none transition-transform duration-500 group-hover:scale-110">
                         <img 
                             :src="order.image_url || '/images/cyber_server_hero.png'" 
+                            @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/cyber_server_hero.png')"
                             class="w-full h-full object-contain" 
                             alt=""
                         />
