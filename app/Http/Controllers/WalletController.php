@@ -358,14 +358,26 @@ class WalletController extends Controller
 
         $event = $request->input('event') ?? $request->input('type');
         $data = $request->input('data') ?? [];
-        $externalId = $data['reference'] ?? null;
+        $externalId = $data['reference'] ?? null; // Notch Pay reference (trx.xxx)
+        $merchantRef = $data['merchant_reference'] ?? $data['trxref'] ?? null; // Our reference (DEP-xxx)
         $status = $data['status'] ?? null;
 
-        if (!$externalId) {
+        if (!$externalId && !$merchantRef) {
             return response()->json(['message' => 'Missing reference'], 400);
         }
 
-        $transaction = Transaction::where('reference', $externalId)->first();
+        // Search by gateway_ref first (trx.xxx), then fallback to internal reference (DEP-xxx)
+        $transaction = null;
+        if ($externalId) {
+            $transaction = Transaction::where('gateway_ref', $externalId)->first();
+            if (!$transaction) {
+                $transaction = Transaction::where('reference', $externalId)->first();
+            }
+        }
+        if (!$transaction && $merchantRef) {
+            $transaction = Transaction::where('reference', $merchantRef)->first();
+        }
+
         if ($transaction && $transaction->status === 'pending') {
             if ($event === 'payment.complete' || $status === 'complete') {
                 DB::transaction(function () use ($transaction) {
