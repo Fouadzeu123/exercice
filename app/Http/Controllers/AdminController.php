@@ -274,7 +274,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = url('/uploads/' . $fileName);
+            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         $node->update([
@@ -339,7 +339,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $image = url('/uploads/' . $fileName);
+            $image = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         $product->update([
@@ -401,7 +401,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = url('/uploads/' . $fileName);
+            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         Node::create([
@@ -449,7 +449,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $image = url('/uploads/' . $fileName);
+            $image = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         AVIPProduct::create([
@@ -490,7 +490,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = url('/uploads/' . $fileName);
+            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         \App\Models\Announcement::create([
@@ -525,7 +525,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = url('/uploads/' . $fileName);
+            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         $announcement->update([
@@ -605,7 +605,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = url('/uploads/' . $fileName);
+            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
@@ -647,7 +647,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = url('/uploads/' . $fileName);
+            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
@@ -674,6 +674,14 @@ class AdminController extends Controller
         $vaultPlan = VaultPlan::findOrFail($id);
         $vaultPlan->delete();
         return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimÃ© avec succÃ¨s.');
+    }
+
+    /**
+     * Force absolute URL to be HTTPS for mobile webview compatibility.
+     */
+    private function forceHttpsUrl($path)
+    {
+        return str_replace('http://', 'https://', url($path));
     }
 }
 ?>
