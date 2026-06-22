@@ -304,13 +304,41 @@ onUnmounted(() => {
                             v-for="amount in fixedAmounts" :key="amount"
                             type="button"
                             @click="selectAmount(amount)"
-                            class="py-3 px-1 rounded-xl border text-center transition-all duration-300"
-                            :class="selectedAmount === amount
-                                ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                                : 'bg-[#121524]/60 border-[#1a1f33] text-slate-400 hover:text-white'"
+                            :disabled="(user?.balance ?? 0) < amount"
+                            class="py-3 px-1 rounded-xl border text-center transition-all duration-300 relative overflow-hidden"
+                            :class="[
+                                (user?.balance ?? 0) < amount
+                                    ? 'bg-black/40 border-red-950/20 text-slate-600 opacity-40 cursor-not-allowed'
+                                    : (selectedAmount === amount
+                                        ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                                        : 'bg-[#121524]/60 border-[#1a1f33] text-slate-400 hover:text-white')
+                            ]"
                         >
+                            <!-- Lock icon for disabled amounts -->
+                            <Lock v-if="(user?.balance ?? 0) < amount" class="absolute top-1 right-1 w-2.5 h-2.5 text-rose-500/60" />
                             <span class="text-[11px] font-black font-mono block">{{ formatCompact(amount) }}</span>
                         </button>
+                    </div>
+
+                    <!-- TRANSACTION SIMULATOR -->
+                    <div v-if="selectedAmount !== null" class="mt-1 bg-[#121625]/80 border border-cyan-500/20 rounded-xl p-3.5 space-y-2 animate-fadeIn">
+                        <p class="text-[10px] text-cyan-400 font-black uppercase tracking-wider font-mono">
+                            {{ t('Simulation de transaction', 'Transaction Simulation') }}
+                        </p>
+                        <div class="space-y-1.5 text-[11px] font-mono">
+                            <div class="flex justify-between text-slate-400">
+                                <span>{{ t('Montant demandé (Brut) :', 'Requested Amount (Gross):') }}</span>
+                                <span class="font-bold text-white">{{ formatXAF(selectedAmount) }}</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>{{ t('Frais administratifs (6%) :', 'Handling Fee (6%):') }}</span>
+                                <span class="font-bold text-rose-400">-{{ formatXAF(selectedAmount * 0.06) }}</span>
+                            </div>
+                            <div class="flex justify-between border-t border-white/10 pt-1.5 font-bold text-xs">
+                                <span class="text-slate-300">{{ t('Montant net à recevoir :', 'Net to Receive:') }}</span>
+                                <span class="text-emerald-400 font-black">{{ formatXAF(selectedAmount * 0.94) }}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- PASSWORD INPUT (Mot de passe de fonds match) -->

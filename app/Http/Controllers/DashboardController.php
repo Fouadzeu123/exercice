@@ -250,7 +250,7 @@ class DashboardController extends Controller
             $product = \App\Models\AVIPProduct::findOrFail($id);
             $product->isVault = false;
             $product->isAvip = true;
-            $product->duration = 7;
+            $product->duration = $product->duration ?? 7;
             $product->generation_profit = (float) $product->daily_salary;
         } else {
             abort(404, 'Type de produit inconnu');

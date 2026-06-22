@@ -72,7 +72,7 @@ class AdminController extends Controller
         }
 
         if ($transaction->type === 'deposit') {
-            return back()->withErrors(['error' => 'Les dÃ©pÃ´ts sont approuvÃ©s automatiquement par la passerelle de paiement.']);
+            return back()->withErrors(['error' => 'Les dépôts sont approuvés automatiquement par la passerelle de paiement.']);
         }
 
         if ($transaction->type === 'withdrawal') {
@@ -95,9 +95,9 @@ class AdminController extends Controller
                             'country' => 'CM',
                         ]);
 
-                        $beneficiaryId = $beneficiary->id ?? null;
+                        $beneficiaryId = $beneficiary->id ?? ($beneficiary->beneficiary->id ?? ($beneficiary->beneficiary ?? null));
                         if (!$beneficiaryId) {
-                            return back()->withErrors(['error' => 'Ã‰chec de la crÃ©ation du bÃ©nÃ©ficiaire Notch Pay.']);
+                            return back()->withErrors(['error' => 'Échec de la création du bénéficiaire Notch Pay.']);
                         }
 
                         // 2. Initialize the Transfer
@@ -128,7 +128,7 @@ class AdminController extends Controller
             }
         });
 
-        return back()->with('success', 'Transaction approuvÃ©e et validÃ©e avec succÃ¨s.');
+        return back()->with('success', 'Transaction approuvée et validée avec succès.');
     }
 
     /**
@@ -152,7 +152,7 @@ class AdminController extends Controller
             $transaction->save();
         });
 
-        return back()->with('success', 'Transaction rejetÃ©e et capitaux restituÃ©s au mineur.');
+        return back()->with('success', 'Transaction rejetée et capitaux restitués au mineur.');
     }
 
     /**
@@ -196,7 +196,7 @@ class AdminController extends Controller
             }
         });
 
-        return back()->with('success', 'Profil et variables du mineur mis Ã  jour avec succÃ¨s.');
+        return back()->with('success', 'Profil et variables du mineur mis Ã  jour avec succès.');
     }
 
     /**
@@ -207,11 +207,11 @@ class AdminController extends Controller
         $user = User::findOrFail($id);
 
         if ($user->id === Auth::id()) {
-            return back()->withErrors(['error' => 'Vous ne pouvez pas vous bannir vous-mÃªme.']);
+            return back()->withErrors(['error' => 'Vous ne pouvez pas vous bannir vous-même.']);
         }
 
         $user->delete();
-        return back()->with('success', 'Utilisateur supprimÃ© et rÃ©voquÃ© de l\'infrastructure.');
+        return back()->with('success', 'Utilisateur supprimé et révoqué de l\'infrastructure.');
     }
 
     /**
@@ -232,7 +232,7 @@ class AdminController extends Controller
             'usages' => 0,
         ]);
 
-        return back()->with('success', 'Code cadeau promotionnel gÃ©nÃ©rÃ© avec succÃ¨s.');
+        return back()->with('success', 'Code cadeau promotionnel généré avec succès.');
     }
 
     /**
@@ -242,7 +242,7 @@ class AdminController extends Controller
     {
         $code = GiftCode::findOrFail($id);
         $code->delete();
-        return back()->with('success', 'Code cadeau supprimÃ© et dÃ©sactivÃ©.');
+        return back()->with('success', 'Code cadeau supprimé et désactivé.');
     }
 
     /**
@@ -364,7 +364,7 @@ class AdminController extends Controller
             $product->restore();
         }
 
-        return back()->with('success', 'AccÃ©lÃ©rateur AVIP configurÃ© et mis Ã  jour.');
+        return back()->with('success', 'Accélérateur AVIP configuré et mis à jour.');
     }
 
     /**
@@ -374,7 +374,7 @@ class AdminController extends Controller
     {
         $product = AVIPProduct::findOrFail($id);
         $product->delete(); // Soft deletes it
-        return back()->with('success', 'AccÃ©lÃ©rateur AVIP supprimÃ© logiquement (offres masquÃ©es, commandes actives prÃ©servÃ©es).');
+        return back()->with('success', 'Accélérateur AVIP supprimé logiquement (offres masquées, commandes actives préservées).');
     }
 
     /**
@@ -421,7 +421,7 @@ class AdminController extends Controller
             'image' => $imageUrl,
         ]);
 
-        return back()->with('success', 'Nouveau nÅ“ud de serveur standard crÃ©Ã© avec succÃ¨s.');
+        return back()->with('success', 'Nouveau nœud de serveur standard créé avec succès.');
     }
 
     /**
@@ -472,7 +472,7 @@ class AdminController extends Controller
             'image' => $image,
         ]);
 
-        return back()->with('success', 'Nouvel Ã©quipement AVIP crÃ©Ã© avec succÃ¨s.');
+        return back()->with('success', 'Nouvel équipement AVIP créé avec succès.');
     }
 
     /**
@@ -505,7 +505,7 @@ class AdminController extends Controller
             'active' => $request->active,
         ]);
 
-        return back()->with('success', 'Nouvelle annonce crÃ©Ã©e et publiÃ©e avec succÃ¨s.');
+        return back()->with('success', 'Nouvelle annonce créée et publiée avec succès.');
     }
 
     /**

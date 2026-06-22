@@ -51,7 +51,14 @@ const formatDate = (date: string) => {
 // Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
 const resolveImageUrl = (url: string | null | undefined): string => {
     if (!url) return '/images/cyber_server_hero.png';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+    let cleanUrl = url;
+    if (url.includes('/uploads/')) {
+        const index = url.indexOf('/uploads/');
+        cleanUrl = url.substring(index);
+    }
+
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) return cleanUrl;
     
     const page = usePage();
     let appUrl = page.props.appUrl as string;
@@ -67,10 +74,10 @@ const resolveImageUrl = (url: string | null | undefined): string => {
     
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
     
-    if (url.startsWith('/')) {
-        return cleanBaseUrl + url;
+    if (cleanUrl.startsWith('/')) {
+        return cleanBaseUrl + cleanUrl;
     }
-    return cleanBaseUrl + '/' + url;
+    return cleanBaseUrl + '/' + cleanUrl;
 };
 
 const getDaysRemaining = (expiresAt: string | null): string => {

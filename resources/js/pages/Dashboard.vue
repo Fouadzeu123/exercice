@@ -193,6 +193,7 @@ const combinedProducts = computed(() => {
         is_limited: !!a.is_limited,
         required_active_referrals: a.required_active_referrals ?? 0,
         category: a.is_limited ? 'limited' : 'avip',
+        image: a.image,
         image_url: a.image,
         description: a.description,
         required_vip_level: a.required_vip_level,
@@ -252,7 +253,14 @@ const FALLBACK_IMG = 'https://images.unsplash.com/photo-1587202372775-e229f172b9
 // Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
 const resolveImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+    let cleanUrl = url;
+    if (url.includes('/uploads/')) {
+        const index = url.indexOf('/uploads/');
+        cleanUrl = url.substring(index);
+    }
+
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) return cleanUrl;
 
     const page = usePage();
     let appUrl = page.props.appUrl as string;
@@ -268,10 +276,10 @@ const resolveImageUrl = (url: string | null | undefined): string | null => {
 
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
 
-    if (url.startsWith('/')) {
-        return cleanBaseUrl + url;
+    if (cleanUrl.startsWith('/')) {
+        return cleanBaseUrl + cleanUrl;
     }
-    return cleanBaseUrl + '/' + url;
+    return cleanBaseUrl + '/' + cleanUrl;
 };
 
 const getProductImage = (node: any) => {

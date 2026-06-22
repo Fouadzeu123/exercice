@@ -83,7 +83,14 @@ const getProductImage = () => {
         }
         return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
     }
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+
+    let cleanUrl = raw;
+    if (raw.includes('/uploads/')) {
+        const index = raw.indexOf('/uploads/');
+        cleanUrl = raw.substring(index);
+    }
+
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) return cleanUrl;
 
     const page = usePage();
     let appUrl = page.props.appUrl as string;
@@ -99,10 +106,10 @@ const getProductImage = () => {
 
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
 
-    if (raw.startsWith('/')) {
-        return cleanBaseUrl + raw;
+    if (cleanUrl.startsWith('/')) {
+        return cleanBaseUrl + cleanUrl;
     }
-    return cleanBaseUrl + '/' + raw;
+    return cleanBaseUrl + '/' + cleanUrl;
 };
 
 // Check node statuses if it's a node (always false since users can buy multiple at once)
