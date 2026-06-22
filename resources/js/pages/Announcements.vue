@@ -68,11 +68,11 @@ const formatDate = (date: string) => {
 import { onMounted } from 'vue';
 
 const techImages = [
-    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1563770660941-20978e870e26?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=600&q=80'
+    '/images/cyber_server_hero.png',
+    '/images/commission.jpg',
+    '/images/parrainage.jpg',
+    '/images/contract.png',
+    '/images/avatar_assistant.png'
 ];
 
 const getTechImage = (id: number) => {

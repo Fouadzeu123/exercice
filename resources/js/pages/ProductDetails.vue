@@ -77,10 +77,10 @@ const formatXAF = (value: number | string) => {
 
 const getProductImage = () => {
     if (props.product.isVault) {
-        return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format';
+        return '/images/golden_chest.png'; // Image locale — toujours disponible dans Capacitor
     }
     const raw = props.product.image || props.product.image_url;
-    if (!raw) return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
+    if (!raw) return '/images/cyber_server_hero.png'; // Image locale — toujours disponible dans Capacitor
     if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
     
     const page = usePage();
@@ -223,7 +223,7 @@ onUnmounted(() => {
                     </div>
                     <img 
                         :src="getProductImage()" 
-                        @error="(e: Event) => ((e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80')"
+                        @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/cyber_server_hero.png')"
                         :alt="product.name" 
                         class="w-full h-full object-cover opacity-90" 
                     />

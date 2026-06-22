@@ -246,7 +246,7 @@ const confirmRentVault = (vault: any) => {
 
 // --- UTILS ---
 const formatXAF = (val: number | string) => new Intl.NumberFormat('fr-FR').format(Number(val)) + ' xaf';
-const FALLBACK_IMG = 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
+const FALLBACK_IMG = '/images/cyber_server_hero.png'; // Image locale dans Git — charge toujours dans Capacitor
 
 // Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
 const resolveImageUrl = (url: string | null | undefined): string | null => {
@@ -673,7 +673,7 @@ watch(
                                     </div>
                                     <!-- Show server image or custom vault graphics image -->
                                     <img 
-                                        :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : getProductImage(node)" 
+                                        :src="node.isVault ? '/images/golden_chest.png' : getProductImage(node)" 
                                         @error="(e: Event) => onImgError(e, FALLBACK_IMG)"
                                         class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" 
                                         :alt="node.name"
