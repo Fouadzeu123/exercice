@@ -27,12 +27,43 @@ if [ ! -f "public/build/manifest.json" ]; then
 fi
 echo "✅ Assets compilés détectés"
 
-# ── Étape 2 : Dossier uploads persistant (hors Git) ──────────────────────────
+# ── Étape 2 : Dossier uploads PERSISTANT (hors dossier projet) ───────────────
+# Les fichiers doivent survivre aux déploiements Git/npm.
+# Solution : dossier réel HORS du projet + lien symbolique dans public/
 echo ""
-echo "Étape 2: Création du dossier uploads persistant..."
-mkdir -p public/uploads
-chmod -R 775 public/uploads 2>/dev/null || true
-echo "✅ Dossier public/uploads/ prêt (hors Git, persistant)"
+echo "Étape 2: Mise en place du stockage d'uploads persistant..."
+
+# Déterminer le dossier home de l'utilisateur courant
+USER_HOME="$(eval echo ~$(whoami))"
+PERSISTENT_UPLOADS_DIR="${USER_HOME}/uploads_persistant"
+
+# Créer le dossier persistant s'il n'existe pas
+if [ ! -d "$PERSISTENT_UPLOADS_DIR" ]; then
+    mkdir -p "$PERSISTENT_UPLOADS_DIR"
+    echo "  → Dossier persistant créé : $PERSISTENT_UPLOADS_DIR"
+else
+    echo "  → Dossier persistant existant trouvé : $PERSISTENT_UPLOADS_DIR"
+fi
+chmod -R 775 "$PERSISTENT_UPLOADS_DIR" 2>/dev/null || true
+
+# Supprimer le dossier public/uploads s'il existe déjà (non-symlink)
+if [ -d "public/uploads" ] && [ ! -L "public/uploads" ]; then
+    # S'il y a des fichiers, les déplacer vers le persistant
+    if [ "$(ls -A public/uploads 2>/dev/null)" ]; then
+        echo "  → Migration des anciens fichiers uploads vers le dossier persistant..."
+        mv public/uploads/* "$PERSISTENT_UPLOADS_DIR/" 2>/dev/null || true
+    fi
+    rm -rf public/uploads
+fi
+
+# Créer le lien symbolique si nécessaire
+if [ ! -L "public/uploads" ]; then
+    ln -s "$PERSISTENT_UPLOADS_DIR" public/uploads
+    echo "  → Lien symbolique créé : public/uploads → $PERSISTENT_UPLOADS_DIR"
+else
+    echo "  → Lien symbolique existant : public/uploads → $(readlink public/uploads)"
+fi
+echo "✅ Stockage uploads persistant configuré (${PERSISTENT_UPLOADS_DIR})"
 
 # ── Étape 3 : Permissions storage & cache ────────────────────────────────────
 echo ""
@@ -67,9 +98,12 @@ echo "=============================================="
 echo "✅ DÉPLOIEMENT TERMINÉ AVEC SUCCÈS !"
 echo "=============================================="
 echo ""
-echo "📁 Images uploadées : public/uploads/"
-echo "🔗 URL images       : https://armicm.com/uploads/<nom_fichier>"
-echo "🌐 Application      : https://armicm.com"
+echo "📁 Images uploadées (persistant) : ~/uploads_persistant/"
+echo "🔗 Lien symbolique              : public/uploads/ → ~/uploads_persistant/"
+echo "🔗 URL images                   : https://armicm.com/uploads/<nom_fichier>"
+echo "🌐 Application                  : https://armicm.com"
+echo ""
+echo "ℹ️  Les fichiers dans ~/uploads_persistant/ survivent aux déploiements."
 echo ""
 echo "⚠️  RAPPEL pour le prochain déploiement :"
 echo "   1. LOCAL : npm run build → git push"

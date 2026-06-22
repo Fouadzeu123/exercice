@@ -23,6 +23,10 @@ yarn-error.log
 /.vscode
 /.zed
 
-# Les images uploadées en production vivent dans storage/app/public/uploads/
-# Elles sont ignorées par storage/app/public/uploads/.gitignore
-# NE PAS ajouter ce dossier ici — seul le .gitkeep est tracké
+# Les images uploadées en production vivent dans ~/uploads_persistant/
+# et sont accessibles via le lien symbolique public/uploads -> ~/uploads_persistant/
+# Le DOSSIER public/uploads ne doit PAS être tracké dans Git (c'est un symlink en prod)
+# Seul le .gitkeep et .gitignore sont trackés pour que le dossier existe localement
+/public/uploads/*
+!/public/uploads/.gitkeep
+!/public/uploads/.gitignore
