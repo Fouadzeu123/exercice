@@ -68,11 +68,11 @@ const formatDate = (date: string) => {
 import { onMounted } from 'vue';
 
 const techImages = [
-    '/images/cyber_server_hero.png',
-    '/images/commission.jpg',
-    '/images/parrainage.jpg',
-    '/images/contract.png',
-    '/images/avatar_assistant.png'
+    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1563770660941-20978e870e26?auto=format&fit=crop&w=600&q=80',
+    'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=600&q=80'
 ];
 
 const getTechImage = (id: number) => {
@@ -83,10 +83,10 @@ const getTechImage = (id: number) => {
 const resolveImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    
+
     const page = usePage();
     let appUrl = page.props.appUrl as string;
-    
+
     if (!appUrl) {
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
         if (!origin || origin.includes('localhost') || origin.startsWith('capacitor://') || origin.startsWith('http://127.0.0.1')) {
@@ -95,9 +95,9 @@ const resolveImageUrl = (url: string | null | undefined): string | null => {
             appUrl = origin;
         }
     }
-    
+
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
-    
+
     if (url.startsWith('/')) {
         return cleanBaseUrl + url;
     }

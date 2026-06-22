@@ -3,15 +3,15 @@ import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
-    Cpu, 
-    Clock, 
-    ArrowLeft, 
-    CheckCircle, 
-    TrendingUp, 
-    Box, 
-    BrainCircuit, 
-    Activity, 
+import {
+    Cpu,
+    Clock,
+    ArrowLeft,
+    CheckCircle,
+    TrendingUp,
+    Box,
+    BrainCircuit,
+    Activity,
     ShieldAlert,
     Coins,
     Lock,
@@ -77,15 +77,15 @@ const formatXAF = (value: number | string) => {
 
 const getProductImage = () => {
     if (props.product.isVault) {
-        return '/images/golden_chest.png'; // Image locale — toujours disponible dans Capacitor
+        return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format';
     }
     const raw = props.product.image || props.product.image_url;
-    if (!raw) return '/images/cyber_server_hero.png'; // Image locale — toujours disponible dans Capacitor
+    if (!raw) return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
     if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    
+
     const page = usePage();
     let appUrl = page.props.appUrl as string;
-    
+
     if (!appUrl) {
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
         if (!origin || origin.includes('localhost') || origin.startsWith('capacitor://') || origin.startsWith('http://127.0.0.1')) {
@@ -94,9 +94,9 @@ const getProductImage = () => {
             appUrl = origin;
         }
     }
-    
+
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
-    
+
     if (raw.startsWith('/')) {
         return cleanBaseUrl + raw;
     }
@@ -139,17 +139,17 @@ const handlePurchase = () => {
         showErrorCard.value = true;
         return;
     }
-    
+
     isProcessing.value = true;
-    const url = props.product.isVault 
-        ? `/vaults/${props.product.id}/invest` 
+    const url = props.product.isVault
+        ? `/vaults/${props.product.id}/invest`
         : (props.type === 'avip' ? `/avip-products/${props.product.id}/purchase` : `/nodes/${props.product.id}/rent`);
 
     rentForm.post(url, {
         onSuccess: () => {
-            successMessage.value = props.product.isVault 
+            successMessage.value = props.product.isVault
                 ? t('Votre investissement dans le Vault a été validé avec succès !', 'Your Vault investment was successfully approved!')
-                : (props.type === 'avip' 
+                : (props.type === 'avip'
                     ? t('L\'accélérateur AVIP a été loué avec succès ! Votre dividende quotidien a été mis à jour.', 'AVIP accelerator rented successfully! Your daily dividend has been updated.')
                     : t('La location de votre nœud de calcul GPU a été activée !', 'Your GPU computing node lease was successfully activated!'));
             showSuccessCard.value = true;
@@ -189,7 +189,7 @@ onUnmounted(() => {
     <Head :title="product.name" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="relative w-full max-w-xl mx-auto flex flex-col gap-5 pt-3 pb-24 text-white font-sans transition-all duration-500" :class="pageLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'">
-            
+
             <!-- Header Nav Back -->
             <div class="flex items-center justify-between bg-[#0c0f1d] p-3 rounded-2xl border border-purple-500/10 shadow-lg">
                 <Link href="/dashboard" class="flex items-center gap-2 text-xs font-black text-purple-400 hover:text-white uppercase transition-colors select-none">
@@ -221,11 +221,11 @@ onUnmounted(() => {
                         <AlertTriangle class="w-3.5 h-3.5 text-yellow-300" />
                         <span>Offre Limitée</span>
                     </div>
-                    <img 
-                        :src="getProductImage()" 
-                        @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/cyber_server_hero.png')"
-                        :alt="product.name" 
-                        class="w-full h-full object-cover opacity-90" 
+                    <img
+                        :src="getProductImage()"
+                        @error="(e: Event) => ((e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80')"
+                        :alt="product.name"
+                        class="w-full h-full object-cover opacity-90"
                     />
                     <!-- Absolute glow overlay -->
                     <div class="absolute inset-0 bg-gradient-to-t from-[#090b15] via-transparent to-transparent"></div>
@@ -362,7 +362,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Action Button -->
-                <button 
+                <button
                     v-if="isCurrentNode"
                     disabled
                     class="w-full py-4 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-xs uppercase tracking-wider"
@@ -370,7 +370,7 @@ onUnmounted(() => {
                     {{ t('Déjà Actif', 'Already Active') }}
                 </button>
 
-                <button 
+                <button
                     v-else-if="product.required_active_referrals > 0 && (activeReferralsCount ?? 0) < product.required_active_referrals"
                     disabled
                     class="w-full py-4 rounded-xl bg-slate-800 text-slate-500 border border-white/5 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2"
@@ -379,7 +379,7 @@ onUnmounted(() => {
                     {{ t('Verrouillé - Filleuls requis', 'Locked - Referrals Required') }}
                 </button>
 
-                <button 
+                <button
                     v-else-if="isLockedNode"
                     disabled
                     class="w-full py-4 rounded-xl bg-slate-800 text-slate-500 border border-white/5 font-black text-xs uppercase tracking-wider"
@@ -387,7 +387,7 @@ onUnmounted(() => {
                     {{ t('Unité verrouillée (Niveau inférieur)', 'Unit Locked (Lower Level)') }}
                 </button>
 
-                <button 
+                <button
                     v-else
                     @click="handlePurchase"
                     :disabled="isProcessing"
@@ -410,14 +410,14 @@ onUnmounted(() => {
                         <div class="h-16 w-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6 mx-auto animate-bounce">
                             <CheckCircle class="h-8 w-8" />
                         </div>
-                        
+
                         <span class="text-emerald-400 font-extrabold uppercase text-[10px] tracking-widest block mb-1">Succès Système</span>
                         <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Opération Validée</h3>
                         <p class="text-slate-300 text-xs leading-relaxed font-sans mb-6">
                             {{ successMessage }}
                         </p>
-                        <button 
-                            @click="showSuccessCard = false; $inertia.visit('/dashboard')" 
+                        <button
+                            @click="showSuccessCard = false; $inertia.visit('/dashboard')"
                             class="w-full py-3.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-400 transition-all duration-300"
                         >
                             Retour au Tableau de Bord
@@ -433,14 +433,14 @@ onUnmounted(() => {
                         <div class="h-16 w-16 rounded-full bg-rose-500/10 border-2 border-rose-500/30 flex items-center justify-center text-rose-400 mb-6 mx-auto animate-pulse">
                             <AlertCircle class="h-8 w-8" />
                         </div>
-                        
+
                         <span class="text-rose-400 font-extrabold uppercase text-[10px] tracking-widest block mb-1">Alerte Système</span>
                         <h3 class="text-sm font-black text-white uppercase tracking-wider mb-2">Erreur d'Opération</h3>
                         <p class="text-slate-300 text-xs leading-relaxed font-mono mb-6">
                             {{ errorMessage }}
                         </p>
-                        <button 
-                            @click="showErrorCard = false" 
+                        <button
+                            @click="showErrorCard = false"
                             class="w-full py-3.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold uppercase tracking-wider text-xs hover:bg-rose-500 hover:text-black transition-all duration-300"
                         >
                             Fermer

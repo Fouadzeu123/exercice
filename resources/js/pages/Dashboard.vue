@@ -246,16 +246,16 @@ const confirmRentVault = (vault: any) => {
 
 // --- UTILS ---
 const formatXAF = (val: number | string) => new Intl.NumberFormat('fr-FR').format(Number(val)) + ' xaf';
-const FALLBACK_IMG = '/images/cyber_server_hero.png'; // Image locale dans Git — charge toujours dans Capacitor
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
 
 // Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
 const resolveImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    
+
     const page = usePage();
     let appUrl = page.props.appUrl as string;
-    
+
     if (!appUrl) {
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
         if (!origin || origin.includes('localhost') || origin.startsWith('capacitor://') || origin.startsWith('http://127.0.0.1')) {
@@ -264,9 +264,9 @@ const resolveImageUrl = (url: string | null | undefined): string | null => {
             appUrl = origin;
         }
     }
-    
+
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
-    
+
     if (url.startsWith('/')) {
         return cleanBaseUrl + url;
     }
@@ -559,15 +559,15 @@ watch(
                                     {{ activeUserNodesCount && activeUserNodesCount > 0 ? `${activeUserNodesCount} serveur(s) de calcul connecté(s)` : 'Aucun serveur actif détecté' }}
                                 </div>
                                 <div class="text-xs text-gray-400 mt-1">
-                                    Rendement cumulé : 
+                                    Rendement cumulé :
                                     <span class="text-emerald-400 font-bold font-mono">
                                         +{{ formatXAF(stats?.daily_profit_rate || 0) }} / jour
                                     </span>
                                 </div>
                             </div>
                             <div class="shrink-0 flex items-center w-full sm:w-auto">
-                                <Link 
-                                    href="/generate" 
+                                <Link
+                                    href="/generate"
                                     class="w-full text-center px-5 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)]"
                                 >
                                     Gérer mes Serveurs & Gains →
@@ -672,10 +672,10 @@ watch(
                                         <span>Filleuls: {{ node.required_active_referrals }}</span>
                                     </div>
                                     <!-- Show server image or custom vault graphics image -->
-                                    <img 
-                                        :src="node.isVault ? '/images/golden_chest.png' : getProductImage(node)" 
+                                    <img
+                                        :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : getProductImage(node)"
                                         @error="(e: Event) => onImgError(e, FALLBACK_IMG)"
-                                        class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" 
+                                        class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105"
                                         :alt="node.name"
                                     >
                                 </div>

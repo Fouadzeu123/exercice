@@ -3,11 +3,11 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { 
-    Cpu, 
-    Zap, 
-    Clock, 
-    CheckCircle2, 
+import {
+    Cpu,
+    Zap,
+    Clock,
+    CheckCircle2,
     RefreshCw,
     Activity,
     Server,
@@ -60,10 +60,11 @@ const nodesList = ref<any[]>([]);
 const showErrorModal = ref(false);
 const errorMessage = ref('');
 
-// Claim countdown state
-const claimingSessionId = ref<number | null>(null);
-const claimSecondsLeft = ref(8);
-let claimTimer: ReturnType<typeof setInterval> | null = null;
+// Start countdown state (bouton Démarrer)
+const startingNodeId = ref<number | null>(null);
+const startSecondsLeft = ref(8);
+const startProgressPercent = ref(0);
+let startTimer: ReturnType<typeof setInterval> | null = null;
 
 // Global frame animation id for 60fps tickers
 let animationFrameId: number | null = null;
@@ -76,14 +77,14 @@ watch(() => props.activeNodes, (newNodes) => {
 // Run the tick loop at 60 FPS to update all progress percentages and timers
 const tick = () => {
     const now = Date.now();
-    
+
     nodesList.value.forEach(node => {
         if (node.status === 'running' && node.session) {
             const startMs = new Date(node.session.start_time).getTime();
             const endMs = new Date(node.session.end_time).getTime();
             const total = endMs - startMs;
             const elapsed = now - startMs;
-            
+
             if (elapsed >= total) {
                 node.status = 'claimable';
                 node.progressPercent = 100;
@@ -99,83 +100,90 @@ const tick = () => {
             const expiresMs = new Date(node.cooldown_expires_at).getTime();
             const remaining = Math.max(0, Math.ceil((expiresMs - now) / 1000));
             node.cooldown_seconds = remaining;
-            
+
             if (remaining <= 0) {
                 node.status = 'ready';
                 node.cooldown_seconds = 0;
             }
         }
     });
-    
+
     animationFrameId = requestAnimationFrame(tick);
 };
 
-// Start generation on a specific rented node
-const startGeneration = async (userNodeId: number) => {
-    const targetNode = nodesList.value.find(n => n.id === userNodeId);
-    if (!targetNode) return;
-    
-    try {
-        const response = await axios.post('/generation/start', {
-            user_node_id: userNodeId
-        });
-        const data = response.data;
-        
-        targetNode.status = 'running';
-        targetNode.session = {
-            id: data.id,
-            start_time: data.start_time,
-            end_time: data.end_time,
-            expected_profit: parseFloat(data.expected_profit),
-            remaining_seconds: 120,
-        };
-        targetNode.progressPercent = 0;
-        targetNode.liveProfit = 0;
-        
-        router.reload({ only: ['activeNodes'] });
-    } catch (error: any) {
-        errorMessage.value = error.response?.data?.error || 'Erreur lors du lancement de la génération.';
-        showErrorModal.value = true;
-    }
-};
+// Start generation on a specific rented node (with 8-second animated countdown)
+const startGeneration = (userNodeId: number) => {
+    if (startingNodeId.value !== null) return; // prevent double-trigger
 
-// Claim profit from a completed session (with 8-second animated countdown)
-const claimProfit = (sessionId: number, userNodeId: number) => {
-    if (claimingSessionId.value !== null) return; // prevent double-trigger
+    startingNodeId.value = userNodeId;
+    startSecondsLeft.value = 8;
+    startProgressPercent.value = 0;
 
-    claimingSessionId.value = sessionId;
-    claimSecondsLeft.value = 8;
+    const startTime = Date.now();
+    const duration = 8000; // 8 seconds
 
-    claimTimer = setInterval(() => {
-        claimSecondsLeft.value--;
-        if (claimSecondsLeft.value <= 0) {
-            clearInterval(claimTimer!);
-            claimTimer = null;
-            // Actually post the claim after countdown
-            axios.post(`/generation/${sessionId}/claim`)
+    startTimer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+
+        // Calculate remaining seconds for text (ceil to show 8s first, then 7s, down to 0s)
+        startSecondsLeft.value = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+
+        // Calculate smooth progress percentage
+        startProgressPercent.value = Math.min(100, (elapsed / duration) * 100);
+
+        if (elapsed >= duration) {
+            clearInterval(startTimer!);
+            startTimer = null;
+            const targetNode = nodesList.value.find(n => n.id === userNodeId);
+            if (!targetNode) { startingNodeId.value = null; return; }
+            axios.post('/generation/start', { user_node_id: userNodeId })
                 .then(response => {
-                    if (response.data.success) {
-                        const targetNode = nodesList.value.find(n => n.id === userNodeId);
-                        if (targetNode) {
-                            targetNode.status = 'cooldown';
-                            targetNode.session = null;
-                            const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                            targetNode.cooldown_expires_at = future.toISOString();
-                            targetNode.cooldown_seconds = 24 * 60 * 60;
-                        }
-                        router.reload({ only: ['activeNodes', 'auth'] });
-                    }
+                    const data = response.data;
+                    targetNode.status = 'running';
+                    targetNode.session = {
+                        id: data.id,
+                        start_time: data.start_time,
+                        end_time: data.end_time,
+                        expected_profit: parseFloat(data.expected_profit),
+                        remaining_seconds: data.remaining_seconds,
+                    };
+                    targetNode.progressPercent = 0;
+                    targetNode.liveProfit = 0;
+                    router.reload({ only: ['activeNodes'] });
                 })
                 .catch((error: any) => {
-                    errorMessage.value = error.response?.data?.error || 'Erreur lors de la réclamation des gains.';
+                    errorMessage.value = error.response?.data?.error || 'Erreur lors du lancement de la génération.';
                     showErrorModal.value = true;
                 })
                 .finally(() => {
-                    claimingSessionId.value = null;
-                    claimSecondsLeft.value = 8;
+                    startingNodeId.value = null;
+                    startSecondsLeft.value = 8;
+                    startProgressPercent.value = 0;
                 });
         }
-    }, 1000);
+    }, 30);
+};
+
+// Claim profit from a completed session (direct, no countdown)
+const claimProfit = (sessionId: number, userNodeId: number) => {
+    axios.post(`/generation/${sessionId}/claim`)
+        .then(response => {
+            if (response.data.success) {
+                const targetNode = nodesList.value.find(n => n.id === userNodeId);
+                if (targetNode) {
+                    targetNode.status = 'cooldown';
+                    targetNode.session = null;
+                    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    targetNode.cooldown_expires_at = future.toISOString();
+                    targetNode.cooldown_seconds = 24 * 60 * 60;
+                }
+                router.reload({ only: ['activeNodes', 'auth'] });
+            }
+        })
+        .catch((error: any) => {
+            errorMessage.value = error.response?.data?.error || 'Erreur lors de la réclamation des gains.';
+            showErrorModal.value = true;
+        });
 };
 
 // Returns the number of remaining weekdays (Mon-Fri) until expiresAt
@@ -216,7 +224,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    if (claimTimer) clearInterval(claimTimer);
+    if (startTimer) clearInterval(startTimer);
     document.body.style.overflow = '';
 });
 
@@ -235,7 +243,7 @@ watch(showErrorModal, (newError) => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex flex-col gap-6 p-4 md:p-6 max-w-7xl mx-auto w-full">
-            
+
             <!-- Header -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-5">
                 <div>
@@ -275,8 +283,8 @@ watch(showErrorModal, (newError) => {
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div 
-                        v-for="node in nodesList" 
+                    <div
+                        v-for="node in nodesList"
                         :key="node.id"
                         class="glass rounded-2xl p-5 border border-white/5 relative overflow-hidden flex flex-col justify-between min-h-[340px] transition-all duration-300 hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] group"
                     >
@@ -307,7 +315,7 @@ watch(showErrorModal, (newError) => {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <h3 class="text-base font-black text-white mt-3 group-hover:text-cyan-400 transition-colors">
                                 {{ node.node_name }}
                             </h3>
@@ -340,7 +348,7 @@ watch(showErrorModal, (newError) => {
 
                         <!-- Interactive Status Section in the center -->
                         <div class="my-5 py-3 rounded-xl bg-white/[0.01] border border-white/5 px-4 min-h-[90px] flex flex-col justify-center">
-                            
+
                             <!-- State: Ready to Generate -->
                             <div v-if="node.status === 'ready'" class="text-center">
                                 <p class="text-[10px] text-muted-foreground font-semibold leading-relaxed">
@@ -358,7 +366,7 @@ watch(showErrorModal, (newError) => {
                                     </span>
                                 </div>
                                 <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 relative p-0.5 shadow-inner">
-                                    <div 
+                                    <div
                                         class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-100 ease-out shadow-[0_0_10px_rgba(6,182,212,0.4)]"
                                         :style="{ width: (node.progressPercent || 0) + '%' }"
                                     ></div>
@@ -398,9 +406,9 @@ watch(showErrorModal, (newError) => {
 
                         <!-- Card Action Button -->
                         <div>
-                            <!-- Action: Start Generation -->
-                            <button 
-                                v-if="node.status === 'ready'"
+                            <!-- Action: Start Generation (idle) -->
+                            <button
+                                v-if="node.status === 'ready' && startingNodeId !== node.id"
                                 @click="startGeneration(node.id)"
                                 class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all flex items-center justify-center gap-2"
                             >
@@ -408,8 +416,25 @@ watch(showErrorModal, (newError) => {
                                 Démarrer (2 Min)
                             </button>
 
+                            <!-- Action: Start countdown (8 seconds) -->
+                            <div
+                                v-if="node.status === 'ready' && startingNodeId === node.id"
+                                class="w-full rounded-xl overflow-hidden border border-cyan-500/30 bg-cyan-950/20"
+                            >
+                                <div class="flex items-center justify-between px-4 py-2 text-xs">
+                                    <span class="text-cyan-400 font-black font-mono tracking-wider animate-pulse">Initialisation...</span>
+                                    <span class="text-white font-black font-mono text-sm">{{ startSecondsLeft }}s</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-cyan-950/40">
+                                    <div
+                                        class="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)] transition-all duration-75 ease-out"
+                                        :style="{ width: startProgressPercent + '%' }"
+                                    ></div>
+                                </div>
+                            </div>
+
                             <!-- Action: Running -->
-                            <button 
+                            <button
                                 v-if="node.status === 'running'"
                                 disabled
                                 class="w-full py-3.5 rounded-xl bg-cyan-950/20 text-cyan-400/50 border border-cyan-500/10 font-extrabold text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
@@ -418,9 +443,9 @@ watch(showErrorModal, (newError) => {
                                 Calcul en Cours
                             </button>
 
-                            <!-- Action: Claim Profit (idle) -->
-                            <button 
-                                v-if="node.status === 'claimable' && node.session && claimingSessionId !== node.session.id"
+                            <!-- Action: Claim Profit -->
+                            <button
+                                v-if="node.status === 'claimable' && node.session"
                                 @click="claimProfit(node.session.id, node.id)"
                                 class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse transition-all flex items-center justify-center gap-2"
                             >
@@ -428,25 +453,8 @@ watch(showErrorModal, (newError) => {
                                 Réclamer {{ formatXAF(node.generation_profit) }}
                             </button>
 
-                            <!-- Action: Claiming countdown (8 seconds) -->
-                            <div
-                                v-if="node.status === 'claimable' && node.session && claimingSessionId === node.session.id"
-                                class="w-full rounded-xl overflow-hidden border border-amber-500/30 bg-amber-950/20"
-                            >
-                                <div class="flex items-center justify-between px-4 py-2 text-xs">
-                                    <span class="text-amber-400 font-black font-mono tracking-wider animate-pulse">Collecte en cours...</span>
-                                    <span class="text-white font-black font-mono text-sm">{{ claimSecondsLeft }}s</span>
-                                </div>
-                                <div class="h-1.5 w-full bg-amber-950/40">
-                                    <div
-                                        class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 shadow-[0_0_8px_rgba(245,158,11,0.6)] transition-all duration-1000 ease-linear"
-                                        :style="{ width: ((8 - claimSecondsLeft) / 8 * 100) + '%' }"
-                                    ></div>
-                                </div>
-                            </div>
-
                             <!-- Action: Cooldown Locked -->
-                            <button 
+                            <button
                                 v-if="node.status === 'cooldown'"
                                 disabled
                                 class="w-full py-3.5 rounded-xl bg-purple-950/10 text-purple-400/40 border border-purple-500/10 font-bold text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
@@ -481,17 +489,17 @@ watch(showErrorModal, (newError) => {
 <style scoped>
 .bg-grid {
     background-size: 30px 30px;
-    background-image: 
+    background-image:
         linear-gradient(to right, rgba(6, 182, 212, 0.04) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
 }
-@keyframes scan { 
-    0% { top: -10%; opacity: 0; } 
-    10% { opacity: 1; } 
-    90% { opacity: 1; } 
-    100% { top: 110%; opacity: 0; } 
+@keyframes scan {
+    0% { top: -10%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 110%; opacity: 0; }
 }
-.animate-scan { 
-    animation: scan 3s linear infinite; 
+.animate-scan {
+    animation: scan 3s linear infinite;
 }
 </style>

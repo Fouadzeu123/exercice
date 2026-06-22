@@ -15,12 +15,12 @@ class SettingsService
             4 => 1000.00,
             5 => 2000.00,
         ],
-        'min_deposit' => 1000.00,
-        'min_withdrawal' => 1000.00,
+        'min_deposit' => 500.00,
+        'min_withdrawal' => 1500.00,
         'support_telegram' => 'https://t.me/armholding',
         'support_whatsapp' => 'https://wa.me/237000000000',
         'lucky_draw_cost' => 1,
-        'generation_duration' => 120, // 2 minutes (120s)
+        'generation_duration' => 0, // Instantaneous (0s)
     ];
 
     /**

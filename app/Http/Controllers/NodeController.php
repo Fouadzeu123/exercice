@@ -316,9 +316,10 @@ class NodeController extends Controller
             return response()->json(['error' => 'Une session de génération est déjà en cours sur ce nœud.'], 422);
         }
 
-        // 3. Start a new 2-minute session
+        // 3. Start a new generation session
+        $duration = (int)\App\Services\SettingsService::get('generation_duration', 0);
         $startTime = Carbon::now();
-        $endTime = Carbon::now()->addMinutes(2);
+        $endTime = Carbon::now()->addSeconds($duration);
 
         $session = GenerationSession::create([
             'user_id' => $user->id,
@@ -335,7 +336,7 @@ class NodeController extends Controller
             'start_time' => $session->start_time,
             'end_time' => $session->end_time,
             'expected_profit' => $session->expected_profit,
-            'remaining_seconds' => 120,
+            'remaining_seconds' => $duration,
         ]);
     }
 
