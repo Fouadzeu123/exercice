@@ -83,6 +83,7 @@ const getTechImage = (id: number) => {
 const resolveImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/uploads/')) return 'https://armicm.com' + url;
     if (url.startsWith('/')) return window.location.origin + url;
     return url;
 };
