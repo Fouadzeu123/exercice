@@ -55,7 +55,7 @@ class FixImageUrls extends Command
             });
 
         // Fix Vault Plans
-        VaultPlan::withTrashed()->whereNotNull('image')
+        VaultPlan::whereNotNull('image')
             ->each(function ($plan) use ($baseUrl, &$count) {
                 $original = $plan->image;
                 if (str_starts_with($plan->image, '/uploads/')) {
