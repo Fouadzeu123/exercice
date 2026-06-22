@@ -48,6 +48,14 @@ const formatDate = (date: string) => {
     });
 };
 
+// Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
+const resolveImageUrl = (url: string | null | undefined): string => {
+    if (!url) return '/images/cyber_server_hero.png';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return window.location.origin + url;
+    return url;
+};
+
 const getDaysRemaining = (expiresAt: string | null): string => {
     if (!expiresAt) return 'Illimité';
     const now = new Date();
@@ -112,7 +120,7 @@ const { containerRef } = useRevealAnimation();
                     <!-- Server image background indicator -->
                     <div class="absolute right-0 top-0 w-32 h-32 opacity-10 pointer-events-none transition-transform duration-500 group-hover:scale-110">
                         <img 
-                            :src="order.image_url || '/images/cyber_server_hero.png'" 
+                            :src="resolveImageUrl(order.image_url)" 
                             @error="(e: Event) => ((e.target as HTMLImageElement).src = '/images/cyber_server_hero.png')"
                             class="w-full h-full object-contain" 
                             alt=""

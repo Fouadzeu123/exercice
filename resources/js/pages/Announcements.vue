@@ -79,6 +79,14 @@ const getTechImage = (id: number) => {
     return techImages[id % techImages.length];
 };
 
+// Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
+const resolveImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return window.location.origin + url;
+    return url;
+};
+
 const isLoading = ref(true);
 
 onMounted(() => {
@@ -223,7 +231,7 @@ const { containerRef } = useRevealAnimation();
                     <div class="w-full h-40 overflow-hidden relative border-b border-purple-500/10">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#05020c] to-transparent z-10"></div>
                         <img
-                            :src="ann.image_url || getTechImage(ann.id)"
+                            :src="resolveImageUrl(ann.image_url) || getTechImage(ann.id)"
                             @error="(e: Event) => ((e.target as HTMLImageElement).src = getTechImage(ann.id))"
                             alt="ARM Computing Cluster"
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -305,7 +313,7 @@ const { containerRef } = useRevealAnimation();
                 <!-- Hero tech image -->
                 <div class="w-full h-48 relative shrink-0">
                     <img
-                        :src="selectedAnnouncement.image_url || getTechImage(selectedAnnouncement.id)"
+                        :src="resolveImageUrl(selectedAnnouncement.image_url) || getTechImage(selectedAnnouncement.id)"
                         @error="(e: Event) => ((e.target as HTMLImageElement).src = getTechImage(selectedAnnouncement.id))"
                         alt="ARM Server Cluster"
                         class="w-full h-full object-cover"

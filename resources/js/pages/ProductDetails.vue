@@ -79,7 +79,11 @@ const getProductImage = () => {
     if (props.product.isVault) {
         return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format';
     }
-    return props.product.image || props.product.image_url || 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
+    const raw = props.product.image || props.product.image_url;
+    if (!raw) return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    if (raw.startsWith('/')) return window.location.origin + raw;
+    return raw;
 };
 
 // Check node statuses if it's a node (always false since users can buy multiple at once)

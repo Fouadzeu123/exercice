@@ -247,7 +247,16 @@ const confirmRentVault = (vault: any) => {
 // --- UTILS ---
 const formatXAF = (val: number | string) => new Intl.NumberFormat('fr-FR').format(Number(val)) + ' xaf';
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&auto=format';
-const getProductImage = (node: any) => node.image || node.image_url || FALLBACK_IMG;
+
+// Convert relative /uploads/ paths to absolute URLs (needed for mobile WebViews)
+const resolveImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return window.location.origin + url;
+    return url;
+};
+
+const getProductImage = (node: any) => resolveImageUrl(node.image || node.image_url) || FALLBACK_IMG;
 const onImgError = (e: Event, fallback: string) => {
     const img = e.target as HTMLImageElement;
     if (img.src !== fallback) img.src = fallback;
