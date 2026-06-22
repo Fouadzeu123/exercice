@@ -76,23 +76,47 @@ class AdminController extends Controller
         }
 
         if ($transaction->type === 'withdrawal') {
-            $publicKey = config('services.notchpay.public_key');
-            $secretKey = config('services.notchpay.secret_key');
+            $publicKey = config('notchpay.public_key') ?? config('services.notchpay.public_key');
+            $secretKey = config('notchpay.private_key') ?? config('services.notchpay.secret_key');
+
+            // MODE SIMULATION
+            $isSimulation = app()->environment(['testing']) || config('notchpay.sandbox', false);
+
+            if ($isSimulation) {
+                DB::transaction(function () use ($transaction) {
+                    $transaction->status = 'completed';
+                    $transaction->save();
+                });
+                return back()->with('success', 'Retrait approuvé et simulé avec succès.');
+            }
 
             if ($publicKey && $secretKey) {
                 if ($transaction->payment_method !== 'usdt') {
                     try {
                         $notchPayService = app(NotchPayService::class);
-                        $channel = $transaction->payment_method === 'orange' ? 'cm.orange' : 'cm.mtn';
+                        
+                        $withdrawalCountry = 'CM';
+                        $phonePrefix = config('notchpay.country_phone_codes.' . $withdrawalCountry, '237');
+
+                        $phone = trim($transaction->payment_phone);
+                        $phone = preg_replace('/\s+/', '', $phone);
+                        if (!str_starts_with($phone, '+')) {
+                            $phone = '+' . $phonePrefix . ltrim($phone, '0');
+                        }
+
+                        $amountFCFA = (int)abs($transaction->amount);
+                        $amountNetFCFA = (int) round($amountFCFA * 0.94); // 6% admin fee
+
+                        $beneficiaryChannel = config('notchpay.beneficiary_channels.' . $withdrawalCountry, 'cm.mobile');
 
                         // 1. Create a Beneficiary first
                         $beneficiary = $notchPayService->createBeneficiary([
-                            'channel' => $channel,
+                            'channel' => $beneficiaryChannel,
                             'name' => $transaction->user->name ?? 'User ' . $transaction->user_id,
-                            'account_number' => $transaction->payment_phone,
-                            'email' => $transaction->user->email ?? ($transaction->payment_phone . '@armicm.com'),
-                            'phone' => $transaction->payment_phone,
-                            'country' => 'CM',
+                            'account_number' => $phone,
+                            'email' => $transaction->user->email ?? ($phone . '@armicm.com'),
+                            'phone' => $phone,
+                            'country' => strtolower($withdrawalCountry),
                         ]);
 
                         $beneficiaryId = $beneficiary->id ?? ($beneficiary->beneficiary->id ?? ($beneficiary->beneficiary ?? null));
@@ -102,7 +126,7 @@ class AdminController extends Controller
 
                         // 2. Initialize the Transfer
                         $notchPayService->initializeTransfer([
-                            'amount' => (int)abs($transaction->amount),
+                            'amount' => $amountNetFCFA,
                             'currency' => 'XAF',
                             'beneficiary' => $beneficiaryId,
                             'reference' => $transaction->reference,
@@ -110,7 +134,9 @@ class AdminController extends Controller
                         ]);
 
                     } catch (\Exception $e) {
-                        return back()->withErrors(['error' => 'Erreur de transfert Notch Pay : ' . $e->getMessage()]);
+                        $msg = $e->getMessage();
+                        \Illuminate\Support\Facades\Log::error('Notch Pay transfer error: ' . $msg);
+                        return back()->withErrors(['error' => 'Erreur de transfert Notch Pay : ' . $msg]);
                     }
                 }
             }

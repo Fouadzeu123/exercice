@@ -57,8 +57,49 @@ class NotchPayService
      */
     public function createBeneficiary(array $params)
     {
-        $this->authenticate();
-        return Beneficiary::create($params);
+        $publicKey = config('notchpay.public_key') ?? config('services.notchpay.public_key');
+        $privateKey = config('notchpay.private_key') ?? config('services.notchpay.secret_key');
+        $apiUrl = rtrim(config('notchpay.api_url', 'https://api.notchpay.co'), '/');
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => $publicKey,
+                    'X-Grant'       => $privateKey,
+                    'Content-Type'  => 'application/json',
+                    'Accept'        => 'application/json',
+                ])
+                ->post("{$apiUrl}/beneficiaries", [
+                    'name'           => $params['name'] ?? '',
+                    'phone'          => $params['phone'] ?? '',
+                    'account_number' => $params['account_number'] ?? ($params['phone'] ?? ''),
+                    'email'          => $params['email'] ?? '',
+                    'channel'        => $params['channel'] ?? 'cm.mobile',
+                    'country'        => strtolower($params['country'] ?? 'CM'),
+                ]);
+
+            $data = $response->json();
+
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::error('NotchPay direct beneficiary creation failed', [
+                    'status' => $response->status(),
+                    'response' => $data
+                ]);
+                $errorMsg = $data['message'] ?? 'Erreur API';
+                if (!empty($data['errors'])) {
+                    $errorMsg .= ' : ' . json_encode($data['errors']);
+                }
+                throw new \Exception($errorMsg);
+            }
+
+            return (object)[
+                'id' => $data['beneficiary']['id'] ?? null,
+                'beneficiary' => (object)($data['beneficiary'] ?? [])
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('NotchPay beneficiary creation exception: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -66,7 +107,44 @@ class NotchPayService
      */
     public function initializeTransfer(array $params)
     {
-        $this->authenticate();
-        return Transfer::initialize($params);
+        $publicKey = config('notchpay.public_key') ?? config('services.notchpay.public_key');
+        $privateKey = config('notchpay.private_key') ?? config('services.notchpay.secret_key');
+        $apiUrl = rtrim(config('notchpay.api_url', 'https://api.notchpay.co'), '/');
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => $publicKey,
+                    'X-Grant'       => $privateKey,
+                    'Content-Type'  => 'application/json',
+                    'Accept'        => 'application/json',
+                ])
+                ->post("{$apiUrl}/transfers", [
+                    'amount'      => $params['amount'] ?? 0,
+                    'currency'    => $params['currency'] ?? 'XAF',
+                    'beneficiary' => $params['beneficiary'] ?? '',
+                    'description' => $params['description'] ?? 'Transfer',
+                    'reference'   => $params['reference'] ?? '',
+                ]);
+
+            $data = $response->json();
+
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::error('NotchPay direct transfer initialization failed', [
+                    'status' => $response->status(),
+                    'response' => $data
+                ]);
+                $errorMsg = $data['message'] ?? 'Erreur API';
+                if (!empty($data['errors'])) {
+                    $errorMsg .= ' : ' . json_encode($data['errors']);
+                }
+                throw new \Exception($errorMsg);
+            }
+
+            return (object)($data['transfer'] ?? []);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('NotchPay transfer exception: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }
