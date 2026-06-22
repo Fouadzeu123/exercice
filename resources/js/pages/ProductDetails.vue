@@ -277,7 +277,7 @@ onUnmounted(() => {
                     <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
                         <span class="text-slate-400 font-bold uppercase text-[9px]">{{ t('Durée de Co-Calcul', 'Co-Processing Term') }}</span>
                         <span class="font-extrabold text-white text-[11px] font-mono">
-                            {{ type === 'avip' ? t('Illimitée', 'Unlimited') : (type === 'vault' ? product.duration + ' Jours' : product.duration + ' Jours (Lun-Ven)') }}
+                            {{ type === 'node' ? product.duration + ' Jours (Lun-Ven)' : product.duration + ' Jours' }}
                         </span>
                     </div>
 

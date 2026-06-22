@@ -361,6 +361,7 @@ const avipForm = useForm({
     referral_reward: 0,
     required_vip_level: 1,
     avip_level: 1,
+    duration: 7,
     stock_quantity: null as number | null,
     limited_purchase_count: null as number | null,
     active: true,
@@ -380,6 +381,7 @@ const openAvipModal = (product: any) => {
     avipForm.referral_reward = parseFloat(product.referral_reward || 0);
     avipForm.required_vip_level = product.required_vip_level;
     avipForm.avip_level = product.avip_level;
+    avipForm.duration = product.duration || 7;
     avipForm.stock_quantity = product.stock_quantity !== null ? parseInt(product.stock_quantity) : null;
     avipForm.limited_purchase_count = product.limited_purchase_count !== null ? parseInt(product.limited_purchase_count) : null;
     avipForm.active = !!product.active;
@@ -451,6 +453,7 @@ const createAvipForm = useForm({
     referral_reward: 0,
     required_vip_level: 1,
     avip_level: 1,
+    duration: 7,
     stock_quantity: null as number | null,
     limited_purchase_count: null as number | null,
     active: true,
@@ -1170,6 +1173,10 @@ onUnmounted(() => {
                                         <span class="text-white font-bold">AVIP {{ p.avip_level }}</span>
                                     </div>
                                     <div class="flex justify-between">
+                                        <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Durée :</span>
+                                        <span class="text-white font-bold">{{ p.duration || 7 }} Jours</span>
+                                    </div>
+                                    <div class="flex justify-between">
                                         <span class="text-slate-500 uppercase font-black text-[8px] tracking-wider">Parrainage :</span>
                                         <span class="text-purple-400 font-bold">{{ formatXAF(p.referral_reward || 0) }}</span>
                                     </div>
@@ -1774,7 +1781,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <!-- Required VIP level -->
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">VIP Minimum Requis</label>
@@ -1788,6 +1795,11 @@ onUnmounted(() => {
                                 <select v-model="avipForm.avip_level" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
                                     <option v-for="i in [1, 2, 3, 4, 5]" :key="i" :value="i">AVIP {{ i }}</option>
                                 </select>
+                            </div>
+                            <!-- Duration -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Durée (jours)</label>
+                                <input v-model="avipForm.duration" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
                         </div>
 
@@ -2049,7 +2061,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <!-- Required VIP level -->
                             <div class="space-y-1">
                                 <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">VIP Minimum Requis</label>
@@ -2063,6 +2075,11 @@ onUnmounted(() => {
                                 <select v-model="createAvipForm.avip_level" class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl">
                                     <option v-for="i in [1, 2, 3, 4, 5]" :key="i" :value="i">AVIP {{ i }}</option>
                                 </select>
+                            </div>
+                            <!-- Duration -->
+                            <div class="space-y-1">
+                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Durée (jours)</label>
+                                <input v-model="createAvipForm.duration" type="number" required class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl" />
                             </div>
                         </div>
 

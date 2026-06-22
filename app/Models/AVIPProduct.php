@@ -18,6 +18,7 @@ class AVIPProduct extends Model
         'referral_reward' => 'float',
         'required_vip_level' => 'integer',
         'avip_level' => 'integer',
+        'duration' => 'integer',
         'active' => 'boolean',
         'is_limited' => 'boolean',
         'stock_quantity' => 'integer',

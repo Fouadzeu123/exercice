@@ -185,7 +185,7 @@ const combinedProducts = computed(() => {
         amount: a.amount,
         generation_profit: a.daily_salary,
         technology_level: 0,
-        duration: 7,
+        duration: a.duration,
         stock_quantity: a.stock_quantity !== null ? Number(a.stock_quantity) : null,
         limited_purchase_count: a.limited_purchase_count !== null ? Number(a.limited_purchase_count) : null,
         isVault: false,
@@ -662,7 +662,7 @@ watch(
                                     </span>
                                     <!-- Duration Badge -->
                                     <span class="text-[12px] font-black bg-cyan-500 text-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md">
-                                        {{ node.isAvip ? t('Illimité', 'Unlimited') : (node.isVault ? node.duration + ' ' + t('Jours', 'Days') : node.duration + ' ' + t('Jours', 'Days')) }}
+                                        {{ node.duration }} {{ t('Jours', 'Days') }}
                                     </span>
                                 </div>
 

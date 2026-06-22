@@ -143,7 +143,15 @@ class User extends Authenticatable
             $newVip = 1;
         }
 
-        $newAvip = 0;
+        $newAvip = (int) DB::table('user_avip_products')
+            ->join('avip_products', 'user_avip_products.avip_product_id', '=', 'avip_products.id')
+            ->where('user_avip_products.user_id', $this->id)
+            ->where('user_avip_products.active', true)
+            ->where(function($q) {
+                $q->whereNull('user_avip_products.expires_at')
+                  ->orWhere('user_avip_products.expires_at', '>', now());
+            })
+            ->max('avip_products.avip_level') ?? 0;
 
         // Mise à jour seulement si nécessaire (optimisation écriture BDD)
         if ($this->vip_level !== $newVip || $this->avip_level !== $newAvip) {

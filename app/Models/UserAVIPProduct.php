@@ -14,6 +14,7 @@ class UserAVIPProduct extends Model
         'amount' => 'float',
         'active' => 'boolean',
         'purchased_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     /**

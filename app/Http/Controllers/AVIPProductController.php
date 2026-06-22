@@ -115,6 +115,7 @@ class AVIPProductController extends Controller
                     'amount' => $product->amount,
                     'active' => true,
                     'purchased_at' => Carbon::now(),
+                    'expires_at' => Carbon::now()->addDays($product->duration ?? 7),
                 ]);
 
                 // Log the purchase transaction
