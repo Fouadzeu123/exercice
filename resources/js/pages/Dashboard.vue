@@ -656,7 +656,7 @@ watch(
                                     </div>
                                     <!-- Show server image or custom vault graphics image -->
                                     <img 
-                                        :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : (node.isAvip ? node.image_url : getProductImage(node))" 
+                                        :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : getProductImage(node)" 
                                         @error="(e: Event) => onImgError(e, FALLBACK_IMG)"
                                         class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" 
                                         :alt="node.name"
