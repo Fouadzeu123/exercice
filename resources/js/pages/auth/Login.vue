@@ -20,7 +20,7 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="Connexion" />
+    <Head title="Connexion | ARM Holding" />
     <div class="relative min-h-screen flex flex-col bg-black overflow-hidden">
         
         <!-- Background: Vertical Purple Shimmering Lines -->

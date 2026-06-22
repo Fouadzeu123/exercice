@@ -22,7 +22,7 @@ const showTermsModal = ref(false);
 </script>
 
 <template>
-    <Head title="Inscription" />
+    <Head title="Inscription | ARM Holding - Créez votre compte d'investissement" />
     <div class="relative min-h-screen flex flex-col bg-black overflow-hidden">
         
         <!-- Background: Vertical Purple Shimmering Lines -->
