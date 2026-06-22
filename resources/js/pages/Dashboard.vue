@@ -176,7 +176,8 @@ const combinedProducts = computed(() => {
         fixed_return: v.fixed_return,
         profit_amount: v.profit_amount,
         required_active_referrals: 0,
-        category: 'vault'
+        category: 'vault',
+        image: v.image
     }));
     const mappedAvips = (props.avipProducts || []).map(a => ({
         id: a.id,
@@ -273,7 +274,13 @@ const resolveImageUrl = (url: string | null | undefined): string | null => {
     return cleanBaseUrl + '/' + url;
 };
 
-const getProductImage = (node: any) => resolveImageUrl(node.image || node.image_url) || FALLBACK_IMG;
+const getProductImage = (node: any) => {
+    const raw = node.image || node.image_url;
+    if (raw) {
+        return resolveImageUrl(raw);
+    }
+    return node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : FALLBACK_IMG;
+};
 const onImgError = (e: Event, fallback: string) => {
     const img = e.target as HTMLImageElement;
     if (img.src !== fallback) img.src = fallback;
@@ -673,7 +680,7 @@ watch(
                                     </div>
                                     <!-- Show server image or custom vault graphics image -->
                                     <img
-                                        :src="node.isVault ? 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&auto=format' : getProductImage(node)"
+                                        :src="getProductImage(node)"
                                         @error="(e: Event) => onImgError(e, FALLBACK_IMG)"
                                         class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105"
                                         :alt="node.name"

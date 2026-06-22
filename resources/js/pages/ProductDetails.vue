@@ -76,11 +76,13 @@ const formatXAF = (value: number | string) => {
 };
 
 const getProductImage = () => {
-    if (props.product.isVault) {
-        return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format';
-    }
     const raw = props.product.image || props.product.image_url;
-    if (!raw) return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
+    if (!raw) {
+        if (props.product.isVault) {
+            return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format';
+        }
+        return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
+    }
     if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
 
     const page = usePage();
