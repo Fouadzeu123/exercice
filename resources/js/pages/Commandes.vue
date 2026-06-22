@@ -54,7 +54,17 @@ const resolveImageUrl = (url: string | null | undefined): string => {
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     
     const page = usePage();
-    const appUrl = (page.props.appUrl as string) || window.location.origin;
+    let appUrl = page.props.appUrl as string;
+    
+    if (!appUrl) {
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        if (!origin || origin.includes('localhost') || origin.startsWith('capacitor://') || origin.startsWith('http://127.0.0.1')) {
+            appUrl = 'https://armicm.com';
+        } else {
+            appUrl = origin;
+        }
+    }
+    
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
     
     if (url.startsWith('/')) {

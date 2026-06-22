@@ -84,7 +84,17 @@ const getProductImage = () => {
     if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
     
     const page = usePage();
-    const appUrl = (page.props.appUrl as string) || window.location.origin;
+    let appUrl = page.props.appUrl as string;
+    
+    if (!appUrl) {
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        if (!origin || origin.includes('localhost') || origin.startsWith('capacitor://') || origin.startsWith('http://127.0.0.1')) {
+            appUrl = 'https://armicm.com';
+        } else {
+            appUrl = origin;
+        }
+    }
+    
     const cleanBaseUrl = appUrl.replace(/\/+$/, '');
     
     if (raw.startsWith('/')) {
