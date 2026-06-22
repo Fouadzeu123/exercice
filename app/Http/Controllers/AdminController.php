@@ -80,7 +80,7 @@ class AdminController extends Controller
             $secretKey = config('notchpay.private_key') ?? config('services.notchpay.secret_key');
 
             // MODE SIMULATION
-            $isSimulation = app()->environment(['testing']) || config('notchpay.sandbox', false);
+            $isSimulation = config('notchpay.sandbox', false);
 
             if ($isSimulation) {
                 DB::transaction(function () use ($transaction) {
@@ -300,7 +300,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
+            $imageUrl = url('/uploads/' . $fileName);
         }
 
         $node->update([
@@ -429,7 +429,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
+            $imageUrl = url('/uploads/' . $fileName);
         }
 
         Node::create([
@@ -520,7 +520,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
+            $imageUrl = url('/uploads/' . $fileName);
         }
 
         \App\Models\Announcement::create([
@@ -555,7 +555,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
+            $imageUrl = url('/uploads/' . $fileName);
         }
 
         $announcement->update([
@@ -635,7 +635,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
+            $imageUrl = url('/uploads/' . $fileName);
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
@@ -677,7 +677,7 @@ class AdminController extends Controller
             $file = $request->file('image_file');
             $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
             $file->move(public_path('uploads'), $fileName);
-            $imageUrl = $this->forceHttpsUrl('/uploads/' . $fileName);
+            $imageUrl = url('/uploads/' . $fileName);
         }
 
         $profitAmount = $request->fixed_return - $request->fixed_investment_amount;
