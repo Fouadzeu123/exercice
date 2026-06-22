@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import {
@@ -83,9 +83,15 @@ const getTechImage = (id: number) => {
 const resolveImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/uploads/')) return 'https://armicm.com' + url;
-    if (url.startsWith('/')) return window.location.origin + url;
-    return url;
+    
+    const page = usePage();
+    const appUrl = (page.props.appUrl as string) || window.location.origin;
+    const cleanBaseUrl = appUrl.replace(/\/+$/, '');
+    
+    if (url.startsWith('/')) {
+        return cleanBaseUrl + url;
+    }
+    return cleanBaseUrl + '/' + url;
 };
 
 const isLoading = ref(true);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useRevealAnimation } from '@/composables/useRevealAnimation';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -52,9 +52,15 @@ const formatDate = (date: string) => {
 const resolveImageUrl = (url: string | null | undefined): string => {
     if (!url) return '/images/cyber_server_hero.png';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/uploads/')) return 'https://armicm.com' + url;
-    if (url.startsWith('/')) return window.location.origin + url;
-    return url;
+    
+    const page = usePage();
+    const appUrl = (page.props.appUrl as string) || window.location.origin;
+    const cleanBaseUrl = appUrl.replace(/\/+$/, '');
+    
+    if (url.startsWith('/')) {
+        return cleanBaseUrl + url;
+    }
+    return cleanBaseUrl + '/' + url;
 };
 
 const getDaysRemaining = (expiresAt: string | null): string => {

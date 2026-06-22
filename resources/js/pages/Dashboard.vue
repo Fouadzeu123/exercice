@@ -252,9 +252,15 @@ const FALLBACK_IMG = 'https://images.unsplash.com/photo-1587202372775-e229f172b9
 const resolveImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/uploads/')) return 'https://armicm.com' + url;
-    if (url.startsWith('/')) return window.location.origin + url;
-    return url;
+    
+    const page = usePage();
+    const appUrl = (page.props.appUrl as string) || window.location.origin;
+    const cleanBaseUrl = appUrl.replace(/\/+$/, '');
+    
+    if (url.startsWith('/')) {
+        return cleanBaseUrl + url;
+    }
+    return cleanBaseUrl + '/' + url;
 };
 
 const getProductImage = (node: any) => resolveImageUrl(node.image || node.image_url) || FALLBACK_IMG;

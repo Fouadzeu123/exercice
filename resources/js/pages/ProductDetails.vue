@@ -82,8 +82,15 @@ const getProductImage = () => {
     const raw = props.product.image || props.product.image_url;
     if (!raw) return 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80';
     if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    if (raw.startsWith('/')) return window.location.origin + raw;
-    return raw;
+    
+    const page = usePage();
+    const appUrl = (page.props.appUrl as string) || window.location.origin;
+    const cleanBaseUrl = appUrl.replace(/\/+$/, '');
+    
+    if (raw.startsWith('/')) {
+        return cleanBaseUrl + raw;
+    }
+    return cleanBaseUrl + '/' + raw;
 };
 
 // Check node statuses if it's a node (always false since users can buy multiple at once)

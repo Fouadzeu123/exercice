@@ -35,9 +35,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $appUrl = config('app.url');
+        // Force HTTPS for non-local environments to ensure WebView compatibility
+        if ($appUrl && !str_contains($appUrl, 'localhost') && !str_contains($appUrl, '127.0.0.1') && !str_contains($appUrl, '192.168.')) {
+            $appUrl = str_replace('http://', 'https://', $appUrl);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'appUrl' => $appUrl,
             'auth' => [
                 'user' => $request->user(),
             ],
