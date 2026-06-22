@@ -59,7 +59,7 @@ const showMethodSelector = ref(false);
 const showPassword = ref(false);
 const showHistory = ref(false);
 
-const fixedAmounts = [1000, 5000, 15000, 50000, 150000, 500000, 1500000, 5000000];
+const fixedAmounts = [1500, 5000, 15000, 50000, 150000, 500000, 1500000, 5000000];
 const selectedAmount = ref<number | null>(null);
 
 const withdrawForm = useForm({

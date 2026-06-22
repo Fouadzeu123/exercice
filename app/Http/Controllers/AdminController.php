@@ -29,7 +29,7 @@ class AdminController extends Controller
             ->get();
         $users = User::orderBy('created_at', 'desc')->get();
         $giftCodes = GiftCode::orderBy('created_at', 'desc')->get();
-        
+
         // Fetch all nodes and AVIP products, including soft-deleted ones so admins can configure or restore them
         $nodes = Node::withTrashed()->orderBy('created_at', 'desc')->get();
         $avipProducts = AVIPProduct::withTrashed()->orderBy('created_at', 'desc')->get();
@@ -115,11 +115,11 @@ class AdminController extends Controller
                 }
             }
         }
-        
+
         DB::transaction(function () use ($transaction) {
             $transaction->status = 'completed';
             $transaction->save();
-            
+
             // If it is a deposit, increment the user's balance
             if ($transaction->type === 'deposit') {
                 $user = $transaction->user;
@@ -127,7 +127,7 @@ class AdminController extends Controller
                 $user->save();
             }
         });
-        
+
         return back()->with('success', 'Transaction approuvÃ©e et validÃ©e avec succÃ¨s.');
     }
 
@@ -140,7 +140,7 @@ class AdminController extends Controller
         if ($transaction->status !== 'pending') {
             return back()->withErrors(['error' => 'La transaction n\'est plus en attente.']);
         }
-        
+
         DB::transaction(function () use ($transaction) {
             // Refund user balance for withdrawal
             if ($transaction->type === 'withdrawal') {
@@ -151,7 +151,7 @@ class AdminController extends Controller
             $transaction->status = 'rejected';
             $transaction->save();
         });
-        
+
         return back()->with('success', 'Transaction rejetÃ©e et capitaux restituÃ©s au mineur.');
     }
 
@@ -161,7 +161,7 @@ class AdminController extends Controller
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $request->validate([
             'balance' => 'required|numeric',
             'role' => 'required|string|in:user,admin',
@@ -205,7 +205,7 @@ class AdminController extends Controller
     public function deleteUser($id)
     {
         $user = User::findOrFail($id);
-        
+
         if ($user->id === Auth::id()) {
             return back()->withErrors(['error' => 'Vous ne pouvez pas vous bannir vous-mÃªme.']);
         }
@@ -536,7 +536,7 @@ class AdminController extends Controller
             'active' => $request->active,
         ]);
 
-        return back()->with('success', 'Annonce mise Ã  jour avec succÃ¨s.');
+        return back()->with('success', 'Annonce mise à jour avec succès.');
     }
 
     /**
@@ -547,7 +547,7 @@ class AdminController extends Controller
         $announcement = \App\Models\Announcement::findOrFail($id);
         $announcement->delete();
 
-        return back()->with('success', 'Annonce supprimÃ©e avec succÃ¨s.');
+        return back()->with('success', 'Annonce supprimée avec succès.');
     }
 
     /**
@@ -581,7 +581,7 @@ class AdminController extends Controller
             'vip_salaries' => array_map('floatval', $request->vip_salaries),
         ]);
 
-        return back()->with('success', 'Configuration globale du systÃ¨me enregistrÃ©e.');
+        return back()->with('success', 'Configuration globale du système enregistrée.');
     }
 
     /**
@@ -621,7 +621,7 @@ class AdminController extends Controller
             'image' => $imageUrl,
         ]);
 
-        return back()->with('success', 'Nouveau produit de coffre-fort (Vault Plan) crÃ©Ã© avec succÃ¨s.');
+        return back()->with('success', 'Nouveau produit de coffre-fort (Vault Plan) créé avec succès.');
     }
 
     /**
@@ -673,7 +673,7 @@ class AdminController extends Controller
     {
         $vaultPlan = VaultPlan::findOrFail($id);
         $vaultPlan->delete();
-        return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimÃ© avec succÃ¨s.');
+        return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimé avec succès.');
     }
 
     /**

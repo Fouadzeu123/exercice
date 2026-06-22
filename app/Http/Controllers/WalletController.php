@@ -86,7 +86,7 @@ class WalletController extends Controller
      */
     public function deposit(Request $request)
     {
-        $minDeposit = \App\Services\SettingsService::get('min_deposit', 1000);
+        $minDeposit = \App\Services\SettingsService::get('min_deposit', 500);
         $request->validate([
             'amount' => 'required|numeric|min:' . $minDeposit,
             'method' => 'required|string|in:mtn,orange',
@@ -187,7 +187,7 @@ class WalletController extends Controller
      */
     public function withdraw(Request $request)
     {
-        $minWithdrawal = \App\Services\SettingsService::get('min_withdrawal', 1000);
+        $minWithdrawal = \App\Services\SettingsService::get('min_withdrawal', 1500);
         $request->validate([
             'amount' => 'required|numeric|min:' . $minWithdrawal,
             'method' => 'required|string|in:mtn,orange,usdt',
@@ -411,7 +411,7 @@ class WalletController extends Controller
         // Get fallback values using SettingsService
         $orangeAgent = \App\Services\SettingsService::get('fapshi_orange_agent', '694196055');
         $orangeMerchant = \App\Services\SettingsService::get('fapshi_orange_merchant', '374320');
-        
+
         $mtnAgent = \App\Services\SettingsService::get('fapshi_mtn_agent', '670000000');
         $mtnMerchant = \App\Services\SettingsService::get('fapshi_mtn_merchant', '123456');
 
