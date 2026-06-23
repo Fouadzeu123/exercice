@@ -150,8 +150,20 @@ class DashboardController extends Controller
             ->orderBy('user_nodes.created_at', 'desc')
             ->get();
 
+        $vaultInvestments = \App\Models\VaultInvestment::where('user_id', $user->id)
+            ->with('vaultPlan')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $userAvips = \App\Models\UserAVIPProduct::where('user_id', $user->id)
+            ->with('avipProduct')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('Commandes', [
             'orders' => $userNodes,
+            'vaultInvestments' => $vaultInvestments,
+            'userAvips' => $userAvips,
         ]);
     }
 

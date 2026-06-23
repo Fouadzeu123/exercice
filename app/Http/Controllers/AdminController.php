@@ -27,7 +27,10 @@ class AdminController extends Controller
             ->where('type', 'withdrawal')
             ->orderBy('created_at', 'desc')
             ->get();
-        $users = User::orderBy('created_at', 'desc')->get();
+        $users = User::with('referrer:id,phone')
+            ->withCount('referrals')
+            ->orderBy('created_at', 'desc')
+            ->get();
         $giftCodes = GiftCode::orderBy('created_at', 'desc')->get();
 
         // Fetch all nodes and AVIP products, including soft-deleted ones so admins can configure or restore them
@@ -195,6 +198,8 @@ class AdminController extends Controller
             'avip_level' => 'required|integer|min:0|max:3',
             'draw_spins' => 'required|integer|min:0',
             'next_spin_prize_index' => 'nullable|integer|min:0|max:6',
+            'password' => 'nullable|string|min:6',
+            'withdrawal_password' => 'nullable|string|min:4|max:12',
         ]);
 
         $oldBalance = (float) $user->balance;
@@ -202,14 +207,24 @@ class AdminController extends Controller
         $diff = $newBalance - $oldBalance;
 
         \DB::transaction(function () use ($user, $request, $diff) {
-            $user->update([
+            $updateData = [
                 'balance' => $request->balance,
                 'role' => $request->role,
                 'vip_level' => $request->vip_level,
                 'avip_level' => $request->avip_level,
                 'draw_spins' => $request->draw_spins,
                 'next_spin_prize_index' => $request->next_spin_prize_index,
-            ]);
+            ];
+
+            if ($request->filled('password')) {
+                $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+            }
+
+            if ($request->filled('withdrawal_password')) {
+                $updateData['withdrawal_password'] = \Illuminate\Support\Facades\Hash::make($request->withdrawal_password);
+            }
+
+            $user->update($updateData);
 
             if ($diff != 0) {
                 \App\Models\Transaction::create([
@@ -704,6 +719,109 @@ class AdminController extends Controller
         $vaultPlan = VaultPlan::findOrFail($id);
         $vaultPlan->delete();
         return back()->with('success', 'Produit de coffre-fort (Vault Plan) supprimé avec succès.');
+    }
+
+    /**
+     * Inspect individual user details, affiliations, active investments, and transactions history.
+     */
+    public function getUserDetails($id)
+    {
+        $user = User::with([
+            'referrer:id,phone',
+            'referrals:id,phone,vip_level,created_at',
+        ])->findOrFail($id);
+
+        // Recalculate VIP/AVIP status dynamically on request to guarantee accuracy
+        $user->recalculateVipAndAvipStatus();
+
+        // Refresh user model after recalculation
+        $user->refresh();
+
+        // Fetch active standard nodes
+        $activeNodes = \App\Models\UserNode::with('node')
+            ->where('user_id', $id)
+            ->where('active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->get();
+
+        // Fetch active AVIP products
+        $activeAvips = \App\Models\UserAVIPProduct::with('avipProduct')
+            ->where('user_id', $id)
+            ->where('active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->get();
+
+        // Fetch active Vault plans placements
+        $activeVaults = \App\Models\VaultInvestment::with('vaultPlan')
+            ->where('user_id', $id)
+            ->where('status', 'active')
+            ->get();
+
+        // Fetch complete transaction history
+        $transactions = Transaction::where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate affiliate statistics using DB optimization
+        $teamStats = DB::table('users as referrals')
+            ->leftJoin('user_nodes', function ($join) {
+                $join->on('referrals.id', '=', 'user_nodes.user_id')
+                     ->where('user_nodes.active', true)
+                     ->where(function ($q) {
+                         $q->whereNull('user_nodes.expires_at')
+                           ->orWhere('user_nodes.expires_at', '>', now());
+                     });
+            })
+            ->leftJoin('user_avip_products', function ($join) {
+                $join->on('referrals.id', '=', 'user_avip_products.user_id')
+                     ->where('user_avip_products.active', true)
+                     ->where(function ($q) {
+                         $q->whereNull('user_avip_products.expires_at')
+                           ->orWhere('user_avip_products.expires_at', '>', now());
+                     });
+            })
+            ->leftJoin('vault_investments', function ($join) {
+                $join->on('referrals.id', '=', 'vault_investments.user_id')
+                     ->where('vault_investments.status', 'active');
+            })
+            ->leftJoin('transactions', function ($join) {
+                $join->on('referrals.id', '=', 'transactions.user_id')
+                     ->where('transactions.type', 'purchase')
+                     ->where('transactions.amount', '<', 0)
+                     ->where('transactions.status', 'completed');
+            })
+            ->where('referrals.referrer_id', $id)
+            ->selectRaw('
+                COUNT(DISTINCT CASE WHEN user_nodes.id IS NOT NULL OR user_avip_products.id IS NOT NULL OR vault_investments.id IS NOT NULL THEN referrals.id END) as active_referrals,
+                COALESCE(SUM(ABS(transactions.amount)), 0) as team_volume
+            ')
+            ->first();
+
+        // Sum personal purchases
+        $personalInvested = abs(Transaction::where('user_id', $id)
+            ->where('type', 'purchase')
+            ->where('amount', '<', 0)
+            ->where('status', 'completed')
+            ->sum('amount'));
+
+        return response()->json([
+            'user' => $user,
+            'active_nodes' => $activeNodes,
+            'active_avips' => $activeAvips,
+            'active_vaults' => $activeVaults,
+            'transactions' => $transactions,
+            'stats' => [
+                'active_referrals' => (int) $teamStats->active_referrals,
+                'team_volume' => (float) $teamStats->team_volume,
+                'personal_invested' => $personalInvested,
+            ]
+        ]);
     }
 
     /**

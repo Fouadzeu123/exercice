@@ -1,1 +1,0 @@
-import{j as o}from"./app-h0Lc6SiI.js";const e=o(localStorage.getItem("locale")||"FR");function c(a,l){return e.value==="FR"?a:l}function r(){e.value=e.value==="FR"?"EN":"FR",localStorage.setItem("locale",e.value)}export{r as a,e as c,c as t};

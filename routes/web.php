@@ -86,6 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('admin/transaction/{id}/reject', [\App\Http\Controllers\AdminController::class, 'rejectTransaction'])->name('admin.reject');
         Route::post('admin/user/{id}/update', [\App\Http\Controllers\AdminController::class, 'updateUser'])->name('admin.user.update');
         Route::delete('admin/user/{id}/delete', [\App\Http\Controllers\AdminController::class, 'deleteUser'])->name('admin.user.delete');
+        Route::get('admin/user/{id}/details', [\App\Http\Controllers\AdminController::class, 'getUserDetails'])->name('admin.user.details');
         Route::post('admin/gift-code', [\App\Http\Controllers\AdminController::class, 'createGiftCode'])->name('admin.giftcode.create');
         Route::delete('admin/gift-code/{id}', [\App\Http\Controllers\AdminController::class, 'deleteGiftCode'])->name('admin.giftcode.delete');
         Route::post('admin/node/{id}/update', [\App\Http\Controllers\AdminController::class, 'updateNode'])->name('admin.node.update');

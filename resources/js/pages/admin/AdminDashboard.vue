@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import axios from 'axios';
 import { 
     ShieldAlert, 
     Check, 
@@ -221,9 +222,15 @@ const userEditForm = useForm({
     avip_level: 0,
     draw_spins: 0,
     next_spin_prize_index: null as number | null | string,
+    password: '',
+    withdrawal_password: '',
 });
 
-const openUserModal = (user: any) => {
+const loadingDetails = ref(false);
+const userDetails = ref<any>(null);
+const userDetailTab = ref('transactions');
+
+const openUserModal = async (user: any) => {
     selectedUser.value = user;
     userEditForm.balance = parseFloat(user.balance);
     userEditForm.role = user.role;
@@ -231,6 +238,23 @@ const openUserModal = (user: any) => {
     userEditForm.avip_level = user.avip_level;
     userEditForm.draw_spins = user.draw_spins;
     userEditForm.next_spin_prize_index = user.next_spin_prize_index;
+    userEditForm.password = '';
+    userEditForm.withdrawal_password = '';
+
+    // Reset details panel state
+    loadingDetails.value = true;
+    userDetails.value = null;
+    userDetailTab.value = 'transactions';
+
+    try {
+        const response = await axios.get(`/admin/user/${user.id}/details`);
+        userDetails.value = response.data;
+    } catch (error) {
+        console.error("Erreur lors du chargement des détails de l'utilisateur", error);
+        showToast("Impossible de charger les détails du mineur.", true);
+    } finally {
+        loadingDetails.value = false;
+    }
 };
 
 const handleUpdateUser = () => {
@@ -250,6 +274,7 @@ const handleUpdateUser = () => {
     })).post(`/admin/user/${selectedUser.value.id}/update`, {
         onSuccess: () => {
             selectedUser.value = null;
+            userEditForm.reset('password', 'withdrawal_password');
             showToast("Profil et variables système du mineur modifiés.");
         },
         onError: (err: any) => showToast(err.error || "Erreur lors de la mise à jour", true)
@@ -877,6 +902,8 @@ onUnmounted(() => {
                                 <th class="pb-3">Solde Courant</th>
                                 <th class="pb-3">VIP</th>
                                 <th class="pb-3">AVIP</th>
+                                <th class="pb-3">Parrain</th>
+                                <th class="pb-3">Filleuls</th>
                                 <th class="pb-3">Tours Tirage</th>
                                 <th class="pb-3">Triche/Rigging</th>
                                 <th class="pb-3">Rôle</th>
@@ -899,6 +926,13 @@ onUnmounted(() => {
                                 </td>
                                 <td class="py-3.5 text-slate-400">
                                     AVIP {{ u.avip_level }}
+                                </td>
+                                <td class="py-3.5 text-slate-400">
+                                    <span v-if="u.referrer" class="font-bold text-slate-300">{{ u.referrer.phone }}</span>
+                                    <span v-else class="text-slate-500 text-[10px]">Aucun</span>
+                                </td>
+                                <td class="py-3.5 font-bold text-cyan-400">
+                                    {{ u.referrals_count || 0 }}
                                 </td>
                                 <td class="py-3.5 font-bold">
                                     {{ u.draw_spins }} lancers
@@ -1450,119 +1484,355 @@ onUnmounted(() => {
 
         <!-- MODAL OVERLAY 1: USER PROPERTIES EDITION & RIGGING -->
         <div v-if="selectedUser" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-            <div class="w-full max-w-sm bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
+            <div class="w-full max-w-5xl bg-[#0e071d] border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl animate-fadeInUp">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
                         <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
                             <Settings class="w-4 h-4 text-purple-400" />
-                            Gérer le Mineur
+                            Gérer le Mineur : {{ selectedUser.phone }}
                         </h3>
                         <button @click="selectedUser = null" class="hover:rotate-90 transition-transform"><X class="w-5 h-5 text-slate-400" /></button>
                     </div>
 
-                    <div class="mb-4 text-center">
-                        <span class="text-[10px] text-slate-500 uppercase tracking-widest block font-bold font-mono">ID: {{ selectedUser.id }}</span>
-                        <span class="text-sm font-mono font-black text-white block mt-0.5">{{ selectedUser.phone }}</span>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left Column (User Edit Form) -->
+                        <div class="lg:col-span-4 space-y-4 border-r border-white/5 pr-0 lg:pr-6">
+                            <div class="mb-4 text-center bg-black/30 p-3 rounded-2xl border border-white/5">
+                                <span class="text-[10px] text-slate-500 uppercase tracking-widest block font-bold font-mono">ID: {{ selectedUser.id }}</span>
+                                <span class="text-sm font-mono font-black text-white block mt-0.5">{{ selectedUser.phone }}</span>
+                            </div>
+
+                            <form @submit.prevent="handleUpdateUser" class="space-y-3.5 text-xs">
+                                <!-- Balance -->
+                                <div class="space-y-1">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Solde en XAF</label>
+                                    <input 
+                                        v-model="userEditForm.balance"
+                                        type="number"
+                                        required
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    />
+                                </div>
+
+                                <!-- System Role -->
+                                <div class="space-y-1">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Rôle Système</label>
+                                    <select 
+                                        v-model="userEditForm.role"
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    >
+                                        <option value="user">Utilisateur (user)</option>
+                                        <option value="admin">Administrateur (admin)</option>
+                                    </select>
+                                </div>
+
+                                <!-- VIP & AVIP levels -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Niveau VIP</label>
+                                        <select 
+                                            v-model="userEditForm.vip_level"
+                                            class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none"
+                                        >
+                                            <option v-for="i in [0, 1, 2, 3, 4, 5]" :key="i" :value="i">VIP {{ i }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Niveau AVIP</label>
+                                        <select 
+                                            v-model="userEditForm.avip_level"
+                                            class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none"
+                                        >
+                                            <option v-for="i in [0, 1, 2, 3]" :key="i" :value="i">AVIP {{ i }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Spin Wheels quota -->
+                                <div class="space-y-1">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Lancers Tirage Disponibles</label>
+                                    <input 
+                                        v-model="userEditForm.draw_spins"
+                                        type="number"
+                                        required
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    />
+                                </div>
+
+                                <!-- Reset Passwords -->
+                                <div class="space-y-1">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Nouveau Mot de Passe Connexion (Min 6 car.)</label>
+                                    <input 
+                                        v-model="userEditForm.password"
+                                        type="text"
+                                        placeholder="Laisser vide si inchangé"
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    />
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Nouveau Code PIN de Retrait (4-12 car.)</label>
+                                    <input 
+                                        v-model="userEditForm.withdrawal_password"
+                                        type="text"
+                                        placeholder="Laisser vide si inchangé"
+                                        class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    />
+                                </div>
+
+                                <!-- RIGGING / PRE-DETERMINED OUTCOME SELECTOR -->
+                                <div class="space-y-1.5 p-3.5 bg-amber-500/[0.02] border border-amber-500/25 rounded-2xl">
+                                    <label class="text-[9px] text-amber-400 uppercase font-black tracking-wider block flex items-center gap-1">
+                                        <Zap class="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                                        Rigging du Prochain Tirage
+                                    </label>
+                                    <p class="text-[8px] text-slate-400 leading-relaxed mb-1.5">Force la roue de l'utilisateur à s'arrêter sur le gain sélectionné lors de son PROCHAIN spin.</p>
+                                    <select 
+                                        v-model="userEditForm.next_spin_prize_index"
+                                        class="w-full bg-black/50 border border-amber-500/30 text-amber-400 font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none"
+                                    >
+                                        <option :value="null">Aléatoire (Aucun rigging)</option>
+                                        <option value="0">Secteur 0 : 777 XAF (Hautement Probable)</option>
+                                        <option value="1">Secteur 1 : 1 777 XAF</option>
+                                        <option value="2">Secteur 2 : 7 777 XAF</option>
+                                        <option value="3">Secteur 3 : 77 777 XAF</option>
+                                        <option value="4">Secteur 4 : 177 777 XAF</option>
+                                        <option value="5">Secteur 5 : 777 777 XAF</option>
+                                        <option value="6">Secteur 6 : 1 777 777 XAF (JACKPOT FORCÉ)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Actions Buttons -->
+                                <div class="flex gap-2 pt-3 border-t border-white/5">
+                                    <button 
+                                        type="submit"
+                                        :disabled="userEditForm.processing"
+                                        class="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                                    >
+                                        Enregistrer
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        @click="handleDeleteUser(selectedUser.id)"
+                                        class="px-3.5 py-3 bg-rose-950/30 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-black font-bold uppercase tracking-wider text-[9px] rounded-xl transition-all"
+                                    >
+                                        Bannir
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Right Column (User Details / History) -->
+                        <div class="lg:col-span-8 flex flex-col space-y-4">
+                            <!-- Loading State -->
+                            <div v-if="loadingDetails" class="flex flex-col items-center justify-center py-24 space-y-3">
+                                <div class="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span class="text-xs text-slate-400 font-mono">Chargement des données du mineur...</span>
+                            </div>
+
+                            <!-- Loaded State -->
+                            <div v-else-if="userDetails" class="space-y-4 flex-1 flex flex-col">
+                                <!-- Stats Cards Grid -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+                                        <span class="text-[8px] font-extrabold uppercase tracking-widest text-slate-500 block">Sponsor / Parrain</span>
+                                        <span class="text-xs font-black text-white mt-1 block truncate">
+                                            {{ userDetails.user.referrer ? userDetails.user.referrer.phone : 'Aucun' }}
+                                        </span>
+                                    </div>
+                                    <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+                                        <span class="text-[8px] font-extrabold uppercase tracking-widest text-slate-500 block">Filleuls Actifs</span>
+                                        <span class="text-xs font-black text-cyan-400 mt-1 block font-mono">
+                                            {{ userDetails.stats.active_referrals }}
+                                        </span>
+                                    </div>
+                                    <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+                                        <span class="text-[8px] font-extrabold uppercase tracking-widest text-slate-500 block">Volume Équipe</span>
+                                        <span class="text-[10px] font-black text-purple-400 mt-1 block font-mono truncate">
+                                            {{ formatXAF(userDetails.stats.team_volume) }}
+                                        </span>
+                                    </div>
+                                    <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+                                        <span class="text-[8px] font-extrabold uppercase tracking-widest text-slate-500 block">Investi Perso</span>
+                                        <span class="text-[10px] font-black text-white mt-1 block font-mono truncate">
+                                            {{ formatXAF(userDetails.stats.personal_invested) }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Detail Tabs navigation -->
+                                <div class="flex border-b border-white/5 bg-black/20 p-1 rounded-xl w-fit">
+                                    <button 
+                                        type="button"
+                                        @click="userDetailTab = 'transactions'" 
+                                        class="px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all"
+                                        :class="userDetailTab === 'transactions' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_8px_rgba(6,182,212,0.3)]' : 'text-slate-400 hover:text-white'"
+                                    >
+                                        Transactions ({{ userDetails.transactions.length }})
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        @click="userDetailTab = 'referrals'" 
+                                        class="px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all"
+                                        :class="userDetailTab === 'referrals' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_8px_rgba(6,182,212,0.3)]' : 'text-slate-400 hover:text-white'"
+                                    >
+                                        Filleuls ({{ userDetails.user.referrals ? userDetails.user.referrals.length : 0 }})
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        @click="userDetailTab = 'investments'" 
+                                        class="px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all"
+                                        :class="userDetailTab === 'investments' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_8px_rgba(6,182,212,0.3)]' : 'text-slate-400 hover:text-white'"
+                                    >
+                                        Investissements Actifs
+                                    </button>
+                                </div>
+
+                                <!-- Tab Contents -->
+                                <div class="flex-1 min-h-[300px] max-h-[350px] overflow-y-auto pr-1">
+                                    <!-- TAB 1: TRANSACTIONS -->
+                                    <div v-if="userDetailTab === 'transactions'">
+                                        <div v-if="userDetails.transactions.length === 0" class="text-center py-12 text-slate-500 text-[10px] uppercase font-mono">
+                                            Aucune transaction enregistrée.
+                                        </div>
+                                        <table v-else class="w-full text-left text-[10px] font-mono text-slate-300">
+                                            <thead>
+                                                <tr class="border-b border-white/5 text-slate-500 uppercase text-[8px] font-black">
+                                                    <th class="pb-2">Type</th>
+                                                    <th class="pb-2">Référence</th>
+                                                    <th class="pb-2">Montant</th>
+                                                    <th class="pb-2">Statut</th>
+                                                    <th class="pb-2 text-right">Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-white/5">
+                                                <tr v-for="t in userDetails.transactions" :key="t.id" class="hover:bg-white/[0.01]">
+                                                    <td class="py-2.5">
+                                                        <span class="px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wide font-extrabold"
+                                                            :class="{
+                                                                'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15': t.type === 'deposit',
+                                                                'bg-amber-500/10 text-amber-400 border border-amber-500/15': t.type === 'withdrawal',
+                                                                'bg-cyan-500/10 text-cyan-400 border border-cyan-500/15': t.type === 'commission',
+                                                                'bg-purple-500/10 text-purple-400 border border-purple-500/15': t.type === 'earnings',
+                                                                'bg-slate-500/10 text-slate-300 border border-slate-500/15': t.type === 'purchase'
+                                                            }"
+                                                        >
+                                                            {{ t.type }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-2.5 text-slate-500">{{ t.reference }}</td>
+                                                    <td class="py-2.5 font-bold" :class="parseFloat(t.amount) >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+                                                        {{ parseFloat(t.amount) >= 0 ? '+' : '' }}{{ formatXAF(t.amount) }}
+                                                    </td>
+                                                    <td class="py-2.5">
+                                                        <span :class="{
+                                                            'text-emerald-400': t.status === 'completed',
+                                                            'text-amber-400 animate-pulse': t.status === 'pending',
+                                                            'text-rose-400': t.status === 'rejected'
+                                                        }">● {{ t.status }}</span>
+                                                    </td>
+                                                    <td class="py-2.5 text-right text-[9px] text-slate-500">
+                                                        {{ new Date(t.created_at).toLocaleString('fr-FR') }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- TAB 2: REFERRALS -->
+                                    <div v-if="userDetailTab === 'referrals'">
+                                        <div v-if="!userDetails.user.referrals || userDetails.user.referrals.length === 0" class="text-center py-12 text-slate-500 text-[10px] uppercase font-mono">
+                                            Aucun filleul direct.
+                                        </div>
+                                        <table v-else class="w-full text-left text-[10px] font-mono text-slate-300">
+                                            <thead>
+                                                <tr class="border-b border-white/5 text-slate-500 uppercase text-[8px] font-black">
+                                                    <th class="pb-2">Téléphone</th>
+                                                    <th class="pb-2">Niveau VIP</th>
+                                                    <th class="pb-2 text-right">Inscription</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-white/5">
+                                                <tr v-for="refUser in userDetails.user.referrals" :key="refUser.id" class="hover:bg-white/[0.01]">
+                                                    <td class="py-2.5 text-white font-bold">{{ refUser.phone }}</td>
+                                                    <td class="py-2.5">
+                                                        <span class="px-1.5 py-0.2 rounded bg-purple-950/40 text-purple-300 border border-purple-700/20 text-[8px] font-bold">
+                                                            VIP {{ refUser.vip_level }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-2.5 text-right text-slate-500">
+                                                        {{ new Date(refUser.created_at).toLocaleDateString('fr-FR') }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- TAB 3: INVESTMENTS -->
+                                    <div v-if="userDetailTab === 'investments'" class="space-y-4">
+                                        <!-- Serveurs Standards -->
+                                        <div>
+                                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 border-b border-white/5 pb-1">Serveurs Loués ({{ userDetails.active_nodes.length }})</h4>
+                                            <div v-if="userDetails.active_nodes.length === 0" class="text-slate-500 text-[9px] uppercase font-mono py-2">
+                                                Aucun serveur actif.
+                                            </div>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="un in userDetails.active_nodes" :key="un.id" class="p-2.5 bg-purple-950/10 border border-purple-500/10 rounded-xl flex justify-between items-center text-[10px]">
+                                                    <div>
+                                                        <span class="text-white font-bold">{{ un.node ? un.node.name : 'Nœud Inconnu' }}</span>
+                                                        <span class="text-[8px] font-black bg-purple-500/20 text-purple-300 px-1.5 py-0.2 rounded ml-2">VIP {{ un.node ? un.node.technology_level : 0 }}</span>
+                                                    </div>
+                                                    <div class="text-right text-slate-400">
+                                                        <span>Rendement: +{{ formatXAF(un.node ? un.node.generation_profit : 0) }}/j</span>
+                                                        <span class="block text-[8px] text-slate-500">Expire: {{ un.expires_at ? new Date(un.expires_at).toLocaleDateString('fr-FR') : 'Jamais' }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Équipements AVIP -->
+                                        <div>
+                                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 border-b border-white/5 pb-1">Équipements AVIP ({{ userDetails.active_avips.length }})</h4>
+                                            <div v-if="userDetails.active_avips.length === 0" class="text-slate-500 text-[9px] uppercase font-mono py-2">
+                                                Aucun équipement AVIP actif.
+                                            </div>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="ua in userDetails.active_avips" :key="ua.id" class="p-2.5 bg-cyan-950/10 border border-cyan-500/10 rounded-xl flex justify-between items-center text-[10px]">
+                                                    <div>
+                                                        <span class="text-white font-bold">{{ ua.avip_product ? ua.avip_product.name : 'Produit AVIP Inconnu' }}</span>
+                                                        <span class="text-[8px] font-black bg-cyan-500/20 text-cyan-300 px-1.5 py-0.2 rounded ml-2">AVIP {{ ua.avip_product ? ua.avip_product.avip_level : 0 }}</span>
+                                                    </div>
+                                                    <div class="text-right text-slate-400">
+                                                        <span>Salaire: +{{ formatXAF(ua.avip_product ? ua.avip_product.daily_salary : 0) }}/j</span>
+                                                        <span class="block text-[8px] text-slate-500">Expire: {{ ua.expires_at ? new Date(ua.expires_at).toLocaleDateString('fr-FR') : 'Jamais' }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Vault Placements -->
+                                        <div>
+                                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 border-b border-white/5 pb-1">Placements Coffre-fort ({{ userDetails.active_vaults.length }})</h4>
+                                            <div v-if="userDetails.active_vaults.length === 0" class="text-slate-500 text-[9px] uppercase font-mono py-2">
+                                                Aucun placement coffre-fort actif.
+                                            </div>
+                                            <div v-else class="space-y-2">
+                                                <div v-for="uv in userDetails.active_vaults" :key="uv.id" class="p-2.5 bg-emerald-950/10 border border-emerald-500/10 rounded-xl flex justify-between items-center text-[10px]">
+                                                    <div>
+                                                        <span class="text-white font-bold">{{ uv.vault_plan ? uv.vault_plan.name : 'Placement Vault' }}</span>
+                                                        <span class="text-[8px] font-black bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded ml-2">{{ uv.vault_plan ? uv.vault_plan.payout_type : '' }}</span>
+                                                    </div>
+                                                    <div class="text-right text-slate-400">
+                                                        <span>Investi: {{ formatXAF(uv.amount) }} • Retour: +{{ formatXAF(uv.return_amount) }}</span>
+                                                        <span class="block text-[8px] text-slate-500">Expire: {{ uv.expires_at ? new Date(uv.expires_at).toLocaleDateString('fr-FR') : 'Jamais' }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <form @submit.prevent="handleUpdateUser" class="space-y-3.5 text-xs">
-                        
-                        <!-- Balance -->
-                        <div class="space-y-1">
-                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Solde en XAF</label>
-                            <input 
-                                v-model="userEditForm.balance"
-                                type="number"
-                                required
-                                class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
-                            />
-                        </div>
-
-                        <!-- System Role -->
-                        <div class="space-y-1">
-                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Rôle Système</label>
-                            <select 
-                                v-model="userEditForm.role"
-                                class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
-                            >
-                                <option value="user">Utilisateur (user)</option>
-                                <option value="admin">Administrateur (admin)</option>
-                            </select>
-                        </div>
-
-                        <!-- VIP & AVIP levels -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1">
-                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Niveau VIP</label>
-                                <select 
-                                    v-model="userEditForm.vip_level"
-                                    class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none"
-                                >
-                                    <option v-for="i in [0, 1, 2, 3, 4, 5]" :key="i" :value="i">VIP {{ i }}</option>
-                                </select>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Niveau AVIP</label>
-                                <select 
-                                    v-model="userEditForm.avip_level"
-                                    class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none"
-                                >
-                                    <option v-for="i in [0, 1, 2, 3]" :key="i" :value="i">AVIP {{ i }}</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Spin Wheels quota -->
-                        <div class="space-y-1">
-                            <label class="text-[9px] text-slate-400 uppercase font-black tracking-wider block">Lancers Tirage Disponibles</label>
-                            <input 
-                                v-model="userEditForm.draw_spins"
-                                type="number"
-                                required
-                                class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
-                            />
-                        </div>
-
-                        <!-- RIGGING / PRE-DETERMINED OUTCOME SELECTOR -->
-                        <div class="space-y-1.5 p-3.5 bg-amber-500/[0.02] border border-amber-500/25 rounded-2xl">
-                            <label class="text-[9px] text-amber-400 uppercase font-black tracking-wider block flex items-center gap-1">
-                                <Zap class="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                                Rigging du Prochain Tirage
-                            </label>
-                            <p class="text-[8px] text-slate-400 leading-relaxed mb-1.5">Force la roue de l'utilisateur à s'arrêter sur le gain sélectionné lors de son PROCHAIN spin.</p>
-                            <select 
-                                v-model="userEditForm.next_spin_prize_index"
-                                class="w-full bg-black/50 border border-amber-500/30 text-amber-400 font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none"
-                            >
-                                <option :value="null">Aléatoire (Aucun rigging)</option>
-                                <option value="0">Secteur 0 : 777 XAF (Hautement Probable)</option>
-                                <option value="1">Secteur 1 : 1 777 XAF</option>
-                                <option value="2">Secteur 2 : 7 777 XAF</option>
-                                <option value="3">Secteur 3 : 77 777 XAF</option>
-                                <option value="4">Secteur 4 : 177 777 XAF</option>
-                                <option value="5">Secteur 5 : 777 777 XAF</option>
-                                <option value="6">Secteur 6 : 1 777 777 XAF (JACKPOT FORCÉ)</option>
-                            </select>
-                        </div>
-
-                        <!-- Actions Buttons -->
-                        <div class="flex gap-2 pt-3 border-t border-white/5">
-                            <button 
-                                type="submit"
-                                :disabled="userEditForm.processing"
-                                class="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-[9px] rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)]"
-                            >
-                                Enregistrer
-                            </button>
-                            <button 
-                                type="button"
-                                @click="handleDeleteUser(selectedUser.id)"
-                                class="px-3.5 py-3 bg-rose-950/30 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-black font-bold uppercase tracking-wider text-[9px] rounded-xl transition-all"
-                            >
-                                Bannir
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
