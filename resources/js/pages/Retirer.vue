@@ -59,6 +59,44 @@ const showMethodSelector = ref(false);
 const showPassword = ref(false);
 const showHistory = ref(false);
 
+const isWithdrawalOpen = computed(() => {
+    // Convert current local time to Africa/Douala timezone (Cameroon)
+    const now = new Date();
+    try {
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Africa/Douala',
+            hour12: false,
+            weekday: 'short',
+            hour: 'numeric',
+            minute: 'numeric'
+        });
+        const parts = formatter.formatToParts(now);
+        const weekdayVal = parts.find(p => p.type === 'weekday')?.value || '';
+        const hourVal = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+        const minuteVal = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+
+        // Weekdays: Mon, Tue, Wed, Thu, Fri
+        const isWeekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(weekdayVal);
+        if (!isWeekday) return false;
+
+        const timeInMinutes = hourVal * 60 + minuteVal;
+        const startLimit = 9 * 60; // 09:00
+        const endLimit = 17 * 60 + 30; // 17:30
+
+        return timeInMinutes >= startLimit && timeInMinutes <= endLimit;
+    } catch (e) {
+        // Fallback for environment without Intl support
+        const day = now.getDay();
+        const isWeekday = day >= 1 && day <= 5;
+        if (!isWeekday) return false;
+
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        const timeInMinutes = hour * 60 + minute;
+        return timeInMinutes >= 540 && timeInMinutes <= 1050; // 09:00 - 17:30
+    }
+});
+
 const fixedAmounts = [1500, 5000, 15000, 50000, 150000, 500000, 1500000, 5000000];
 const selectedAmount = ref<number | null>(null);
 
@@ -362,14 +400,25 @@ onUnmounted(() => {
                         </div>
                     </div>
 
+                    <!-- Warning banner if closed -->
+                    <div v-if="!isWithdrawalOpen" class="bg-red-500/10 border border-red-500/20 rounded-xl p-3.5 text-xs text-red-400 font-mono flex items-center gap-2 mt-2">
+                        <AlertCircle class="h-4.5 w-4.5 shrink-0 text-red-400" />
+                        <span>{{ t('Les retraits sont fermés. Horaires autorisés : du lundi au vendredi de 09h00 à 17h30 (Heure du Cameroun).', 'Withdrawals are closed. Allowed hours: Monday to Friday from 09:00 to 17:30 (Cameroon Time).') }}</span>
+                    </div>
+
                     <!-- CONFIRM BUTTON (Confirm withdraw match) -->
                     <button
                         type="button"
                         @click="handleWithdrawSubmit"
-                        :disabled="withdrawForm.processing"
+                        :disabled="withdrawForm.processing || !isWithdrawalOpen"
                         class="w-full py-3.5 mt-2 rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-extrabold text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all duration-300 disabled:opacity-50"
                     >
-                        {{ withdrawForm.processing ? t('Traitement...', 'Processing...') : t('Confirmer le retrait', 'Confirm withdrawal') }}
+                        <template v-if="!isWithdrawalOpen">
+                            {{ t('Retraits fermés (09:00 - 17:30)', 'Withdrawals Closed (09:00 - 17:30)') }}
+                        </template>
+                        <template v-else>
+                            {{ withdrawForm.processing ? t('Traitement...', 'Processing...') : t('Confirmer le retrait', 'Confirm withdrawal') }}
+                        </template>
                     </button>
                 </div>
 
@@ -378,6 +427,7 @@ onUnmounted(() => {
                     <p class="font-bold text-white mb-2">
                         {{ t('Conseils de retrait :', 'Withdrawal Guidelines:') }}
                     </p>
+                    <p>• {{ t('Horaires de retrait : du lundi au vendredi de 09h00 à 17h30 (Heure du Cameroun). Les demandes en dehors de cette plage sont bloquées.', 'Withdrawal hours: Monday to Friday from 09:00 to 17:30 (Cameroon Time). Requests outside this window are blocked.') }}</p>
                     <p>• {{ t('Délai de traitement des retraits : 1 à 3 jours ouvrables (sous 72 heures).', 'Withdrawal Processing Time: 1-3 business days (within 72 hours).') }}</p>
                     <p>• {{ t('Chaque transaction engendre des frais de traitement administratifs de 6%.', 'Each transaction incurs a 6% handling fee.') }}</p>
                     <p>• {{ t('Les frais de gestion de 6% seront automatiquement prélevés lors du transfert.', 'A 6% management fee will be deducted for each withdrawal.') }}</p>

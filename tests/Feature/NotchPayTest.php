@@ -350,4 +350,143 @@ class NotchPayTest extends TestCase
         $user->refresh();
         $this->assertEquals(5000, $user->balance);
     }
+
+    public function test_withdrawal_blocked_on_weekend()
+    {
+        // Fake time to Saturday June 20, 2026 at 12:00:00 (WAT timezone context)
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-20 12:00:00', 'Africa/Douala'));
+
+        $user = User::factory()->create(['balance' => 20000]);
+        $this->actingAs($user);
+
+        // Pre-create withdrawal method & active node to satisfy validation checks
+        \App\Models\WithdrawalMethod::create([
+            'user_id' => $user->id,
+            'operator' => 'orange',
+            'phone' => '699999999',
+            'full_name' => 'Test User',
+            'is_default' => true
+        ]);
+        $node = \App\Models\Node::create([
+            'name' => 'Neoverse Card',
+            'amount' => 15000,
+            'duration' => 30,
+            'generation_profit' => 500,
+            'technology_level' => 1,
+            'active' => true,
+        ]);
+        \App\Models\UserNode::create([
+            'user_id' => $user->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => \Carbon\Carbon::now()->subDays(2),
+            'expires_at' => \Carbon\Carbon::now()->addDays(28),
+        ]);
+
+        $user->update(['withdrawal_password' => bcrypt('1234')]);
+
+        $response = $this->post(route('wallet.withdraw'), [
+            'amount' => 5000,
+            'method' => 'orange',
+            'phone' => '699999999',
+            'withdrawal_password' => '1234'
+        ]);
+
+        $response->assertSessionHasErrors('error');
+        $this->assertEquals(20000, $user->fresh()->balance);
+
+        \Carbon\Carbon::setTestNow();
+    }
+
+    public function test_withdrawal_blocked_outside_hours()
+    {
+        // Fake time to Monday June 22, 2026 at 08:30:00 (before 9h00 WAT)
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-22 08:30:00', 'Africa/Douala'));
+
+        $user = User::factory()->create(['balance' => 20000]);
+        $this->actingAs($user);
+
+        \App\Models\WithdrawalMethod::create([
+            'user_id' => $user->id,
+            'operator' => 'orange',
+            'phone' => '699999999',
+            'full_name' => 'Test User',
+            'is_default' => true
+        ]);
+        $node = \App\Models\Node::create([
+            'name' => 'Neoverse Card',
+            'amount' => 15000,
+            'duration' => 30,
+            'generation_profit' => 500,
+            'technology_level' => 1,
+            'active' => true,
+        ]);
+        \App\Models\UserNode::create([
+            'user_id' => $user->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => \Carbon\Carbon::now()->subDays(2),
+            'expires_at' => \Carbon\Carbon::now()->addDays(28),
+        ]);
+
+        $user->update(['withdrawal_password' => bcrypt('1234')]);
+
+        $response = $this->post(route('wallet.withdraw'), [
+            'amount' => 5000,
+            'method' => 'orange',
+            'phone' => '699999999',
+            'withdrawal_password' => '1234'
+        ]);
+
+        $response->assertSessionHasErrors('error');
+        $this->assertEquals(20000, $user->fresh()->balance);
+
+        \Carbon\Carbon::setTestNow();
+    }
+
+    public function test_withdrawal_allowed_during_hours()
+    {
+        // Fake time to Monday June 22, 2026 at 11:30:00 (between 9h00 and 17h30 WAT)
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-22 11:30:00', 'Africa/Douala'));
+
+        $user = User::factory()->create(['balance' => 20000]);
+        $this->actingAs($user);
+
+        \App\Models\WithdrawalMethod::create([
+            'user_id' => $user->id,
+            'operator' => 'orange',
+            'phone' => '699999999',
+            'full_name' => 'Test User',
+            'is_default' => true
+        ]);
+        $node = \App\Models\Node::create([
+            'name' => 'Neoverse Card',
+            'amount' => 15000,
+            'duration' => 30,
+            'generation_profit' => 500,
+            'technology_level' => 1,
+            'active' => true,
+        ]);
+        \App\Models\UserNode::create([
+            'user_id' => $user->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => \Carbon\Carbon::now()->subDays(2),
+            'expires_at' => \Carbon\Carbon::now()->addDays(28),
+        ]);
+
+        $user->update(['withdrawal_password' => bcrypt('1234')]);
+
+        $response = $this->post(route('wallet.withdraw'), [
+            'amount' => 5000,
+            'method' => 'orange',
+            'phone' => '699999999',
+            'withdrawal_password' => '1234'
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals(15000, $user->fresh()->balance);
+
+        \Carbon\Carbon::setTestNow();
+    }
 }

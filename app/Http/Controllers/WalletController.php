@@ -199,6 +199,18 @@ class WalletController extends Controller
         $user = Auth::user();
         $amount = $request->amount;
 
+        // Validation stricte des jours et horaires de retrait (Lundi - Vendredi, 09h00 - 17h30, heure du Cameroun)
+        $now = \Carbon\Carbon::now('Africa/Douala');
+        if ($now->isWeekend()) {
+            return back()->withErrors(['error' => 'Les retraits sont ouverts uniquement du lundi au vendredi de 09h00 à 17h30 (Heure du Cameroun).']);
+        }
+
+        $startTime = $now->copy()->setTime(9, 0, 0);
+        $endTime = $now->copy()->setTime(17, 30, 0);
+        if (!$now->between($startTime, $endTime)) {
+            return back()->withErrors(['error' => 'Les retraits sont ouverts uniquement du lundi au vendredi de 09h00 à 17h30 (Heure du Cameroun).']);
+        }
+
         // 1. Invested in at least one product
         $hasInvested = \App\Models\UserNode::where('user_id', $user->id)->exists();
         if (!$hasInvested) {
