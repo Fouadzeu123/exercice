@@ -82,8 +82,8 @@ class DashboardController extends Controller
         $user = Auth::user();
         $today = Carbon::today();
 
-        // Référence unique par jour : CKI-YYYYMMDD
-        $reference = 'CKI-' . $today->format('Ymd');
+        // Référence unique par jour et par utilisateur : CKI-USER_ID-YYYYMMDD
+        $reference = 'CKI-' . $user->id . '-' . $today->format('Ymd');
         $alreadyCheckedIn = Transaction::where('user_id', $user->id)
             ->where('type', 'earnings')
             ->where('reference', $reference)
@@ -187,7 +187,7 @@ class DashboardController extends Controller
 
         // Commissions de parrainage
         $referralCommissions = Transaction::where('user_id', $user->id)
-            ->where('type', 'earnings')
+            ->whereIn('type', ['commission', 'earnings'])
             ->where('reference', 'like', 'COM-%')
             ->where('status', 'completed')
             ->sum('amount');
@@ -257,10 +257,7 @@ class DashboardController extends Controller
         }
 
         $activeReferralsCount = \App\Models\User::where('referrer_id', $user->id)
-            ->where(function($query) {
-                $query->whereHas('userNodes')
-                      ->orWhereHas('userAVIPProducts');
-            })
+            ->hasActiveInvestments()
             ->count();
 
         return Inertia::render('ProductDetails', [

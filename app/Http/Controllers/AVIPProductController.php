@@ -49,10 +49,7 @@ class AVIPProductController extends Controller
         // Enforce required active referrals constraint
         if ($product->required_active_referrals > 0) {
             $activeReferralsCount = \App\Models\User::where('referrer_id', $user->id)
-                ->where(function($query) {
-                    $query->whereHas('userNodes')
-                          ->orWhereHas('userAVIPProducts');
-                })
+                ->hasActiveInvestments()
                 ->count();
             if ($activeReferralsCount < $product->required_active_referrals) {
                 return back()->withErrors(['error' => "Ce produit requiert au moins {$product->required_active_referrals} filleul(s) actif(s) ayant loué/acheté un produit pour être déverrouillé. Vous en avez actuellement : {$activeReferralsCount}."]);
@@ -145,7 +142,7 @@ class AVIPProductController extends Controller
                             Transaction::create([
                                 'user_id' => $sponsor->id,
                                 'amount' => $commissionAmount,
-                                'type' => 'earnings',
+                                'type' => 'commission',
                                 'status' => 'completed',
                                 'reference' => 'COM-' . strtoupper(bin2hex(random_bytes(4))),
                             ]);

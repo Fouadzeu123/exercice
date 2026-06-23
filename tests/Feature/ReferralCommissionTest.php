@@ -186,4 +186,116 @@ class ReferralCommissionTest extends TestCase
         $this->assertEquals(15000.00, $user->balance);
         $this->assertEquals('completed', $investment->status);
     }
+
+    public function test_team_controller_and_dashboard_controller_sum_all_commissions_and_detect_active_referrals_properly()
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create(['referrer_id' => $userA->id]);
+
+        // 1. Create check-in commission (type 'commission')
+        Transaction::create([
+            'user_id' => $userA->id,
+            'amount' => 50.00,
+            'type' => 'commission',
+            'status' => 'completed',
+            'reference' => 'COM-L1-AABBCC',
+        ]);
+
+        // 2. Create node direct commission (type 'commission')
+        Transaction::create([
+            'user_id' => $userA->id,
+            'amount' => 500.00,
+            'type' => 'commission',
+            'status' => 'completed',
+            'reference' => 'COM-DDEEFF',
+        ]);
+
+        // 3. Create node active for userB (referree)
+        $node = Node::create([
+            'name' => 'Active Node',
+            'amount' => 5000,
+            'duration' => 30,
+            'generation_profit' => 100,
+            'technology_level' => 1,
+            'active' => true,
+        ]);
+        UserNode::create([
+            'user_id' => $userB->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => Carbon::now(),
+            'expires_at' => Carbon::now()->addDays(30),
+        ]);
+
+        $this->actingAs($userA);
+
+        // Access Dashboard Gains
+        $response1 = $this->get('/gains');
+        $response1->assertOk();
+        
+        // Assert that the dashboard sum of parrainage commissions equals 550.00
+        $this->assertEquals(550.00, $response1->viewData('page')['props']['referralCommissions']);
+
+        // Access Team Page
+        $response2 = $this->get('/team');
+        $response2->assertOk();
+
+        // Assert that total parrainage commissions on team page equals 550.00
+        $this->assertEquals(550.00, $response2->viewData('page')['props']['stats']['total_commissions']);
+
+        // Assert that userB is counted as active member
+        $this->assertEquals(1, $response2->viewData('page')['props']['stats']['active_members']);
+    }
+
+    public function test_retroactive_referral_rewards_artisan_command()
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create(['referrer_id' => $userA->id]);
+
+        // Create node with referral reward
+        $node = Node::create([
+            'name' => 'Reward Node',
+            'amount' => 5000,
+            'duration' => 30,
+            'generation_profit' => 100,
+            'technology_level' => 1,
+            'referral_reward' => 1200,
+            'active' => true,
+        ]);
+
+        // Create rental for userB (filleul) WITHOUT creating a commission for userA (parrain)
+        $userNode = UserNode::create([
+            'user_id' => $userB->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => Carbon::now(),
+            'expires_at' => Carbon::now()->addDays(30),
+        ]);
+
+        // Assert userA balance is 0 and no commission exists
+        $this->assertEquals(0, $userA->balance);
+
+        // Run parrainage:retro-rewards command
+        $this->artisan('parrainage:retro-rewards')
+             ->expectsOutputToContain('Récompense manquante détectée')
+             ->expectsOutputToContain('Total récompenses attribuées : 1')
+             ->expectsOutputToContain('Montant total distribué : 1200')
+             ->assertExitCode(0);
+
+        // Check that userA balance is credited
+        $userA->refresh();
+        $this->assertEquals(1200.00, $userA->balance);
+
+        // Check that unique transaction is logged
+        $this->assertTrue(Transaction::where('user_id', $userA->id)
+            ->where('reference', 'COM-RET-N-' . $userB->id . '-' . $userNode->id)
+            ->where('amount', 1200.00)
+            ->exists());
+
+        // Run command again, should not reward twice
+        $this->artisan('parrainage:retro-rewards')
+             ->expectsOutputToContain('Total récompenses attribuées : 0')
+             ->assertExitCode(0);
+    }
 }
+

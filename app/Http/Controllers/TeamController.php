@@ -19,7 +19,17 @@ class TeamController extends Controller
         // ---------------------------------------------------------
         $directReferrals = User::where('referrer_id', $user->id)
             ->with(['userNodes' => function ($query) {
-                $query->where('active', true);
+                $query->where('active', true)->where(function($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                });
+            }])
+            ->with(['userAVIPProducts' => function ($query) {
+                $query->where('active', true)->where(function($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                });
+            }])
+            ->with(['vaultInvestments' => function ($query) {
+                $query->where('status', 'active');
             }])
             ->with(['transactions' => function ($query) {
                 $query->where('type', 'purchase')->where('amount', '<', 0);
@@ -27,7 +37,9 @@ class TeamController extends Controller
             ->get();
 
         $referralsFormatted = $directReferrals->map(function ($referral) {
-            $hasActiveNode = $referral->userNodes->isNotEmpty();
+            $hasActiveInvestment = $referral->userNodes->isNotEmpty()
+                || $referral->userAVIPProducts->isNotEmpty()
+                || $referral->vaultInvestments->isNotEmpty();
             $totalInvested = $referral->transactions->sum(function ($transaction) {
                 return abs($transaction->amount);
             });
@@ -42,7 +54,7 @@ class TeamController extends Controller
                 'phone' => $phoneHidden,
                 'vip_level' => $referral->vip_level,
                 'joined_at' => $referral->created_at->format('d/m/Y'),
-                'is_active' => $hasActiveNode,
+                'is_active' => $hasActiveInvestment,
                 'total_invested' => (float) $totalInvested,
             ];
         });
@@ -56,37 +68,67 @@ class TeamController extends Controller
 
         // Filleuls Niveau 2
         $level2Referrals = User::whereIn('id', $level2UserIds)
-            ->with(['userNodes' => function ($q) { $q->where('active', true); }])
+            ->with(['userNodes' => function ($q) {
+                $q->where('active', true)->where(function($sq) {
+                    $sq->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                });
+            }])
+            ->with(['userAVIPProducts' => function ($q) {
+                $q->where('active', true)->where(function($sq) {
+                    $sq->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                });
+            }])
+            ->with(['vaultInvestments' => function ($q) {
+                $q->where('status', 'active');
+            }])
             ->get()
             ->map(function ($ref) {
                 $phone = $ref->phone;
                 if (strlen($phone) > 7) {
                     $phone = substr($phone, 0, 4) . '****' . substr($phone, -3);
                 }
+                $hasActiveInvestment = $ref->userNodes->isNotEmpty()
+                    || $ref->userAVIPProducts->isNotEmpty()
+                    || $ref->vaultInvestments->isNotEmpty();
                 return [
                     'id' => $ref->id,
                     'phone' => $phone,
                     'vip_level' => $ref->vip_level,
                     'joined_at' => $ref->created_at->format('d/m/Y'),
-                    'is_active' => $ref->userNodes->isNotEmpty(),
+                    'is_active' => $hasActiveInvestment,
                 ];
             });
 
         // Filleuls Niveau 3
         $level3Referrals = User::whereIn('id', $level3UserIds)
-            ->with(['userNodes' => function ($q) { $q->where('active', true); }])
+            ->with(['userNodes' => function ($q) {
+                $q->where('active', true)->where(function($sq) {
+                    $sq->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                });
+            }])
+            ->with(['userAVIPProducts' => function ($q) {
+                $q->where('active', true)->where(function($sq) {
+                    $sq->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                });
+            }])
+            ->with(['vaultInvestments' => function ($q) {
+                $q->where('status', 'active');
+            }])
             ->get()
             ->map(function ($ref) {
                 $phone = $ref->phone;
                 if (strlen($phone) > 7) {
                     $phone = substr($phone, 0, 4) . '****' . substr($phone, -3);
                 }
+                $hasActiveInvestment = $ref->userNodes->isNotEmpty()
+                    || $ref->userAVIPProducts->isNotEmpty()
+                    || $ref->vaultInvestments->isNotEmpty();
                 return [
                     'id' => $ref->id,
                     'phone' => $phone,
                     'vip_level' => $ref->vip_level,
                     'joined_at' => $ref->created_at->format('d/m/Y'),
-                    'is_active' => $ref->userNodes->isNotEmpty(),
+                    'is_active' => $hasActiveInvestment,
                 ];
             });
 
@@ -97,7 +139,7 @@ class TeamController extends Controller
         $teamVolume = $referralsFormatted->sum('total_invested');
         
         $totalCommissions = Transaction::where('user_id', $user->id)
-            ->where('type', 'earnings')
+            ->whereIn('type', ['commission', 'earnings'])
             ->where('reference', 'like', 'COM-%')
             ->sum('amount');
 
@@ -163,7 +205,7 @@ class TeamController extends Controller
         $referredCount = User::where('referrer_id', $user->id)->count();
 
         $commissionsTotal = Transaction::where('user_id', $user->id)
-            ->where('type', 'earnings')
+            ->whereIn('type', ['commission', 'earnings'])
             ->where('reference', 'like', 'COM-%')
             ->sum('amount');
 

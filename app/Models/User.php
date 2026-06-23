@@ -77,6 +77,32 @@ class User extends Authenticatable
     // --- METHODES METIER OPTIMISEES ---
 
     /**
+     * Scope: Uniquement les utilisateurs ayant un investissement actif (nœud, produit AVIP ou vault).
+     */
+    public function scopeHasActiveInvestments($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereHas('userNodes', function ($sq) {
+                $sq->where('active', true)
+                   ->where(function ($ssq) {
+                       $ssq->whereNull('expires_at')
+                           ->orWhere('expires_at', '>', now());
+                   });
+            })
+            ->orWhereHas('userAVIPProducts', function ($sq) {
+                $sq->where('active', true)
+                   ->where(function ($ssq) {
+                       $ssq->whereNull('expires_at')
+                           ->orWhere('expires_at', '>', now());
+                   });
+            })
+            ->orWhereHas('vaultInvestments', function ($sq) {
+                $sq->where('status', 'active');
+            });
+        });
+    }
+
+    /**
      * Récupère le nœud actif de l'utilisateur sans requêtes complexes dans le contrôleur
      */
     public function activeNode()
@@ -103,7 +129,7 @@ class User extends Authenticatable
             ->sum('amount'));
 
         // 2. Stats d'équipe (1 grosse requête optimisée au lieu de N boucles)
-        // On joint les users, on compte les actifs, on somme les montants
+        // On joint les users, on compte les actifs (nœuds, AVIP, coffres), on somme les montants
         $teamStats = DB::table('users as referrals')
             ->leftJoin('user_nodes', function ($join) {
                 $join->on('referrals.id', '=', 'user_nodes.user_id')
@@ -113,6 +139,18 @@ class User extends Authenticatable
                            ->orWhere('user_nodes.expires_at', '>', now());
                      });
             })
+            ->leftJoin('user_avip_products', function ($join) {
+                $join->on('referrals.id', '=', 'user_avip_products.user_id')
+                     ->where('user_avip_products.active', true)
+                     ->where(function ($q) {
+                         $q->whereNull('user_avip_products.expires_at')
+                           ->orWhere('user_avip_products.expires_at', '>', now());
+                     });
+            })
+            ->leftJoin('vault_investments', function ($join) {
+                $join->on('referrals.id', '=', 'vault_investments.user_id')
+                     ->where('vault_investments.status', 'active');
+            })
             ->leftJoin('transactions', function ($join) {
                 $join->on('referrals.id', '=', 'transactions.user_id')
                      ->where('transactions.type', 'purchase')
@@ -121,7 +159,7 @@ class User extends Authenticatable
             })
             ->where('referrals.referrer_id', $this->id)
             ->selectRaw('
-                COUNT(DISTINCT CASE WHEN user_nodes.id IS NOT NULL THEN referrals.id END) as active_referrals,
+                COUNT(DISTINCT CASE WHEN user_nodes.id IS NOT NULL OR user_avip_products.id IS NOT NULL OR vault_investments.id IS NOT NULL THEN referrals.id END) as active_referrals,
                 COALESCE(SUM(ABS(transactions.amount)), 0) as team_volume
             ')
             ->first();
