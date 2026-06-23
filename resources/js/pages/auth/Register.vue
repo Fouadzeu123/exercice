@@ -155,6 +155,7 @@ const showTermsModal = ref(false);
                         name="referral_code"
                         placeholder="Ex: AB12CD34"
                         :readonly="!!initialReferral"
+                        :defaultValue="initialReferral"
                         :class="[
                             'bg-black/50 border-purple-500/20 text-white focus-visible:ring-purple-400 focus-visible:border-purple-400 transition-all duration-300 neon-border font-mono text-sm pl-4 h-12 rounded-xl',
                             initialReferral ? 'opacity-50 cursor-not-allowed select-none bg-purple-950/10' : ''
