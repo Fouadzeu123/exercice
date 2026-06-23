@@ -99,7 +99,7 @@ const navItems = [
         </aside>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col min-w-0 z-10 relative">
+        <div class="flex-1 flex flex-col min-w-0 z-30 relative">
             
             <!-- Navbar Header -->
             <header class="h-16 bg-[#0a0518]/50 border-b border-white/5 flex items-center justify-between px-4 lg:px-6 backdrop-blur-md">

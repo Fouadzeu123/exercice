@@ -292,6 +292,15 @@ const handleDeleteUser = (id: number) => {
     });
 };
 
+const handleInspectReferral = (refUserId: number) => {
+    const fullUser = props.users.find(u => u.id === refUserId);
+    if (fullUser) {
+        openUserModal(fullUser);
+    } else {
+        showToast("Erreur : Impossible de localiser ce parrainé dans le registre.", true);
+    }
+};
+
 // DYNAMIC GIFT CODE GENERATION FORM
 const giftCodeForm = useForm({
     code: '',
@@ -1675,7 +1684,7 @@ onUnmounted(() => {
                                         class="px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all"
                                         :class="userDetailTab === 'referrals' ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-[0_0_8px_rgba(6,182,212,0.3)]' : 'text-slate-400 hover:text-white'"
                                     >
-                                        Filleuls ({{ userDetails.user.referrals ? userDetails.user.referrals.length : 0 }})
+                                        Filleuls ({{ userDetails.referrals ? userDetails.referrals.length : 0 }})
                                     </button>
                                     <button 
                                         type="button"
@@ -1740,27 +1749,57 @@ onUnmounted(() => {
 
                                     <!-- TAB 2: REFERRALS -->
                                     <div v-if="userDetailTab === 'referrals'">
-                                        <div v-if="!userDetails.user.referrals || userDetails.user.referrals.length === 0" class="text-center py-12 text-slate-500 text-[10px] uppercase font-mono">
+                                        <div v-if="!userDetails.referrals || userDetails.referrals.length === 0" class="text-center py-12 text-slate-500 text-[10px] uppercase font-mono">
                                             Aucun filleul direct.
                                         </div>
                                         <table v-else class="w-full text-left text-[10px] font-mono text-slate-300">
                                             <thead>
                                                 <tr class="border-b border-white/5 text-slate-500 uppercase text-[8px] font-black">
                                                     <th class="pb-2">Téléphone</th>
-                                                    <th class="pb-2">Niveau VIP</th>
-                                                    <th class="pb-2 text-right">Inscription</th>
+                                                    <th class="pb-2">Niveaux</th>
+                                                    <th class="pb-2">Investissements Actifs</th>
+                                                    <th class="pb-2">Inscription</th>
+                                                    <th class="pb-2 text-right">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-white/5">
-                                                <tr v-for="refUser in userDetails.user.referrals" :key="refUser.id" class="hover:bg-white/[0.01]">
+                                                <tr v-for="refUser in userDetails.referrals" :key="refUser.id" class="hover:bg-white/[0.01]">
                                                     <td class="py-2.5 text-white font-bold">{{ refUser.phone }}</td>
-                                                    <td class="py-2.5">
-                                                        <span class="px-1.5 py-0.2 rounded bg-purple-950/40 text-purple-300 border border-purple-700/20 text-[8px] font-bold">
+                                                    <td class="py-2.5 space-y-1">
+                                                        <span class="px-1.5 py-0.2 rounded bg-purple-950/40 text-purple-300 border border-purple-700/20 text-[8px] font-bold block w-fit">
                                                             VIP {{ refUser.vip_level }}
                                                         </span>
+                                                        <span class="px-1.5 py-0.2 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-700/20 text-[8px] font-bold block w-fit">
+                                                            AVIP {{ refUser.avip_level }}
+                                                        </span>
                                                     </td>
-                                                    <td class="py-2.5 text-right text-slate-500">
+                                                    <td class="py-2.5">
+                                                        <div class="flex flex-wrap gap-1 max-w-sm">
+                                                            <span v-for="nodeName in refUser.active_nodes" :key="nodeName" class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 text-[8px] font-bold">
+                                                                🖥️ {{ nodeName }}
+                                                            </span>
+                                                            <span v-for="avipName in refUser.active_avips" :key="avipName" class="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/15 text-[8px] font-bold">
+                                                                ⚡ {{ avipName }}
+                                                            </span>
+                                                            <span v-for="vaultName in refUser.active_vaults" :key="vaultName" class="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/15 text-[8px] font-bold">
+                                                                📦 {{ vaultName }}
+                                                            </span>
+                                                            <span v-if="refUser.active_nodes.length === 0 && refUser.active_avips.length === 0 && refUser.active_vaults.length === 0" class="text-slate-500 text-[8px] italic">
+                                                                Aucun investissement actif
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-2.5 text-slate-500">
                                                         {{ new Date(refUser.created_at).toLocaleDateString('fr-FR') }}
+                                                    </td>
+                                                    <td class="py-2.5 text-right">
+                                                        <button 
+                                                            type="button" 
+                                                            @click="handleInspectReferral(refUser.id)"
+                                                            class="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-[8px] rounded transition-all"
+                                                        >
+                                                            Gérer
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             </tbody>

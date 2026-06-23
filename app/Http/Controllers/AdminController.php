@@ -728,7 +728,20 @@ class AdminController extends Controller
     {
         $user = User::with([
             'referrer:id,phone',
-            'referrals:id,phone,vip_level,created_at',
+            'referrals:id,phone,vip_level,avip_level,referrer_id,created_at',
+            'referrals.userNodes' => function ($q) {
+                $q->where('active', true)->where(function ($sq) {
+                    $sq->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })->with('node:id,name');
+            },
+            'referrals.userAVIPProducts' => function ($q) {
+                $q->where('active', true)->where(function ($sq) {
+                    $sq->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })->with('avipProduct:id,name');
+            },
+            'referrals.vaultInvestments' => function ($q) {
+                $q->where('status', 'active')->with('vaultPlan:id,name');
+            }
         ])->findOrFail($id);
 
         // Recalculate VIP/AVIP status dynamically on request to guarantee accuracy
@@ -810,8 +823,29 @@ class AdminController extends Controller
             ->where('status', 'completed')
             ->sum('amount'));
 
+        // Prepare referrals with formatted active investments list
+        $formattedReferrals = $user->referrals->map(function ($ref) {
+            return [
+                'id' => $ref->id,
+                'phone' => $ref->phone,
+                'vip_level' => $ref->vip_level,
+                'avip_level' => $ref->avip_level,
+                'created_at' => $ref->created_at,
+                'active_nodes' => $ref->userNodes->map(function ($un) {
+                    return $un->node->name ?? 'GPU';
+                })->toArray(),
+                'active_avips' => $ref->userAVIPProducts->map(function ($ua) {
+                    return $ua->avipProduct->name ?? 'AVIP';
+                })->toArray(),
+                'active_vaults' => $ref->vaultInvestments->map(function ($vi) {
+                    return $vi->vaultPlan->name ?? 'Vault';
+                })->toArray(),
+            ];
+        });
+
         return response()->json([
             'user' => $user,
+            'referrals' => $formattedReferrals,
             'active_nodes' => $activeNodes,
             'active_avips' => $activeAvips,
             'active_vaults' => $activeVaults,
