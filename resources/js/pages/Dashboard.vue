@@ -115,6 +115,12 @@ const checkinProcessing = ref(false);
 const showCheckinSuccessModal = ref(false);
 const checkinError = ref('');
 const showCheckinErrorModal = ref(false);
+const showTelegramModal = ref(false);
+
+const closeTelegramModal = () => {
+    showTelegramModal.value = false;
+    sessionStorage.setItem('telegram_modal_shown', 'true');
+};
 
 const handleDailyCheckin = async () => {
     if (checkinProcessing.value) return;
@@ -397,6 +403,13 @@ onMounted(() => {
     setTimeout(() => {
         isLoading.value = false;
     }, 750);
+
+    // Show Telegram popup shortly after page loaded
+    setTimeout(() => {
+        if (!sessionStorage.getItem('telegram_modal_shown')) {
+            showTelegramModal.value = true;
+        }
+    }, 1800);
 });
 
 onUnmounted(() => {
@@ -407,9 +420,9 @@ onUnmounted(() => {
 
 // Watch to freeze scroll on modal activation
 watch(
-    [showCheckinConsoleModal, showInviteModal, showCheckinSuccessModal, showCheckinErrorModal, showDashboardErrorModal],
-    ([newCheckin, newInvite, newSuccess, newError, newGlobalError]) => {
-        if (newCheckin || newInvite || newSuccess || newError || newGlobalError) {
+    [showCheckinConsoleModal, showInviteModal, showCheckinSuccessModal, showCheckinErrorModal, showDashboardErrorModal, showTelegramModal],
+    ([newCheckin, newInvite, newSuccess, newError, newGlobalError, newTelegram]) => {
+        if (newCheckin || newInvite || newSuccess || newError || newGlobalError || newTelegram) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -945,6 +958,50 @@ watch(
             </div>
         </Teleport>
 
+        <!-- modale Telegram de bienvenue -->
+        <Teleport to="body">
+            <div v-if="showTelegramModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden" @touchmove.prevent>
+                <div class="w-full max-w-sm bg-[#090514] border border-[#229ED9]/40 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(34,158,217,0.3)] animate-fadeInUp glow-telegram-border">
+                    <div class="p-6 text-center relative z-10">
+                        <!-- Telegram Floating Icon -->
+                        <div class="h-20 w-20 rounded-full bg-[#229ED9]/10 border border-[#229ED9]/30 flex items-center justify-center mb-5 mx-auto shadow-[0_0_25px_rgba(34,158,217,0.2)] animate-pulse">
+                            <svg viewBox="0 0 24 24" class="w-11 h-11 text-[#229ED9] fill-current">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.6 1.48-1.56 2.72-2.93 3.93-4.26.53-.58.2-.89-.48-.44-2.28 1.52-4.52 3.05-6.79 4.56-.72.48-1.38.72-1.98.7-.66-.02-1.93-.38-2.87-.69-1.15-.38-1.63-.58-1.55-1.2.04-.33.49-.66 1.37-1 5.37-2.33 8.95-3.87 10.74-4.63 5.11-2.17 6.17-2.55 6.86-2.56.15 0 .49.04.71.22.18.15.23.36.25.51.02.15.03.51.01.71z"/>
+                            </svg>
+                        </div>
+
+                        <h3 class="text-base font-black text-white uppercase tracking-wider">Groupe de Travail</h3>
+
+                        <p class="text-xs text-slate-300 mt-3 leading-relaxed font-sans px-2">
+                            Rejoignez le groupe de travail officiel <strong>ARM HOLDING</strong> sur Telegram pour recevoir les communiqués et astuces en temps réel.
+                        </p>
+
+                        <!-- Action buttons -->
+                        <div class="mt-6 space-y-3">
+                            <a
+                                href="https://t.me/+g_rEkamZ8Q02ZDg0"
+                                target="_blank"
+                                @click="closeTelegramModal"
+                                class="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#229ED9] to-[#0088cc] hover:from-[#33aeff] hover:to-[#0099e6] text-white font-extrabold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(34,158,217,0.4)] flex items-center justify-center gap-2"
+                            >
+                                <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24">
+                                    <path d="M24 12c0 6.627-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0s12 5.373 12 12zm-12.724-3.524c-2.038.847-6.111 2.593-8.219 3.512-.343.136-.525.27-.547.4-.037.218.238.305.748.465l2.062.643 4.779-3.006c.225-.138.431-.064.275.074-.23.203-3.663 3.39-3.82 3.546-.079.078-.168.157-.184.173-.105.108-.103.204-.002.27.697.458 5.617 3.714 6.166 4.076.549.362.946.541 1.341.533.228-.005.474-.11.737-.315 2.035-1.583 6.071-4.839 8.1-6.491.564-.46.793-.768.802-1.026.012-.319-.344-.496-1.037-.775-.944-.378-7.98-3.21-10.978-4.456-.251-.104-.515-.157-.793-.157-.565 0-1.127.215-1.503.371z"/>
+                                </svg>
+                                Rejoindre le groupe
+                            </a>
+
+                            <button
+                                @click="closeTelegramModal"
+                                class="w-full py-3.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white font-extrabold uppercase tracking-widest text-[9px] transition-all"
+                            >
+                                Plus tard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
     </AppLayout>
 </template>
 
@@ -974,4 +1031,11 @@ watch(
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .group:hover { box-shadow: 0 0 20px rgba(168,85,247,0.2); border-color: rgba(168,85,247,0.4); }
+
+@keyframes telegramBorderGlow {
+    0% { box-shadow: 0 0 2px rgba(34,158,217,0.2),0 0 4px rgba(34,158,217,0.1); border-color: rgba(34,158,217,0.3); }
+    50% { box-shadow: 0 0 8px rgba(34,158,217,0.6),0 0 12px rgba(34,158,217,0.3); border-color: rgba(34,158,217,0.8); }
+    100% { box-shadow: 0 0 2px rgba(34,158,217,0.2),0 0 4px rgba(34,158,217,0.1); border-color: rgba(34,158,217,0.3); }
+}
+.glow-telegram-border { animation: telegramBorderGlow 3s ease-in-out infinite; border-style: solid; border-width: 1px; }
 </style>
