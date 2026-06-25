@@ -94,30 +94,50 @@ class VaultInvestment extends Model
                     $payoutAmount = $dailyPayout * $dueDays;
 
                     \DB::transaction(function () use ($user, $investment, $dueDays, $payoutAmount, $plan) {
+                        $lockedUser = User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+                        $lockedInvestment = self::where('id', $investment->id)->lockForUpdate()->firstOrFail();
+
+                        // Re-evaluate due days on locked record to prevent double-claiming
+                        $createdAt = Carbon::parse($lockedInvestment->created_at);
+                        $now = Carbon::now();
+                        $elapsedDays = (int) floor($createdAt->diffInHours($now) / 24);
+                        $elapsedDays = min($plan->duration, $elapsedDays);
+                        $currentDueDays = $elapsedDays - $lockedInvestment->payouts_claimed;
+
+                        if ($currentDueDays <= 0) {
+                            return;
+                        }
+
+                        $dailyPayout = $lockedInvestment->return_amount / $plan->duration;
+                        $currentPayoutAmount = $dailyPayout * $currentDueDays;
+
                         // Credit user balance
-                        $user->balance += $payoutAmount;
-                        $user->save();
+                        $lockedUser->balance += $currentPayoutAmount;
+                        $lockedUser->save();
 
                         // Update investment payouts count
-                        $investment->payouts_claimed += $dueDays;
-                        $investment->last_payout_at = Carbon::now();
+                        $lockedInvestment->payouts_claimed += $currentDueDays;
+                        $lockedInvestment->last_payout_at = Carbon::now();
                         
-                        if ($investment->payouts_claimed >= $plan->duration) {
-                            $investment->status = 'completed';
+                        if ($lockedInvestment->payouts_claimed >= $plan->duration) {
+                            $lockedInvestment->status = 'completed';
                         }
-                        $investment->save();
+                        $lockedInvestment->save();
 
                         // Log transaction
                         Transaction::create([
-                            'user_id' => $user->id,
-                            'amount' => $payoutAmount,
+                            'user_id' => $lockedUser->id,
+                            'amount' => $currentPayoutAmount,
                             'type' => 'earnings',
                             'status' => 'completed',
-                            'reference' => 'VLT-D-' . $investment->id . '-' . strtoupper(bin2hex(random_bytes(3))),
+                            'reference' => 'VLT-D-' . $lockedInvestment->id . '-' . strtoupper(bin2hex(random_bytes(3))),
                         ]);
 
                         // Distribute daily referral commissions (L1 = 5%, L2 = 2%, L3 = 1%)
-                        $user->payDailyCommissions($payoutAmount);
+                        $lockedUser->payDailyCommissions($currentPayoutAmount);
+
+                        // Sync back to memory user object
+                        $user->balance = $lockedUser->balance;
                     });
                 }
             } else {
@@ -125,23 +145,33 @@ class VaultInvestment extends Model
                 $now = Carbon::now();
                 if ($now->isAfter($investment->expires_at)) {
                     \DB::transaction(function () use ($user, $investment) {
+                        $lockedUser = User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+                        $lockedInvestment = self::where('id', $investment->id)->lockForUpdate()->firstOrFail();
+
+                        if ($lockedInvestment->status !== 'active') {
+                            return;
+                        }
+
                         // Credit user balance
-                        $user->balance += $investment->return_amount;
-                        $user->save();
+                        $lockedUser->balance += $lockedInvestment->return_amount;
+                        $lockedUser->save();
 
                         // Update investment state
-                        $investment->status = 'completed';
-                        $investment->last_payout_at = Carbon::now();
-                        $investment->save();
+                        $lockedInvestment->status = 'completed';
+                        $lockedInvestment->last_payout_at = Carbon::now();
+                        $lockedInvestment->save();
 
                         // Log transaction
                         Transaction::create([
-                            'user_id' => $user->id,
-                            'amount' => $investment->return_amount,
+                            'user_id' => $lockedUser->id,
+                            'amount' => $lockedInvestment->return_amount,
                             'type' => 'earnings',
                             'status' => 'completed',
-                            'reference' => 'VLT-E-' . $investment->id . '-' . strtoupper(bin2hex(random_bytes(3))),
+                            'reference' => 'VLT-E-' . $lockedInvestment->id . '-' . strtoupper(bin2hex(random_bytes(3))),
                         ]);
+
+                        // Sync back to memory user object
+                        $user->balance = $lockedUser->balance;
                     });
                 }
             }

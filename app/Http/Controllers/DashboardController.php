@@ -76,38 +76,39 @@ class DashboardController extends Controller
 
     /**
      * Effectue la synchronisation quotidienne du nœud principal (Pointage).
-     */
-    public function checkin()
+     */    public function checkin()
     {
         $user = Auth::user();
         $today = Carbon::today();
 
         // Référence unique par jour et par utilisateur : CKI-USER_ID-YYYYMMDD
         $reference = 'CKI-' . $user->id . '-' . $today->format('Ymd');
-        $alreadyCheckedIn = Transaction::where('user_id', $user->id)
-            ->where('type', 'earnings')
-            ->where('reference', $reference)
-            ->exists();
-
-        if ($alreadyCheckedIn) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Votre console principale a déjà été synchronisée pour aujourd\'hui. Veuillez revenir demain.'
-            ], 400);
-        }
 
         try {
             \DB::transaction(function () use ($user, $reference) {
+                // Lock user record immediately
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+
+                // Re-verify checking inside locked transaction to prevent race conditions
+                $alreadyCheckedIn = Transaction::where('user_id', $lockedUser->id)
+                    ->where('type', 'earnings')
+                    ->where('reference', $reference)
+                    ->exists();
+
+                if ($alreadyCheckedIn) {
+                    throw new \InvalidArgumentException('Votre console principale a déjà été synchronisée pour aujourd\'hui. Veuillez revenir demain.');
+                }
+
                 // Montant du bonus quotidien : 77 FCFA
                 $bonusAmount = 77.00;
 
                 // Ajouter au solde
-                $user->balance += $bonusAmount;
-                $user->save();
+                $lockedUser->balance += $bonusAmount;
+                $lockedUser->save();
 
                 // Créer la transaction de pointage
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => $bonusAmount,
                     'type' => 'earnings',
                     'status' => 'completed',
@@ -115,12 +116,19 @@ class DashboardController extends Controller
                 ]);
             });
 
+            $user->refresh();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Synchronisation du nœud principal réussie. +77 FCFA injectés.',
                 'new_balance' => $user->balance
             ]);
 
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 400);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -316,28 +324,27 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->draw_spins < 1) {
-            return response()->json([
-                'success' => false,
-                'error' => "Vous n'avez plus de lancers disponibles. Les lancers sont attribués par le service RH."
-            ], 400);
-        }
-
         try {
             return \DB::transaction(function () use ($user) {
+                // Lock user record inside transaction
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+
+                if ($lockedUser->draw_spins < 1) {
+                    throw new \InvalidArgumentException("Vous n'avez plus de lancers disponibles. Les lancers sont attribués par le service RH.");
+                }
+
                 // Déduire le lancer
-                $user->draw_spins -= 1;
+                $lockedUser->draw_spins -= 1;
 
                 // Définir les gains et leurs probabilités cumulées (Total = 1000)
                 $prizes = [777, 1777, 7777, 77777, 177777, 777777, 1777777];
-                $weights = [600, 250, 100, 35, 12, 2, 1];
                 
                 $winnerIndex = null;
                 
-                if ($user->next_spin_prize_index !== null && $user->next_spin_prize_index >= 0 && $user->next_spin_prize_index <= 6) {
-                    $winnerIndex = $user->next_spin_prize_index;
+                if ($lockedUser->next_spin_prize_index !== null && $lockedUser->next_spin_prize_index >= 0 && $lockedUser->next_spin_prize_index <= 6) {
+                    $winnerIndex = $lockedUser->next_spin_prize_index;
                     // Reset rigging immediately
-                    $user->next_spin_prize_index = null;
+                    $lockedUser->next_spin_prize_index = null;
                 } else {
                     $winnerIndex = 0; // Default always to 777
                 }
@@ -345,12 +352,12 @@ class DashboardController extends Controller
                 $wonAmount = (float) $prizes[$winnerIndex];
 
                 // Ajouter le gain
-                $user->balance += $wonAmount;
-                $user->save();
+                $lockedUser->balance += $wonAmount;
+                $lockedUser->save();
 
                 // Créer l'historique de transaction
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => $wonAmount,
                     'type' => 'earnings',
                     'status' => 'completed',
@@ -361,12 +368,17 @@ class DashboardController extends Controller
                     'success' => true,
                     'won_amount' => $wonAmount,
                     'winner_index' => $winnerIndex,
-                    'new_balance' => $user->balance,
-                    'draw_spins' => $user->draw_spins,
+                    'new_balance' => $lockedUser->balance,
+                    'draw_spins' => $lockedUser->draw_spins,
                     'message' => "Félicitations ! Vous avez gagné {$wonAmount} XAF !"
                 ]);
             });
 
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 400);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

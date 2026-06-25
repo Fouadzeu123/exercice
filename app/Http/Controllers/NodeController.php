@@ -187,23 +187,24 @@ class NodeController extends Controller
         // Database transaction to guarantee consistency
         try {
             DB::transaction(function () use ($user, $node) {
-                // Check if the user has already rented this node in the past
-                $alreadyRented = UserNode::where('user_id', $user->id)
-                    ->where('node_id', $node->id)
-                    ->exists();
-
-                // Check if user has sufficient balance for the new rental
-                if ($user->balance < $node->amount) {
+                // Lock and load fresh user record to avoid concurrent purchases balance bypass
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->first();
+                if (!$lockedUser || $lockedUser->balance < $node->amount) {
                     throw new \Exception('Solde insuffisant pour louer ce nœud d\'infrastructure.');
                 }
 
+                // Check if the user has already rented this node in the past
+                $alreadyRented = UserNode::where('user_id', $lockedUser->id)
+                    ->where('node_id', $node->id)
+                    ->exists();
+
                 // Deduct the cost from the user's balance
-                $user->balance -= $node->amount;
-                $user->save();
+                $lockedUser->balance -= $node->amount;
+                $lockedUser->save();
 
                 // Create the user node link
                 UserNode::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'node_id' => $node->id,
                     'active' => true,
                     'activated_at' => Carbon::now(),
@@ -212,7 +213,7 @@ class NodeController extends Controller
 
                 // Log the purchase transaction
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => -$node->amount,
                     'type' => 'purchase',
                     'status' => 'completed',
@@ -220,8 +221,8 @@ class NodeController extends Controller
                 ]);
 
                 // Pay referral commission if the user has a referrer and hasn't rented this specific node before
-                if ($user->referrer_id && !$alreadyRented) {
-                    $sponsor = \App\Models\User::find($user->referrer_id);
+                if ($lockedUser->referrer_id && !$alreadyRented) {
+                    $sponsor = \App\Models\User::where('id', $lockedUser->referrer_id)->lockForUpdate()->first();
                     if ($sponsor) {
                         $commissionAmount = (float)($node->referral_reward ?? 0.00);
 
@@ -243,7 +244,7 @@ class NodeController extends Controller
                 }
 
                 // Recalculate status for user (their personal investment changed)
-                $user->recalculateVipAndAvipStatus();
+                $lockedUser->recalculateVipAndAvipStatus();
 
                 // Recalculate status for sponsor (their team volume & active referrals changed)
                 if (isset($sponsor)) {
@@ -356,25 +357,35 @@ class NodeController extends Controller
 
         try {
             DB::transaction(function () use ($user, $session) {
-                // Update session state
-                $session->update(['status' => 'claimed']);
+                // Lock and reload session to prevent double claim
+                $lockedSession = GenerationSession::where('id', $session->id)->lockForUpdate()->firstOrFail();
+                if ($lockedSession->status !== 'active') {
+                    throw new \InvalidArgumentException('Cette session a déjà été réclamée ou est expirée.');
+                }
 
-                // Add rewards to user balance
-                $user->balance += $session->expected_profit;
-                $user->save();
+                // Update session state
+                $lockedSession->status = 'claimed';
+                $lockedSession->save();
+
+                // Lock and load fresh user record
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+                $lockedUser->balance += $lockedSession->expected_profit;
+                $lockedUser->save();
 
                 // Create transaction history
                 Transaction::create([
-                    'user_id' => $user->id,
-                    'amount' => $session->expected_profit,
+                    'user_id' => $lockedUser->id,
+                    'amount' => $lockedSession->expected_profit,
                     'type' => 'earnings',
                     'status' => 'completed',
                     'reference' => 'GEN-' . strtoupper(bin2hex(random_bytes(4))),
                 ]);
 
                 // Distribute daily referral commissions
-                $user->payDailyCommissions($session->expected_profit);
+                $lockedUser->payDailyCommissions($lockedSession->expected_profit);
             });
+
+            $user->refresh();
 
             return response()->json([
                 'success' => true,
@@ -382,6 +393,8 @@ class NodeController extends Controller
                 'new_balance' => $user->balance
             ]);
 
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Erreur lors de la réclamation des gains : ' . $e->getMessage()], 500);
         }

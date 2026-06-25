@@ -96,18 +96,24 @@ class AVIPProductController extends Controller
 
         try {
             DB::transaction(function () use ($user, $product) {
+                // Lock and load fresh user record to avoid concurrent purchases balance bypass
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->first();
+                if (!$lockedUser || $lockedUser->balance < $product->amount) {
+                    throw new \Exception('Solde insuffisant pour acheter ce produit AVIP.');
+                }
+
                 // Check if the user has already purchased this AVIP product in the past
-                $alreadyPurchased = UserAVIPProduct::where('user_id', $user->id)
+                $alreadyPurchased = UserAVIPProduct::where('user_id', $lockedUser->id)
                     ->where('avip_product_id', $product->id)
                     ->exists();
 
                 // Deduct the cost from user's balance
-                $user->balance -= $product->amount;
-                $user->save();
+                $lockedUser->balance -= $product->amount;
+                $lockedUser->save();
 
                 // Create the user AVIP product purchase
                 UserAVIPProduct::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'avip_product_id' => $product->id,
                     'amount' => $product->amount,
                     'active' => true,
@@ -117,7 +123,7 @@ class AVIPProductController extends Controller
 
                 // Log the purchase transaction
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => -$product->amount,
                     'type' => 'purchase',
                     'status' => 'completed',
@@ -125,11 +131,11 @@ class AVIPProductController extends Controller
                 ]);
 
                 // Recalculate VIP/AVIP status
-                $user->recalculateVipAndAvipStatus();
+                $lockedUser->recalculateVipAndAvipStatus();
 
                 // Pay referral commission if the user has a referrer and hasn't purchased this specific AVIP product before
-                if ($user->referrer_id && !$alreadyPurchased) {
-                    $sponsor = \App\Models\User::find($user->referrer_id);
+                if ($lockedUser->referrer_id && !$alreadyPurchased) {
+                    $sponsor = \App\Models\User::where('id', $lockedUser->referrer_id)->lockForUpdate()->first();
                     if ($sponsor) {
                         $commissionAmount = (float)($product->referral_reward ?? 0.00);
 
@@ -177,75 +183,82 @@ class AVIPProductController extends Controller
             return response()->json(['error' => 'Les membres de niveau VIP 0 n\'ont pas de salaire journalier. Veuillez activer au moins un nœud de calcul (VIP 1) pour commencer à percevoir des dividendes journaliers.'], 422);
         }
 
-        $salaryClaimsCount = Transaction::where('user_id', $user->id)
-            ->where('type', 'salary')
-            ->where('status', 'completed')
-            ->count();
-
-        // VIP 1 limit to 7 claims
-        if ($userVipLevel === 1 && $salaryClaimsCount >= 7) {
-            return response()->json(['error' => 'Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.'], 422);
-        }
-
-        // VIP 2 limit to 30 claims
-        if ($userVipLevel === 2 && $salaryClaimsCount >= 30) {
-            return response()->json(['error' => 'Vous avez déjà réclamé vos 30 jours de salaire pour le niveau VIP 2.'], 422);
-        }
-
-        // VIP 3 limit to 30 claims
-        if ($userVipLevel === 3 && $salaryClaimsCount >= 30) {
-            return response()->json(['error' => 'Vous avez déjà réclamé vos 30 jours de salaire pour le niveau VIP 3.'], 422);
-        }
-
         // Define daily salary amounts per VIP level dynamically from settings
         $dailySalaries = \App\Services\SettingsService::get('vip_salaries');
-
         $salaryAmount = $dailySalaries[$userVipLevel] ?? 0.00;
-
-        // 1. Enforce first salary claim only 24 hours after the first purchased product (node or avip)
-        $earliestProduct = DB::table('user_nodes')
-            ->where('user_id', $user->id)
-            ->where('active', true)
-            ->orderBy('activated_at', 'asc')
-            ->first();
-
-        $earliestAvipProduct = DB::table('user_avip_products')
-            ->where('user_id', $user->id)
-            ->where('active', true)
-            ->orderBy('purchased_at', 'asc')
-            ->first();
-
-        $activationTime = null;
-        if ($earliestProduct && $earliestAvipProduct) {
-            $activationTime = Carbon::min(Carbon::parse($earliestProduct->activated_at), Carbon::parse($earliestAvipProduct->purchased_at));
-        } elseif ($earliestProduct) {
-            $activationTime = Carbon::parse($earliestProduct->activated_at);
-        } elseif ($earliestAvipProduct) {
-            $activationTime = Carbon::parse($earliestAvipProduct->purchased_at);
-        }
-
-        if ($activationTime && Carbon::parse($activationTime)->addHours(24)->isFuture()) {
-            $availableTime = Carbon::parse($activationTime)->addHours(24);
-            return response()->json(['error' => "Vous pourrez réclamer votre premier salaire journalier 24 heures après l'achat de votre premier produit. Disponible le : " . $availableTime->format('d/m/Y H:i:s')], 422);
-        }
-
-        // 2. Enforce subsequent claims only 24 hours after the last salary claim
-        $lastClaimDate = $user->last_salary_claim_date;
-        if ($lastClaimDate && Carbon::parse($lastClaimDate)->addHours(24)->isFuture()) {
-            $nextAvailable = Carbon::parse($lastClaimDate)->addHours(24);
-            return response()->json(['error' => "Vous ne pouvez réclamer votre salaire qu'une seule fois toutes les 24 heures. Prochaine réclamation disponible à partir de : " . $nextAvailable->format('d/m/Y H:i:s')], 422);
-        }
 
         try {
             DB::transaction(function () use ($user, $salaryAmount) {
+                // Lock and load fresh user record
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+                $userVipLevel = $lockedUser->vip_level ?? 0;
+
+                if ($userVipLevel < 1) {
+                    throw new \InvalidArgumentException('Les membres de niveau VIP 0 n\'ont pas de salaire journalier. Veuillez activer au moins un nœud de calcul (VIP 1) pour commencer à percevoir des dividendes journaliers.');
+                }
+
+                $salaryClaimsCount = Transaction::where('user_id', $lockedUser->id)
+                    ->where('type', 'salary')
+                    ->where('status', 'completed')
+                    ->count();
+
+                // VIP 1 limit to 7 claims
+                if ($userVipLevel === 1 && $salaryClaimsCount >= 7) {
+                    throw new \InvalidArgumentException('Vous avez déjà réclamé vos 7 jours de salaire pour le niveau VIP 1.');
+                }
+
+                // VIP 2 limit to 30 claims
+                if ($userVipLevel === 2 && $salaryClaimsCount >= 30) {
+                    throw new \InvalidArgumentException('Vous avez déjà réclamé vos 30 jours de salaire pour le niveau VIP 2.');
+                }
+
+                // VIP 3 limit to 30 claims
+                if ($userVipLevel === 3 && $salaryClaimsCount >= 30) {
+                    throw new \InvalidArgumentException('Vous avez déjà réclamé vos 30 jours de salaire pour le niveau VIP 3.');
+                }
+
+                // 1. Enforce first salary claim only 24 hours after the first purchased product (node or avip)
+                $earliestProduct = DB::table('user_nodes')
+                    ->where('user_id', $lockedUser->id)
+                    ->where('active', true)
+                    ->orderBy('activated_at', 'asc')
+                    ->first();
+
+                $earliestAvipProduct = DB::table('user_avip_products')
+                    ->where('user_id', $lockedUser->id)
+                    ->where('active', true)
+                    ->orderBy('purchased_at', 'asc')
+                    ->first();
+
+                $activationTime = null;
+                if ($earliestProduct && $earliestAvipProduct) {
+                    $activationTime = Carbon::min(Carbon::parse($earliestProduct->activated_at), Carbon::parse($earliestAvipProduct->purchased_at));
+                } elseif ($earliestProduct) {
+                    $activationTime = Carbon::parse($earliestProduct->activated_at);
+                } elseif ($earliestAvipProduct) {
+                    $activationTime = Carbon::parse($earliestAvipProduct->purchased_at);
+                }
+
+                if ($activationTime && Carbon::parse($activationTime)->addHours(24)->isFuture()) {
+                    $availableTime = Carbon::parse($activationTime)->addHours(24);
+                    throw new \InvalidArgumentException("Vous pourrez réclamer votre premier salaire journalier 24 heures après l'achat de votre premier produit. Disponible le : " . $availableTime->format('d/m/Y H:i:s'));
+                }
+
+                // 2. Enforce subsequent claims only 24 hours after the last salary claim
+                $lastClaimDate = $lockedUser->last_salary_claim_date;
+                if ($lastClaimDate && Carbon::parse($lastClaimDate)->addHours(24)->isFuture()) {
+                    $nextAvailable = Carbon::parse($lastClaimDate)->addHours(24);
+                    throw new \InvalidArgumentException("Vous ne pouvez réclamer votre salaire qu'une seule fois toutes les 24 heures. Prochaine réclamation disponible à partir de : " . $nextAvailable->format('d/m/Y H:i:s'));
+                }
+
                 // Add salary to user balance
-                $user->balance += $salaryAmount;
-                $user->last_salary_claim_date = Carbon::now();
-                $user->save();
+                $lockedUser->balance += $salaryAmount;
+                $lockedUser->last_salary_claim_date = Carbon::now();
+                $lockedUser->save();
 
                 // Log the salary transaction
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => $salaryAmount,
                     'type' => 'salary',
                     'status' => 'completed',
@@ -253,8 +266,10 @@ class AVIPProductController extends Controller
                 ]);
 
                 // Distribute daily referral commissions
-                $user->payDailyCommissions($salaryAmount);
+                $lockedUser->payDailyCommissions($salaryAmount);
             });
+
+            $user->refresh();
 
             return response()->json([
                 'success' => true,
@@ -262,6 +277,8 @@ class AVIPProductController extends Controller
                 'new_balance' => $user->balance
             ]);
 
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Erreur lors de la réclamation du salaire : ' . $e->getMessage()], 500);
         }

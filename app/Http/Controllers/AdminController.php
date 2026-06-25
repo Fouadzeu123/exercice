@@ -87,8 +87,11 @@ class AdminController extends Controller
 
             if ($isSimulation) {
                 DB::transaction(function () use ($transaction) {
-                    $transaction->status = 'completed';
-                    $transaction->save();
+                    $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                    if ($lockedTrx && $lockedTrx->status === 'pending') {
+                        $lockedTrx->status = 'completed';
+                        $lockedTrx->save();
+                    }
                 });
                 return back()->with('success', 'Retrait approuvé et simulé avec succès.');
             }
@@ -146,14 +149,19 @@ class AdminController extends Controller
         }
 
         DB::transaction(function () use ($transaction) {
-            $transaction->status = 'completed';
-            $transaction->save();
+            $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+            if ($lockedTrx && $lockedTrx->status === 'pending') {
+                $lockedTrx->status = 'completed';
+                $lockedTrx->save();
 
-            // If it is a deposit, increment the user's balance
-            if ($transaction->type === 'deposit') {
-                $user = $transaction->user;
-                $user->balance += $transaction->amount;
-                $user->save();
+                // If it is a deposit, increment the user's balance
+                if ($lockedTrx->type === 'deposit') {
+                    $user = User::where('id', $lockedTrx->user_id)->lockForUpdate()->first();
+                    if ($user) {
+                        $user->balance += $lockedTrx->amount;
+                        $user->save();
+                    }
+                }
             }
         });
 
@@ -165,23 +173,29 @@ class AdminController extends Controller
      */
     public function rejectTransaction(Request $request, $id)
     {
-        $transaction = Transaction::findOrFail($id);
-        if ($transaction->status !== 'pending') {
-            return back()->withErrors(['error' => 'La transaction n\'est plus en attente.']);
+        try {
+            DB::transaction(function () use ($id) {
+                $lockedTrx = Transaction::where('id', $id)->lockForUpdate()->firstOrFail();
+                if ($lockedTrx->status !== 'pending') {
+                    throw new \Exception('La transaction n\'est plus en attente.');
+                }
+
+                // Refund user balance for withdrawal
+                if ($lockedTrx->type === 'withdrawal') {
+                    $user = User::where('id', $lockedTrx->user_id)->lockForUpdate()->first();
+                    if ($user) {
+                        $user->balance += abs($lockedTrx->amount);
+                        $user->save();
+                    }
+                }
+                $lockedTrx->status = 'rejected';
+                $lockedTrx->save();
+            });
+
+            return back()->with('success', 'Transaction rejetée et capitaux restitués au mineur.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        DB::transaction(function () use ($transaction) {
-            // Refund user balance for withdrawal
-            if ($transaction->type === 'withdrawal') {
-                $user = $transaction->user;
-                $user->balance += abs($transaction->amount);
-                $user->save();
-            }
-            $transaction->status = 'rejected';
-            $transaction->save();
-        });
-
-        return back()->with('success', 'Transaction rejetée et capitaux restitués au mineur.');
     }
 
     /**
@@ -189,8 +203,6 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-
         $request->validate([
             'balance' => 'required|numeric',
             'role' => 'required|string|in:user,admin',
@@ -202,11 +214,12 @@ class AdminController extends Controller
             'withdrawal_password' => 'nullable|string|min:4|max:12',
         ]);
 
-        $oldBalance = (float) $user->balance;
-        $newBalance = (float) $request->balance;
-        $diff = $newBalance - $oldBalance;
+        \DB::transaction(function () use ($id, $request) {
+            $lockedUser = User::where('id', $id)->lockForUpdate()->firstOrFail();
+            $oldBalance = (float) $lockedUser->balance;
+            $newBalance = (float) $request->balance;
+            $diff = $newBalance - $oldBalance;
 
-        \DB::transaction(function () use ($user, $request, $diff) {
             $updateData = [
                 'balance' => $request->balance,
                 'role' => $request->role,
@@ -224,11 +237,11 @@ class AdminController extends Controller
                 $updateData['withdrawal_password'] = \Illuminate\Support\Facades\Hash::make($request->withdrawal_password);
             }
 
-            $user->update($updateData);
+            $lockedUser->update($updateData);
 
             if ($diff != 0) {
                 \App\Models\Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => $diff,
                     'type' => $diff > 0 ? 'deposit' : 'withdrawal',
                     'status' => 'completed',
@@ -237,7 +250,7 @@ class AdminController extends Controller
             }
         });
 
-        return back()->with('success', 'Profil et variables du mineur mis Ã  jour avec succès.');
+        return back()->with('success', 'Profil et variables du mineur mis à jour avec succès.');
     }
 
     /**

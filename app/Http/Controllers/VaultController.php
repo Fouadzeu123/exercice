@@ -35,6 +35,7 @@ class VaultController extends Controller
             return back()->withErrors(['error' => 'Ce vault n\'est plus disponible.']);
         }
 
+        // Quick pre-check
         if ($user->balance < $vault->fixed_investment_amount) {
             return back()->withErrors(['error' => 'Solde insuffisant pour investir dans ce vault.']);
         }
@@ -42,10 +43,17 @@ class VaultController extends Controller
         try {
             DB::beginTransaction();
 
-            $user->decrement('balance', $vault->fixed_investment_amount);
+            // Lock and load fresh user record to avoid concurrent vault purchases balance bypass
+            $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->first();
+            if (!$lockedUser || $lockedUser->balance < $vault->fixed_investment_amount) {
+                throw new \Exception('Solde insuffisant pour investir dans ce vault.');
+            }
+
+            $lockedUser->balance -= $vault->fixed_investment_amount;
+            $lockedUser->save();
 
             VaultInvestment::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'vault_plan_id' => $vault->id,
                 'amount' => $vault->fixed_investment_amount,
                 'return_amount' => $vault->fixed_return,
@@ -53,7 +61,7 @@ class VaultController extends Controller
                 'status' => 'active'
             ]);
 
-            $user->transactions()->create([
+            $lockedUser->transactions()->create([
                 'type' => 'purchase',
                 'amount' => -$vault->fixed_investment_amount,
                 'reference' => 'VAULT_INV_' . uniqid(),

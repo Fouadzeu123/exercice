@@ -233,6 +233,7 @@ class WalletController extends Controller
             return back()->withErrors(['error' => 'Le mot de passe de retrait saisi est incorrect.']);
         }
 
+        // Quick pre-check
         if ($user->balance < $amount) {
             return back()->withErrors(['error' => 'Solde insuffisant pour effectuer ce retrait.']);
         }
@@ -241,11 +242,17 @@ class WalletController extends Controller
 
         try {
             DB::transaction(function () use ($user, $amount, $reference, $request) {
-                $user->balance -= $amount;
-                $user->save();
+                // Lock user record for update to prevent concurrent double-withdrawals
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->first();
+                if (!$lockedUser || $lockedUser->balance < $amount) {
+                    throw new \Exception('Solde insuffisant pour effectuer ce retrait.');
+                }
+
+                $lockedUser->balance -= $amount;
+                $lockedUser->save();
 
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => -$amount,
                     'type' => 'withdrawal',
                     'status' => 'pending',
@@ -274,36 +281,40 @@ class WalletController extends Controller
         $user = Auth::user();
         $code = strtoupper(trim($request->code));
 
-        $giftCode = \App\Models\GiftCode::where('code', $code)->first();
-
-        if (!$giftCode) {
-            return back()->withErrors(['code' => 'Code cadeau invalide, corrompu ou expiré.']);
-        }
-
-        if ($giftCode->usages >= $giftCode->max_usages) {
-            return back()->withErrors(['code' => 'Ce code cadeau a atteint sa limite maximale d\'utilisations.']);
-        }
-
-        $amount = $giftCode->amount;
-        $reference = 'GIFT-' . $code;
-
-        $alreadyClaimed = Transaction::where('user_id', $user->id)
-            ->where('reference', $reference)
-            ->exists();
-
-        if ($alreadyClaimed) {
-            return back()->withErrors(['code' => 'Ce code cadeau a déjà été synchronisé sur ce nœud.']);
-        }
-
         try {
-            DB::transaction(function () use ($user, $amount, $reference, $giftCode) {
-                $user->balance += $amount;
-                $user->save();
+            DB::transaction(function () use ($user, $code, &$amount) {
+                // Lock the gift code record
+                $giftCode = \App\Models\GiftCode::where('code', $code)->lockForUpdate()->first();
 
-                $giftCode->increment('usages');
+                if (!$giftCode) {
+                    throw new \InvalidArgumentException('Code cadeau invalide, corrompu ou expiré.');
+                }
+
+                if ($giftCode->usages >= $giftCode->max_usages) {
+                    throw new \InvalidArgumentException('Ce code cadeau a atteint sa limite maximale d\'utilisations.');
+                }
+
+                $amount = $giftCode->amount;
+                $reference = 'GIFT-' . $code;
+
+                $alreadyClaimed = Transaction::where('user_id', $user->id)
+                    ->where('reference', $reference)
+                    ->exists();
+
+                if ($alreadyClaimed) {
+                    throw new \InvalidArgumentException('Ce code cadeau a déjà été synchronisé sur ce nœud.');
+                }
+
+                // Lock user record
+                $lockedUser = \App\Models\User::where('id', $user->id)->lockForUpdate()->firstOrFail();
+                $lockedUser->balance += $amount;
+                $lockedUser->save();
+
+                $giftCode->usages += 1;
+                $giftCode->save();
 
                 Transaction::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'amount' => $amount,
                     'type' => 'earnings',
                     'status' => 'completed',
@@ -313,6 +324,8 @@ class WalletController extends Controller
 
             return redirect()->back()->with('success', 'Code cadeau échangé avec succès ! +' . $amount . ' XAF injectés.');
 
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['code' => $e->getMessage()]);
         } catch (\Exception $e) {
             return back()->withErrors(['code' => 'Échec de la réclamation : ' . $e->getMessage()]);
         }
@@ -393,17 +406,26 @@ class WalletController extends Controller
         if ($transaction && $transaction->status === 'pending') {
             if ($event === 'payment.complete' || $status === 'complete') {
                 DB::transaction(function () use ($transaction) {
-                    $transaction->status = 'completed';
-                    $transaction->save();
+                    $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                    if (!$lockedTrx || $lockedTrx->status !== 'pending') {
+                        return;
+                    }
+                    $lockedTrx->status = 'completed';
+                    $lockedTrx->save();
 
-                    $user = $transaction->user;
-                    $user->balance += $transaction->amount;
-                    $user->save();
+                    $user = \App\Models\User::where('id', $lockedTrx->user_id)->lockForUpdate()->first();
+                    if ($user) {
+                        $user->balance += $lockedTrx->amount;
+                        $user->save();
+                    }
                 });
             } elseif (in_array($event, ['payment.failed', 'payment.canceled', 'payment.expired']) || in_array($status, ['failed', 'canceled', 'expired'])) {
                 DB::transaction(function () use ($transaction) {
-                    $transaction->status = 'rejected';
-                    $transaction->save();
+                    $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                    if ($lockedTrx && $lockedTrx->status === 'pending') {
+                        $lockedTrx->status = 'rejected';
+                        $lockedTrx->save();
+                    }
                 });
             }
         }
@@ -529,12 +551,18 @@ class WalletController extends Controller
         // Local testing mock fallback
         if (!$transId || str_starts_with($transId, 'mock-') || !$secretKey) {
             DB::transaction(function () use ($transaction) {
-                $transaction->status = 'completed';
-                $transaction->save();
+                $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                if (!$lockedTrx || $lockedTrx->status !== 'pending') {
+                    return;
+                }
+                $lockedTrx->status = 'completed';
+                $lockedTrx->save();
 
-                $user = $transaction->user;
-                $user->balance += $transaction->amount;
-                $user->save();
+                $user = \App\Models\User::where('id', $lockedTrx->user_id)->lockForUpdate()->first();
+                if ($user) {
+                    $user->balance += $lockedTrx->amount;
+                    $user->save();
+                }
             });
 
             return response()->json([
@@ -551,12 +579,18 @@ class WalletController extends Controller
 
             if ($notchStatus === 'complete') {
                 DB::transaction(function () use ($transaction) {
-                    $transaction->status = 'completed';
-                    $transaction->save();
+                    $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                    if (!$lockedTrx || $lockedTrx->status !== 'pending') {
+                        return;
+                    }
+                    $lockedTrx->status = 'completed';
+                    $lockedTrx->save();
 
-                    $user = $transaction->user;
-                    $user->balance += $transaction->amount;
-                    $user->save();
+                    $user = \App\Models\User::where('id', $lockedTrx->user_id)->lockForUpdate()->first();
+                    if ($user) {
+                        $user->balance += $lockedTrx->amount;
+                        $user->save();
+                    }
                 });
 
                 return response()->json([
@@ -565,8 +599,11 @@ class WalletController extends Controller
                 ]);
             } elseif (in_array($notchStatus, ['failed', 'canceled', 'expired'])) {
                 DB::transaction(function () use ($transaction) {
-                    $transaction->status = 'rejected';
-                    $transaction->save();
+                    $lockedTrx = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                    if ($lockedTrx && $lockedTrx->status === 'pending') {
+                        $lockedTrx->status = 'rejected';
+                        $lockedTrx->save();
+                    }
                 });
 
                 return response()->json([

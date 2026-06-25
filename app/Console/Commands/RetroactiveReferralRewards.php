@@ -82,11 +82,12 @@ class RetroactiveReferralRewards extends Command
                     
                     if (!$dryRun) {
                         DB::transaction(function() use ($sponsor, $referralReward, $reference, $userNode) {
-                            $sponsor->balance += $referralReward;
-                            $sponsor->save();
+                            $lockedSponsor = User::where('id', $sponsor->id)->lockForUpdate()->firstOrFail();
+                            $lockedSponsor->balance += $referralReward;
+                            $lockedSponsor->save();
 
                             Transaction::create([
-                                'user_id' => $sponsor->id,
+                                'user_id' => $lockedSponsor->id,
                                 'amount' => $referralReward,
                                 'type' => 'commission',
                                 'status' => 'completed',
@@ -95,7 +96,7 @@ class RetroactiveReferralRewards extends Command
                                 'updated_at' => $userNode->created_at,
                             ]);
 
-                            $sponsor->recalculateVipAndAvipStatus();
+                            $lockedSponsor->recalculateVipAndAvipStatus();
                         });
                     }
 
@@ -141,11 +142,12 @@ class RetroactiveReferralRewards extends Command
 
                     if (!$dryRun) {
                         DB::transaction(function() use ($sponsor, $referralReward, $reference, $userAvip) {
-                            $sponsor->balance += $referralReward;
-                            $sponsor->save();
+                            $lockedSponsor = User::where('id', $sponsor->id)->lockForUpdate()->firstOrFail();
+                            $lockedSponsor->balance += $referralReward;
+                            $lockedSponsor->save();
 
                             Transaction::create([
-                                'user_id' => $sponsor->id,
+                                'user_id' => $lockedSponsor->id,
                                 'amount' => $referralReward,
                                 'type' => 'commission',
                                 'status' => 'completed',
@@ -154,7 +156,7 @@ class RetroactiveReferralRewards extends Command
                                 'updated_at' => $userAvip->created_at,
                             ]);
 
-                            $sponsor->recalculateVipAndAvipStatus();
+                            $lockedSponsor->recalculateVipAndAvipStatus();
                         });
                     }
 

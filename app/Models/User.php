@@ -206,7 +206,8 @@ class User extends Authenticatable
     public function payDailyCommissions($amount)
     {
         $rates = [1 => 0.05, 2 => 0.03, 3 => 0.01];
-        $currentSponsor = $this->referrer_id ? User::find($this->referrer_id) : null;
+        // Load sponsor with lockForUpdate to prevent race conditions during concurrent commission payouts
+        $currentSponsor = $this->referrer_id ? User::where('id', $this->referrer_id)->lockForUpdate()->first() : null;
         $level = 1;
 
         while ($currentSponsor && $level <= 3) {
@@ -223,7 +224,7 @@ class User extends Authenticatable
                     'reference' => 'COM-L' . $level . '-' . strtoupper(bin2hex(random_bytes(3))),
                 ]);
             }
-            $currentSponsor = $currentSponsor->referrer_id ? User::find($currentSponsor->referrer_id) : null;
+            $currentSponsor = $currentSponsor->referrer_id ? User::where('id', $currentSponsor->referrer_id)->lockForUpdate()->first() : null;
             $level++;
         }
     }
