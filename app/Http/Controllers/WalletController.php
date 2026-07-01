@@ -238,6 +238,17 @@ class WalletController extends Controller
             return back()->withErrors(['error' => 'Solde insuffisant pour effectuer ce retrait.']);
         }
 
+        // Limite de 1 retrait par jour
+        $todayWithdrawals = Transaction::where('user_id', $user->id)
+            ->where('type', 'withdrawal')
+            ->whereIn('status', ['pending', 'completed'])
+            ->whereDate('created_at', \Carbon\Carbon::now('Africa/Douala')->toDateString())
+            ->count();
+
+        if ($todayWithdrawals >= 1) {
+            return back()->withErrors(['error' => 'Vous avez atteint la limite de 1 retrait par jour. Veuillez réessayer demain.']);
+        }
+
         $reference = 'WTH-' . strtoupper(bin2hex(random_bytes(4)));
 
         try {

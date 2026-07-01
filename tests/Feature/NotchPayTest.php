@@ -489,4 +489,119 @@ class NotchPayTest extends TestCase
 
         \Carbon\Carbon::setTestNow();
     }
+
+    public function test_second_withdrawal_on_same_day_is_blocked()
+    {
+        // Fake time to a valid weekday during open hours
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-22 11:30:00', 'Africa/Douala'));
+
+        $user = User::factory()->create(['balance' => 50000]);
+        $this->actingAs($user);
+
+        \App\Models\WithdrawalMethod::create([
+            'user_id' => $user->id,
+            'operator' => 'orange',
+            'phone' => '699999999',
+            'full_name' => 'Test User',
+            'is_default' => true
+        ]);
+        $node = \App\Models\Node::create([
+            'name' => 'Neoverse Card',
+            'amount' => 15000,
+            'duration' => 30,
+            'generation_profit' => 500,
+            'technology_level' => 1,
+            'active' => true,
+        ]);
+        \App\Models\UserNode::create([
+            'user_id' => $user->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => \Carbon\Carbon::now()->subDays(2),
+            'expires_at' => \Carbon\Carbon::now()->addDays(28),
+        ]);
+        $user->update(['withdrawal_password' => bcrypt('1234')]);
+
+        // First withdrawal today (pending) — already exists
+        Transaction::create([
+            'user_id' => $user->id,
+            'amount' => -5000,
+            'type' => 'withdrawal',
+            'status' => 'pending',
+            'reference' => 'WTH-FIRST001',
+            'payment_method' => 'orange',
+            'payment_phone' => '699999999',
+        ]);
+
+        // Second withdrawal attempt — should be blocked
+        $response = $this->post(route('wallet.withdraw'), [
+            'amount' => 5000,
+            'method' => 'orange',
+            'phone' => '699999999',
+            'withdrawal_password' => '1234'
+        ]);
+
+        $response->assertSessionHasErrors('error');
+        // Balance should remain unchanged
+        $this->assertEquals(50000, $user->fresh()->balance);
+
+        \Carbon\Carbon::setTestNow();
+    }
+
+    public function test_rejected_withdrawal_does_not_count_toward_daily_limit()
+    {
+        // Fake time to a valid weekday during open hours
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-22 11:30:00', 'Africa/Douala'));
+
+        $user = User::factory()->create(['balance' => 50000]);
+        $this->actingAs($user);
+
+        \App\Models\WithdrawalMethod::create([
+            'user_id' => $user->id,
+            'operator' => 'orange',
+            'phone' => '699999999',
+            'full_name' => 'Test User',
+            'is_default' => true
+        ]);
+        $node = \App\Models\Node::create([
+            'name' => 'Neoverse Card',
+            'amount' => 15000,
+            'duration' => 30,
+            'generation_profit' => 500,
+            'technology_level' => 1,
+            'active' => true,
+        ]);
+        \App\Models\UserNode::create([
+            'user_id' => $user->id,
+            'node_id' => $node->id,
+            'active' => true,
+            'activated_at' => \Carbon\Carbon::now()->subDays(2),
+            'expires_at' => \Carbon\Carbon::now()->addDays(28),
+        ]);
+        $user->update(['withdrawal_password' => bcrypt('1234')]);
+
+        // Only a rejected withdrawal today — should NOT count toward the limit
+        Transaction::create([
+            'user_id' => $user->id,
+            'amount' => -5000,
+            'type' => 'withdrawal',
+            'status' => 'rejected',
+            'reference' => 'WTH-REJECTED001',
+            'payment_method' => 'orange',
+            'payment_phone' => '699999999',
+        ]);
+
+        // New withdrawal attempt should be allowed
+        $response = $this->post(route('wallet.withdraw'), [
+            'amount' => 5000,
+            'method' => 'orange',
+            'phone' => '699999999',
+            'withdrawal_password' => '1234'
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals(45000, $user->fresh()->balance);
+
+        \Carbon\Carbon::setTestNow();
+    }
 }

@@ -427,6 +427,7 @@ onUnmounted(() => {
                     <p class="font-bold text-white mb-2">
                         {{ t('Conseils de retrait :', 'Withdrawal Guidelines:') }}
                     </p>
+                    <p>• {{ t('Limite journalière : 1 retrait par jour autorisé. Toute demande supplémentaire sera bloquée jusqu\'au lendemain.', 'Daily limit: 1 withdrawal per day allowed. Any additional request will be blocked until the next day.') }}</p>
                     <p>• {{ t('Horaires de retrait : du lundi au vendredi de 09h00 à 17h30 (Heure du Cameroun). Les demandes en dehors de cette plage sont bloquées.', 'Withdrawal hours: Monday to Friday from 09:00 to 17:30 (Cameroon Time). Requests outside this window are blocked.') }}</p>
                     <p>• {{ t('Délai de traitement des retraits : 1 à 3 jours ouvrables (sous 72 heures).', 'Withdrawal Processing Time: 1-3 business days (within 72 hours).') }}</p>
                     <p>• {{ t('Chaque transaction engendre des frais de traitement administratifs de 6%.', 'Each transaction incurs a 6% handling fee.') }}</p>
