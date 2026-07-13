@@ -21,6 +21,7 @@ class SettingsService
         'support_whatsapp' => 'https://wa.me/237000000000',
         'lucky_draw_cost' => 1,
         'generation_duration' => 0, // Instantaneous (0s)
+        'block_generation_global' => false,
     ];
 
     /**

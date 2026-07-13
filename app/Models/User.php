@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Support\Facades\DB;
 
-#[Fillable(['password', 'withdrawal_password', 'phone', 'balance', 'referral_code', 'referrer_id', 'vip_level', 'avip_level', 'active_node_id', 'role', 'last_salary_claim_date', 'draw_spins', 'next_spin_prize_index'])]
+#[Fillable(['password', 'withdrawal_password', 'phone', 'balance', 'referral_code', 'referrer_id', 'vip_level', 'avip_level', 'active_node_id', 'role', 'last_salary_claim_date', 'draw_spins', 'next_spin_prize_index', 'is_generation_blocked'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,6 +34,7 @@ class User extends Authenticatable
             'balance' => 'float', // IMPORTANT : Assure que le solde est toujours un nombre
             'vip_level' => 'integer',
             'avip_level' => 'integer',
+            'is_generation_blocked' => 'boolean',
         ];
     }
 

@@ -212,6 +212,7 @@ class AdminController extends Controller
             'next_spin_prize_index' => 'nullable|integer|min:0|max:6',
             'password' => 'nullable|string|min:6',
             'withdrawal_password' => 'nullable|string|min:4|max:12',
+            'is_generation_blocked' => 'required|boolean',
         ]);
 
         \DB::transaction(function () use ($id, $request) {
@@ -227,6 +228,7 @@ class AdminController extends Controller
                 'avip_level' => $request->avip_level,
                 'draw_spins' => $request->draw_spins,
                 'next_spin_prize_index' => $request->next_spin_prize_index,
+                'is_generation_blocked' => (bool) $request->is_generation_blocked,
             ];
 
             if ($request->filled('password')) {
@@ -627,6 +629,7 @@ class AdminController extends Controller
             'vip_salaries.3' => 'required|numeric|min:0',
             'vip_salaries.4' => 'required|numeric|min:0',
             'vip_salaries.5' => 'required|numeric|min:0',
+            'block_generation_global' => 'required|boolean',
         ]);
 
         \App\Services\SettingsService::setMultiple([
@@ -637,6 +640,7 @@ class AdminController extends Controller
             'lucky_draw_cost' => (int) $request->lucky_draw_cost,
             'generation_duration' => (int) $request->generation_duration,
             'vip_salaries' => array_map('floatval', $request->vip_salaries),
+            'block_generation_global' => (bool) $request->block_generation_global,
         ]);
 
         return back()->with('success', 'Configuration globale du système enregistrée.');

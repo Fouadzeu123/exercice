@@ -236,6 +236,11 @@ watch(showErrorModal, (newError) => {
         document.body.style.overflow = '';
     }
 });
+
+// Block revenue generation computations
+const isBlockedGlobally = computed(() => !!(page.props.settings as any)?.block_generation_global);
+const isBlockedIndividually = computed(() => !!user.value?.is_generation_blocked);
+const isBlocked = computed(() => isBlockedGlobally.value || isBlockedIndividually.value);
 </script>
 
 <template>
@@ -256,8 +261,28 @@ watch(showErrorModal, (newError) => {
                 </div>
             </div>
 
+            <!-- Case 0: Blocked Generation -->
+            <div v-if="isBlocked" class="glass rounded-3xl py-16 px-6 flex flex-col items-center text-center max-w-xl mx-auto border border-rose-500/20 shadow-[0_0_50px_rgba(244,63,94,0.1)] mt-10">
+                <div class="h-20 w-20 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-6 shadow-[0_0_20px_rgba(244,63,94,0.2)] animate-pulse">
+                    <Lock class="h-10 w-10" :stroke-width="2" />
+                </div>
+                <h3 class="text-lg font-bold text-white tracking-wide uppercase">Accès Temporairement Restreint</h3>
+                
+                <p v-if="isBlockedGlobally" class="text-xs text-slate-300 mt-4 leading-relaxed font-semibold bg-black/40 p-5 rounded-2xl border border-white/5 shadow-inner animate-pulse">
+                    Nous rencontrons actuellement des soucis techniques avec notre opérateur mobile, nous travaillons au plus vite pour sa résolution. Nous vous signalerons lorsque le problème sera résolu.
+                </p>
+                <p v-else-if="isBlockedIndividually" class="text-xs text-slate-300 mt-4 leading-relaxed font-semibold bg-black/40 p-5 rounded-2xl border border-white/5 shadow-inner">
+                    Vous ne pouvez pas générer des revenus actuellement, veuillez contacter votre service RH.
+                </p>
+
+                <div class="mt-6 flex items-center gap-2 text-[9px] text-rose-400 font-mono tracking-wider bg-rose-500/10 px-3 py-1.5 rounded-full border border-rose-500/20">
+                    <span class="h-1.5 w-1.5 rounded-full bg-rose-400 animate-ping"></span>
+                    <span>STATUT : GEN_LOCKED</span>
+                </div>
+            </div>
+
             <!-- Case 1: No Active Nodes -->
-            <div v-if="!nodesList || nodesList.length === 0" class="glass rounded-3xl py-16 px-6 flex flex-col items-center text-center max-w-lg mx-auto border border-white/5 mt-10">
+            <div v-else-if="!nodesList || nodesList.length === 0" class="glass rounded-3xl py-16 px-6 flex flex-col items-center text-center max-w-lg mx-auto border border-white/5 mt-10">
                 <div class="h-16 w-16 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-6 animate-pulse">
                     <Cpu class="h-8 w-8" :stroke-width="2.5" />
                 </div>

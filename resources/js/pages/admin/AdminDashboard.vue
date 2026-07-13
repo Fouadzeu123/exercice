@@ -224,6 +224,7 @@ const userEditForm = useForm({
     next_spin_prize_index: null as number | null | string,
     password: '',
     withdrawal_password: '',
+    is_generation_blocked: false,
 });
 
 const loadingDetails = ref(false);
@@ -240,6 +241,7 @@ const openUserModal = async (user: any) => {
     userEditForm.next_spin_prize_index = user.next_spin_prize_index;
     userEditForm.password = '';
     userEditForm.withdrawal_password = '';
+    userEditForm.is_generation_blocked = !!user.is_generation_blocked;
 
     // Reset details panel state
     loadingDetails.value = true;
@@ -641,6 +643,7 @@ const settingsForm = useForm({
     lucky_draw_cost: props.settings.lucky_draw_cost,
     generation_duration: props.settings.generation_duration,
     vip_salaries: { ...props.settings.vip_salaries },
+    block_generation_global: !!props.settings.block_generation_global,
 });
 
 const handleUpdateSettings = () => {
@@ -1444,6 +1447,25 @@ onUnmounted(() => {
                                     />
                                 </div>
                             </div>
+                            
+                            <!-- Global block toggle -->
+                            <div class="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl flex items-center justify-between mt-4">
+                                <div>
+                                    <h4 class="text-xs font-bold text-white uppercase flex items-center gap-1.5">
+                                        <ShieldAlert class="h-4 w-4 text-rose-500 animate-pulse" />
+                                        Blocage Global de la Génération
+                                    </h4>
+                                    <p class="text-[9px] text-slate-400 leading-relaxed mt-0.5">Activer cette option bloque immédiatement toute génération de revenus pour TOUS les mineurs.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="settingsForm.block_generation_global" 
+                                        class="sr-only peer"
+                                    >
+                                    <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500 shadow-inner"></div>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Submit Buttons -->
@@ -1566,6 +1588,25 @@ onUnmounted(() => {
                                         required
                                         class="w-full bg-black/50 border border-purple-500/20 text-white font-mono text-xs pl-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500"
                                     />
+                                </div>
+
+                                <!-- Individual block toggle -->
+                                <div class="p-3.5 bg-rose-500/5 border border-rose-500/20 rounded-2xl flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-white uppercase flex items-center gap-1.5">
+                                            <ShieldAlert class="h-4 w-4 text-rose-500" />
+                                            Bloquer la Génération
+                                        </h4>
+                                        <p class="text-[8px] text-slate-400 leading-relaxed mt-0.5">Empêche spécifiquement cet utilisateur de générer des revenus.</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            v-model="userEditForm.is_generation_blocked" 
+                                            class="sr-only peer"
+                                        >
+                                        <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500 shadow-inner"></div>
+                                    </label>
                                 </div>
 
                                 <!-- Reset Passwords -->

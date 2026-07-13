@@ -261,6 +261,15 @@ class NodeController extends Controller
 
     public function startGeneration(Request $request)
     {
+        if (\App\Services\SettingsService::get('block_generation_global', false)) {
+            return response()->json(['error' => 'nous rencontrons actuellement des soucis technique avec notre operateur mobile ,nous travaillons au plus vite pour sa resolution. nous vous signalerons lorsque le probleme sera resolu'], 422);
+        }
+
+        $user = Auth::user();
+        if ($user->is_generation_blocked) {
+            return response()->json(['error' => 'vous ne pouvez pas generer des revenus actuellement ,veuillez contacter votre service RH'], 422);
+        }
+
         if (Carbon::now()->isWeekend()) {
             return response()->json(['error' => 'La génération de revenus est disponible uniquement du lundi au vendredi.'], 422);
         }
@@ -268,8 +277,6 @@ class NodeController extends Controller
         $request->validate([
             'user_node_id' => 'required|integer|exists:user_nodes,id'
         ]);
-
-        $user = Auth::user();
         $userNodeId = $request->user_node_id;
 
         // 1. Verify user owns this active node
@@ -343,7 +350,15 @@ class NodeController extends Controller
      */
     public function claimProfit(Request $request, $id)
     {
+        if (\App\Services\SettingsService::get('block_generation_global', false)) {
+            return response()->json(['error' => 'nous rencontrons actuellement des soucis technique avec notre operateur mobile ,nous travaillons au plus vite pour sa resolution. nous vous signalerons lorsque le probleme sera resolu'], 422);
+        }
+
         $user = Auth::user();
+        if ($user->is_generation_blocked) {
+            return response()->json(['error' => 'vous ne pouvez pas generer des revenus actuellement ,veuillez contacter votre service RH'], 422);
+        }
+
         $session = GenerationSession::where('id', $id)->where('user_id', $user->id)->firstOrFail();
 
         if ($session->status !== 'active') {
