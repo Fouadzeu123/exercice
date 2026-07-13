@@ -649,7 +649,11 @@ const settingsForm = useForm({
 const handleUpdateSettings = () => {
     settingsForm.post('/admin/settings', {
         onSuccess: () => showToast("Configuration globale du système enregistrée."),
-        onError: (err: any) => showToast("Erreur d'enregistrement des paramètres.", true)
+        onError: (err: any) => {
+            console.error("Settings Update Errors:", err);
+            const firstError = Object.values(err)[0] as string;
+            showToast("Erreur : " + (firstError || "Erreur d'enregistrement des paramètres."), true);
+        }
     });
 };
 

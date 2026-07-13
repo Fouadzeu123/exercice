@@ -621,7 +621,7 @@ class AdminController extends Controller
             'support_telegram' => 'nullable|string',
             'support_whatsapp' => 'nullable|string',
             'lucky_draw_cost' => 'required|integer|min:0',
-            'generation_duration' => 'required|integer|min:1',
+            'generation_duration' => 'required|integer|min:0',
             'vip_salaries' => 'required|array',
             'vip_salaries.0' => 'required|numeric|min:0',
             'vip_salaries.1' => 'required|numeric|min:0',
@@ -629,7 +629,7 @@ class AdminController extends Controller
             'vip_salaries.3' => 'required|numeric|min:0',
             'vip_salaries.4' => 'required|numeric|min:0',
             'vip_salaries.5' => 'required|numeric|min:0',
-            'block_generation_global' => 'required|boolean',
+            'block_generation_global' => 'boolean',
         ]);
 
         \App\Services\SettingsService::setMultiple([
